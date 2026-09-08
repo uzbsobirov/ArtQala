@@ -2,17 +2,19 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Trash2, X, Loader2 } from 'lucide-react';
+import Image from 'next/image';
+import { Plus, Trash2, Pencil, X, Loader2, Upload } from 'lucide-react';
 
 interface ArtistItem {
   id: string;
   name: string;
   initials?: string | null;
+  photo?: string | null;
   specialty_en: string;
   specialty_uz?: string;
   bio_en: string;
   bio_uz?: string;
-  _count: { paintings: number };
+  _count?: { paintings: number };
 }
 
 export default function AdminArtistsClient({
@@ -21,42 +23,119 @@ export default function AdminArtistsClient({
   initialArtists: ArtistItem[];
 }) {
   const [artists, setArtists] = useState<ArtistItem[]>(initialArtists);
-  const [showModal, setShowModal] = useState(false);
+  
+  // Create / Edit modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingArtist, setEditingArtist] = useState<ArtistItem | null>(null);
+
   const [name, setName] = useState('');
-  const [specialty, setSpecialty] = useState('');
-  const [bio, setBio] = useState('');
+  const [specialtyUz, setSpecialtyUz] = useState('');
+  const [specialtyEn, setSpecialtyEn] = useState('');
+  const [bioUz, setBioUz] = useState('');
+  const [bioEn, setBioEn] = useState('');
+  const [photo, setPhoto] = useState('');
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const openCreateModal = () => {
+    setEditingArtist(null);
+    setName('');
+    setSpecialtyUz('');
+    setSpecialtyEn('');
+    setBioUz('');
+    setBioEn('');
+    setPhoto('');
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (artist: ArtistItem) => {
+    setEditingArtist(artist);
+    setName(artist.name);
+    setSpecialtyUz(artist.specialty_uz || artist.specialty_en || '');
+    setSpecialtyEn(artist.specialty_en || '');
+    setBioUz(artist.bio_uz || artist.bio_en || '');
+    setBioEn(artist.bio_en || '');
+    setPhoto(artist.photo || '');
+    setIsModalOpen(true);
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success && data.url) {
+        setPhoto(data.url);
+      } else {
+        alert(data.error || 'Rasm yuklashda xatolik yuz berdi');
+      }
+    } catch {
+      alert('Rasm yuklashda xatolik');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/artists', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          specialty_uz: specialty || 'Rassom',
-          specialty_en: specialty || 'Painter',
-          bio_uz: bio,
-          bio_en: bio,
-        }),
-      });
+      const payload = {
+        name,
+        specialty_uz: specialtyUz || 'Rassom',
+        specialty_en: specialtyEn || specialtyUz || 'Painter',
+        bio_uz: bioUz,
+        bio_en: bioEn || bioUz,
+        photo: photo || null,
+      };
 
-      const data = await res.json();
-      if (data.success && data.artist) {
-        setArtists((prev) => [
-          { ...data.artist, _count: { paintings: 0 } },
-          ...prev,
-        ]);
-        setShowModal(false);
-        setName('');
-        setSpecialty('');
-        setBio('');
+      if (editingArtist) {
+        // UPDATE (PUT)
+        const res = await fetch(`/api/admin/artists/${editingArtist.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (data.success && data.artist) {
+          setArtists((prev) =>
+            prev.map((a) => (a.id === editingArtist.id ? { ...a, ...data.artist } : a))
+          );
+          setIsModalOpen(false);
+        } else {
+          alert(data.error || 'Rassom ma\'lumotlarini yangilashda xatolik');
+        }
       } else {
-        alert(data.error || 'Rassom qo\'shishda xatolik yuz berdi');
+        // CREATE (POST)
+        const res = await fetch('/api/admin/artists', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (data.success && data.artist) {
+          setArtists((prev) => [
+            { ...data.artist, _count: { paintings: 0 } },
+            ...prev,
+          ]);
+          setIsModalOpen(false);
+        } else {
+          alert(data.error || 'Rassom qo\'shishda xatolik');
+        }
       }
     } catch {
       alert('Serverga bog\'lanishda xatolik');
@@ -88,12 +167,12 @@ export default function AdminArtistsClient({
             Rassomlar Boshqaruvi
           </h2>
           <p className="text-xs text-[#726861] mt-0.5">
-            Galereyada ro'yxatdan o'tgan ustalar va rassomlar ro'yxati
+            Galereyada ro'yxatdan o'tgan ustalar va rassomlar ro'yxati (PostgreSQL)
           </p>
         </div>
 
         <button
-          onClick={() => setShowModal(true)}
+          onClick={openCreateModal}
           className="px-4 py-2 bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold rounded-[3px] transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
@@ -109,9 +188,15 @@ export default function AdminArtistsClient({
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-[#BA4E25] text-white font-serif font-bold text-lg flex items-center justify-center">
-                  {a.initials || a.name.slice(0, 2).toUpperCase()}
-                </div>
+                {a.photo ? (
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[#E7E0D8]">
+                    <Image src={a.photo} alt={a.name} fill className="object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-[#BA4E25] text-white font-serif font-bold text-lg flex items-center justify-center">
+                    {a.initials || a.name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <h3 className="font-serif font-semibold text-lg text-[#281C18]">
                     {a.name}
@@ -122,13 +207,23 @@ export default function AdminArtistsClient({
                 </div>
               </div>
 
-              <button
-                onClick={() => handleDelete(a.id, a.name)}
-                className="p-1.5 text-[#8F7E73] hover:text-red-600 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                title="O'chirish"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {/* Action buttons (Edit & Delete) */}
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => openEditModal(a)}
+                  className="p-1.5 text-[#554740] hover:text-[#BA4E25] hover:bg-[#FAF4EC] rounded cursor-pointer"
+                  title="Tahrirlash"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleDelete(a.id, a.name)}
+                  className="p-1.5 text-[#8F7E73] hover:text-red-600 hover:bg-[#FAF4EC] rounded cursor-pointer"
+                  title="O'chirish"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <p className="text-xs text-[#5F534C] leading-relaxed line-clamp-3">
@@ -150,23 +245,23 @@ export default function AdminArtistsClient({
         ))}
       </div>
 
-      {/* Modal */}
-      {showModal && (
+      {/* Modal: Create or Edit Artist */}
+      {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#E7E0D8]">
             <div className="flex items-center justify-between border-b pb-3 border-[#E7E0D8]">
               <h3 className="font-serif text-lg font-bold text-[#281C18]">
-                Yangi Rassom Qo'shish
+                {editingArtist ? 'Rassomni Tahrirlash' : 'Yangi Rassom Qo\'shish'}
               </h3>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => setIsModalOpen(false)}
                 className="text-[#8F7E73] hover:text-[#281C18]"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreate} className="space-y-3">
+            <form onSubmit={handleSave} className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-[#6B5E55] mb-1">
                   Rassom Ism-Sharifi *
@@ -181,36 +276,81 @@ export default function AdminArtistsClient({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
-                  Mutaxassisligi (Specialty)
-                </label>
-                <input
-                  type="text"
-                  value={specialty}
-                  onChange={(e) => setSpecialty(e.target.value)}
-                  placeholder="Minyatura va Sharq manzaralari"
-                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                    Mutaxassisligi (UZ)
+                  </label>
+                  <input
+                    type="text"
+                    value={specialtyUz}
+                    onChange={(e) => setSpecialtyUz(e.target.value)}
+                    placeholder="Minyatura ustasi"
+                    className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                    Mutaxassisligi (EN)
+                  </label>
+                  <input
+                    type="text"
+                    value={specialtyEn}
+                    onChange={(e) => setSpecialtyEn(e.target.value)}
+                    placeholder="Miniature master"
+                    className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-[#6B5E55] mb-1">
-                  Tarjimai Hol (Bio)
+                  Tarjimai Hol (UZ)
                 </label>
                 <textarea
-                  rows={3}
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
+                  rows={2}
+                  value={bioUz}
+                  onChange={(e) => setBioUz(e.target.value)}
                   placeholder="Rassom hayoti va ijodiy yo'li..."
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] resize-none"
                 />
               </div>
 
+              {/* Photo Upload */}
+              <div>
+                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                  Rassom Fotosi
+                </label>
+                <div className="flex items-center gap-3">
+                  {photo && (
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[#E7E0D8] shrink-0">
+                      <Image src={photo} alt="Preview" fill className="object-cover" />
+                    </div>
+                  )}
+                  <label className="flex-1 border border-dashed border-[#D2C5BA] rounded p-2 text-center text-xs text-[#554740] hover:bg-[#FAF4EC] cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                      disabled={uploadingPhoto}
+                    />
+                    {uploadingPhoto ? (
+                      <span className="text-[#BA4E25]">Yuklanmoqda...</span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-1">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{photo ? 'Fotosuratni almashtirish' : 'Rasm yuklash'}</span>
+                      </span>
+                    )}
+                  </label>
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 border border-[#E7E0D8] text-xs font-semibold text-[#554740] rounded hover:bg-gray-50"
                 >
                   Bekor qilish
@@ -218,9 +358,9 @@ export default function AdminArtistsClient({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-[#BA4E25] text-white text-xs font-semibold rounded hover:bg-[#9C3E1B] disabled:opacity-50"
+                  className="px-4 py-2 bg-[#BA4E25] text-white text-xs font-semibold rounded hover:bg-[#9C3E1B] disabled:opacity-50 cursor-pointer"
                 >
-                  {loading ? 'Qo\'shilmoqda...' : 'Qo\'shish'}
+                  {loading ? 'Saqlanmoqda...' : editingArtist ? 'Saqlash' : 'Qo\'shish'}
                 </button>
               </div>
             </form>

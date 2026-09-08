@@ -256,6 +256,24 @@ export default function PaintingForm({
     }
   };
 
+  const handleDeletePainting = async () => {
+    if (!initialData?.id) return;
+    if (!confirm(`"${titleEn || 'Ushbu'}" kartinani o'chirishni tasdiqlaysizmi?`)) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/paintings/${initialData.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        router.push('/admin/paintings');
+      } else {
+        alert('O\'chirishda xatolik yuz berdi.');
+      }
+    } catch {
+      alert('Serverga bog\'lanishda xatolik.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -274,6 +292,17 @@ export default function PaintingForm({
           </div>
 
           <div className="flex items-center gap-3">
+            {!isNew && (
+              <button
+                type="button"
+                onClick={handleDeletePainting}
+                disabled={loading}
+                className="px-3.5 py-2 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-[3px] transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>O'chirish</span>
+              </button>
+            )}
             <Link
               href="/admin/paintings"
               className="px-4 py-2 border border-[#E7E0D8] bg-white text-xs font-semibold text-[#554740] rounded-[3px] hover:bg-[#FAF4EC] transition-colors"

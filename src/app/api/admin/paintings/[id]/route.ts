@@ -49,6 +49,7 @@ export async function PUT(request: Request, context: RouteContext) {
         discount_ends_at: body.discount_ends_at ? new Date(body.discount_ends_at) : null,
         is_sold: Boolean(body.is_sold),
         is_featured: Boolean(body.is_featured),
+        images: body.images || undefined,
         artist_id: body.artist_id,
         category_id: body.category_id,
       },

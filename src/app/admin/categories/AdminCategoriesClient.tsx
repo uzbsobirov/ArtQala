@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2, Pencil, X, Loader2 } from 'lucide-react';
 
 interface CategoryItem {
   id: string;
@@ -10,7 +10,7 @@ interface CategoryItem {
   name_en: string;
   name_ru: string;
   name_uz: string;
-  _count: { paintings: number };
+  _count?: { paintings: number };
 }
 
 export default function AdminCategoriesClient({
@@ -19,40 +19,83 @@ export default function AdminCategoriesClient({
   initialCategories: CategoryItem[];
 }) {
   const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
-  const [showModal, setShowModal] = useState(false);
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
+
   const [nameUz, setNameUz] = useState('');
   const [nameEn, setNameEn] = useState('');
   const [nameRu, setNameRu] = useState('');
+  const [slug, setSlug] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const openCreateModal = () => {
+    setEditingCategory(null);
+    setNameUz('');
+    setNameEn('');
+    setNameRu('');
+    setSlug('');
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (cat: CategoryItem) => {
+    setEditingCategory(cat);
+    setNameUz(cat.name_uz || '');
+    setNameEn(cat.name_en || '');
+    setNameRu(cat.name_ru || '');
+    setSlug(cat.slug || '');
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nameUz.trim() && !nameEn.trim()) return;
 
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name_uz: nameUz || nameEn,
-          name_en: nameEn || nameUz,
-          name_ru: nameRu || nameUz,
-        }),
-      });
+      const payload = {
+        name_uz: nameUz || nameEn,
+        name_en: nameEn || nameUz,
+        name_ru: nameRu || nameUz,
+        slug: slug.trim() || undefined,
+      };
 
-      const data = await res.json();
-      if (data.success && data.category) {
-        setCategories((prev) => [
-          ...prev,
-          { ...data.category, _count: { paintings: 0 } },
-        ]);
-        setShowModal(false);
-        setNameUz('');
-        setNameEn('');
-        setNameRu('');
+      if (editingCategory) {
+        // UPDATE (PUT)
+        const res = await fetch(`/api/admin/categories/${editingCategory.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (data.success && data.category) {
+          setCategories((prev) =>
+            prev.map((c) => (c.id === editingCategory.id ? { ...c, ...data.category } : c))
+          );
+          setIsModalOpen(false);
+        } else {
+          alert(data.error || 'Kategoriyani yangilashda xatolik');
+        }
       } else {
-        alert(data.error || 'Kategoriya qo\'shishda xatolik yuz berdi');
+        // CREATE (POST)
+        const res = await fetch('/api/admin/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (data.success && data.category) {
+          setCategories((prev) => [
+            ...prev,
+            { ...data.category, _count: { paintings: 0 } },
+          ]);
+          setIsModalOpen(false);
+        } else {
+          alert(data.error || 'Kategoriya qo\'shishda xatolik yuz berdi');
+        }
       }
     } catch {
       alert('Serverga bog\'lanishda xatolik');
@@ -84,12 +127,12 @@ export default function AdminCategoriesClient({
             Kategoriyalar Boshqaruvi
           </h2>
           <p className="text-xs text-[#726861] mt-0.5">
-            Galereya janrlari va mavzulari (saytdagi filtrlar uchun)
+            Galereya janrlari va mavzulari — sayt filtrlari uchun (PostgreSQL)
           </p>
         </div>
 
         <button
-          onClick={() => setShowModal(true)}
+          onClick={openCreateModal}
           className="px-4 py-2 bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold rounded-[3px] transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
@@ -122,13 +165,22 @@ export default function AdminCategoriesClient({
                   {c._count?.paintings || 0}
                 </td>
                 <td className="py-3.5 px-4 text-right">
-                  <button
-                    onClick={() => handleDelete(c.id, c.name_uz || c.name_en)}
-                    className="p-1.5 text-[#8F7E73] hover:text-red-600 rounded transition-colors cursor-pointer"
-                    title="O'chirish"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => openEditModal(c)}
+                      className="p-1.5 text-[#554740] hover:text-[#BA4E25] hover:bg-white rounded transition-colors cursor-pointer"
+                      title="Tahrirlash"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(c.id, c.name_uz || c.name_en)}
+                      className="p-1.5 text-[#8F7E73] hover:text-red-600 hover:bg-white rounded transition-colors cursor-pointer"
+                      title="O'chirish"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -136,23 +188,23 @@ export default function AdminCategoriesClient({
         </table>
       </div>
 
-      {/* Modal */}
-      {showModal && (
+      {/* Modal: Create or Edit Category */}
+      {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#E7E0D8]">
             <div className="flex items-center justify-between border-b pb-3 border-[#E7E0D8]">
               <h3 className="font-serif text-lg font-bold text-[#281C18]">
-                Yangi Kategoriya Qo'shish
+                {editingCategory ? 'Kategoriyani Tahrirlash' : 'Yangi Kategoriya Qo\'shish'}
               </h3>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => setIsModalOpen(false)}
                 className="text-[#8F7E73] hover:text-[#281C18]"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreate} className="space-y-3">
+            <form onSubmit={handleSave} className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-[#6B5E55] mb-1">
                   Kategoriya Nomi (O'zbekcha) *
@@ -193,10 +245,23 @@ export default function AdminCategoriesClient({
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                  Slug (URL identifikatori)
+                </label>
+                <input
+                  type="text"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  placeholder="silk-road-landscapes (bo'sh qoldirilsa avtomatik tuziladi)"
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                />
+              </div>
+
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 border border-[#E7E0D8] text-xs font-semibold text-[#554740] rounded hover:bg-gray-50"
                 >
                   Bekor qilish
@@ -204,9 +269,9 @@ export default function AdminCategoriesClient({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-[#BA4E25] text-white text-xs font-semibold rounded hover:bg-[#9C3E1B] disabled:opacity-50"
+                  className="px-4 py-2 bg-[#BA4E25] text-white text-xs font-semibold rounded hover:bg-[#9C3E1B] disabled:opacity-50 cursor-pointer"
                 >
-                  {loading ? 'Qo\'shilmoqda...' : 'Qo\'shish'}
+                  {loading ? 'Saqlanmoqda...' : editingCategory ? 'Saqlash' : 'Qo\'shish'}
                 </button>
               </div>
             </form>
