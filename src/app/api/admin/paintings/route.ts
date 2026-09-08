@@ -1,0 +1,75 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function GET() {
+  try {
+    const paintings = await prisma.painting.findMany({
+      include: {
+        artist: true,
+        category: true,
+      },
+      orderBy: { created_at: 'desc' },
+    });
+    return NextResponse.json({ success: true, paintings });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: 'Database error' }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const {
+      title_en,
+      title_ru,
+      title_uz,
+      description_en,
+      description_ru,
+      description_uz,
+      size,
+      technique_en,
+      technique_ru,
+      technique_uz,
+      year,
+      price,
+      discount_price,
+      discount_starts_at,
+      discount_ends_at,
+      is_sold,
+      is_featured,
+      images,
+      artist_id,
+      category_id,
+    } = body;
+
+    const newPainting = await prisma.painting.create({
+      data: {
+        title_en,
+        title_ru: title_ru || title_en,
+        title_uz: title_uz || title_en,
+        description_en,
+        description_ru: description_ru || description_en,
+        description_uz: description_uz || description_en,
+        size: size || '60 × 80 cm',
+        technique_en: technique_en || 'Oil on canvas',
+        technique_ru: technique_ru || 'Холст, масло',
+        technique_uz: technique_uz || "Moybo'yoq, polotno",
+        year: parseInt(year) || 2024,
+        price: parseFloat(price) || 0,
+        discount_price: discount_price ? parseFloat(discount_price) : null,
+        discount_starts_at: discount_starts_at ? new Date(discount_starts_at) : null,
+        discount_ends_at: discount_ends_at ? new Date(discount_ends_at) : null,
+        is_sold: Boolean(is_sold),
+        is_featured: Boolean(is_featured),
+        images: images || JSON.stringify(['/assets/p-arch.svg']),
+        artist_id,
+        category_id,
+      },
+    });
+
+    return NextResponse.json({ success: true, painting: newPainting });
+  } catch (error) {
+    console.error('Create painting error:', error);
+    return NextResponse.json({ success: false, error: 'Failed to create painting' }, { status: 500 });
+  }
+}

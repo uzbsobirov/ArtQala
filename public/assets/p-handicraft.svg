@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="ceramicBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F7EFE6"/>
+      <stop offset="100%" stop-color="#DECEBE"/>
+    </linearGradient>
+    <linearGradient id="vaseGlaze" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#429599"/>
+      <stop offset="50%" stop-color="#28696B"/>
+      <stop offset="100%" stop-color="#144345"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#ceramicBg)"/>
+  <!-- Shadow -->
+  <ellipse cx="200" cy="365" rx="90" ry="18" fill="#B59E8C" opacity="0.6"/>
+  <!-- Rishtan Ceramic Vase Body -->
+  <path d="M165 90 h70 v35 q45 30 45 95 v90 q0 45 -60 45 h-40 q-60 0 -60 -45 v-90 q0 -65 45 -95 z" fill="url(#vaseGlaze)"/>
+  <!-- Gold and Terracotta decorative rings -->
+  <path d="M140 180 h120" stroke="#DAA932" stroke-width="8"/>
+  <path d="M125 225 h150" stroke="#BA4E25" stroke-width="12"/>
+  <path d="M125 225 h150" stroke="#FAF4EC" stroke-width="2" stroke-dasharray="6 6"/>
+  <path d="M135 270 h130" stroke="#DAA932" stroke-width="8"/>
+  <!-- Suzani rosette ornament -->
+  <circle cx="200" cy="225" r="16" fill="#DAA932"/>
+  <circle cx="200" cy="225" r="8" fill="#BA4E25"/>
+</svg>

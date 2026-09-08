@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#194B54"/>
+      <stop offset="50%" stop-color="#367F82"/>
+      <stop offset="100%" stop-color="#EEDBC5"/>
+    </linearGradient>
+    <linearGradient id="domeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#56B9BD"/>
+      <stop offset="60%" stop-color="#28696B"/>
+      <stop offset="100%" stop-color="#174345"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#sky)"/>
+  <!-- Drum cylinder -->
+  <rect x="100" y="240" width="200" height="160" fill="#BA4E25"/>
+  <rect x="110" y="250" width="180" height="150" fill="#281C18"/>
+  <!-- Gur-e-Amir ribbed dome -->
+  <path d="M70 240 C70 110, 330 110, 330 240 Z" fill="url(#domeGrad)"/>
+  <!-- Rib lines -->
+  <path d="M100 240 C110 140, 200 110, 200 110" stroke="#8FE4E8" stroke-width="3" fill="none"/>
+  <path d="M140 240 C145 130, 200 110, 200 110" stroke="#8FE4E8" stroke-width="3" fill="none"/>
+  <path d="M200 240 L200 110" stroke="#DAA932" stroke-width="4"/>
+  <path d="M260 240 C255 130, 200 110, 200 110" stroke="#8FE4E8" stroke-width="3" fill="none"/>
+  <path d="M300 240 C290 140, 200 110, 200 110" stroke="#8FE4E8" stroke-width="3" fill="none"/>
+  <!-- Finial spire -->
+  <rect x="195" y="60" width="10" height="50" fill="#DAA932"/>
+  <circle cx="200" cy="55" r="14" fill="#DAA932"/>
+  <circle cx="200" cy="35" r="8" fill="#DAA932"/>
+</svg>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600&family=Work+Sans:wght@400;500;600&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    x-dc { display: block; }
+    body { margin: 0; font-family: 'Work Sans', system-ui, sans-serif; color: oklch(24% 0.02 40); background: oklch(97% 0.012 75); }
+    .shell { display: flex; min-height: 800px; }
+    .sidebar { width: 232px; background: oklch(19% 0.025 40); color: oklch(90% 0.01 70); display: flex; flex-direction: column; padding: 22px 0; flex-shrink: 0; }
+    .side-logo { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 20px; color: oklch(97% 0.012 75); padding: 0 22px 22px; border-bottom: 1px solid oklch(30% 0.02 40); margin-bottom: 12px; }
+    .side-logo span { color: oklch(76% 0.14 85); }
+    .side-item { display: flex; align-items: center; gap: 12px; padding: 11px 22px; font-size: 13.5px; color: oklch(78% 0.02 65); text-decoration: none; border-left: 3px solid transparent; }
+    .side-item.active { background: oklch(24% 0.03 40); color: oklch(97% 0.012 75); border-left: 3px solid oklch(70% 0.13 45); }
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar { height: 64px; border-bottom: 1px solid oklch(88% 0.02 70); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; background: oklch(99% 0.004 80); }
+    .topbar-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; }
+    .btn-primary { background: oklch(56% 0.15 40); color: white; font-size: 13px; font-weight: 600; padding: 10px 18px; border-radius: 4px; text-decoration: none; }
+    .content { padding: 28px; flex: 1; }
+    .toolbar { display: flex; gap: 10px; margin-bottom: 18px; align-items: center; }
+    .search { flex: 1; padding: 9px 14px; border-radius: 4px; border: 1px solid oklch(85% 0.02 70); font-size: 13px; background: white; color: oklch(45% 0.03 45); }
+    .select { padding: 9px 14px; border-radius: 4px; border: 1px solid oklch(85% 0.02 70); font-size: 13px; background: white; color: oklch(45% 0.03 45); }
+    .panel { background: oklch(99% 0.004 80); border: 1px solid oklch(88% 0.02 70); border-radius: 4px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; font-size: 11px; letter-spacing: 0.5px; color: oklch(50% 0.03 45); padding: 12px 14px; border-bottom: 1px solid oklch(88% 0.02 70); background: oklch(93% 0.02 70); }
+    td { padding: 10px 14px; border-bottom: 1px solid oklch(93% 0.02 70); vertical-align: middle; }
+    .thumb { width: 42px; height: 42px; border-radius: 3px; }
+    .price-old { text-decoration: line-through; color: oklch(60% 0.03 45); font-size: 12px; }
+    .price-new { color: oklch(56% 0.15 40); font-weight: 600; }
+    .badge { font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+    .badge.available { background: oklch(88% 0.1 145 / 0.5); color: oklch(38% 0.1 145); }
+    .badge.sold { background: oklch(88% 0.02 40 / 0.5); color: oklch(45% 0.03 45); }
+    .icon-btn { display: inline-flex; padding: 5px; border-radius: 4px; color: oklch(50% 0.03 45); }
+  </style>
+</helmet>
+<div class="shell">
+  <div class="sidebar">
+    <div class="side-logo">Art <span>Qala</span> Admin</div>
+    <a class="side-item" href="#">Dashboard</a>
+    <a class="side-item active" href="#">Paintings</a>
+    <a class="side-item" href="#">Artists</a>
+    <a class="side-item" href="#">Categories</a>
+    <a class="side-item" href="#">Discounts</a>
+    <a class="side-item" href="#">Inquiries</a>
+    <a class="side-item" href="#">Service Requests</a>
+    <a class="side-item" href="#">Customers</a>
+    <a class="side-item" href="#">Reviews</a>
+    <a class="side-item" href="#">Settings</a>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Paintings</div>
+      <a class="btn-primary" href="#">+ Add Painting</a>
+    </div>
+    <div class="content">
+      <div class="toolbar">
+        <input class="search" placeholder="Search by title or artist...">
+        <select class="select"><option>All categories</option><option>Historical</option><option>Portraits</option><option>Courtyards</option><option>Handicraft</option></select>
+        <select class="select"><option>All artists</option><option>Dilnoza Yusupova</option><option>Sardor Rakhimov</option></select>
+      </div>
+      <div class="panel">
+        <table>
+          <tr><th></th><th>TITLE</th><th>ARTIST</th><th>CATEGORY</th><th>PRICE</th><th>STATUS</th><th></th></tr>
+          <tr>
+            <td><div class="thumb" style="background: oklch(66% 0.1 50);"></div></td>
+            <td>Registon at Dusk</td><td>Dilnoza Yusupova</td><td>Historical</td>
+            <td><span class="price-old">$420</span> <span class="price-new">$357</span></td>
+            <td><span class="badge available">Available</span></td>
+            <td><a class="icon-btn" href="#">✎</a></td>
+          </tr>
+          <tr>
+            <td><div class="thumb" style="background: oklch(48% 0.09 195);"></div></td>
+            <td>Gur-e-Amir Sky</td><td>Bekzod Nurov</td><td>Historical</td>
+            <td><span class="price-new">$390</span></td>
+            <td><span class="badge available">Available</span></td>
+            <td><a class="icon-btn" href="#">✎</a></td>
+          </tr>
+          <tr>
+            <td><div class="thumb" style="background: oklch(56% 0.15 40);"></div></td>
+            <td>The Weaver</td><td>Gulnora Azimova</td><td>Portraits</td>
+            <td><span class="price-new">$260</span></td>
+            <td><span class="badge sold">Sold</span></td>
+            <td><a class="icon-btn" href="#">✎</a></td>
+          </tr>
+          <tr>
+            <td><div class="thumb" style="background: oklch(62% 0.08 200);"></div></td>
+            <td>Blue Suzani Vase</td><td>Jasur Tashkentov</td><td>Handicraft</td>
+            <td><span class="price-old">$180</span> <span class="price-new">$153</span></td>
+            <td><span class="badge available">Available</span></td>
+            <td><a class="icon-btn" href="#">✎</a></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700&family=Work+Sans:wght@500;600&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: oklch(97% 0.012 75); font-family: 'Work Sans', system-ui, sans-serif; padding: 40px; }
+    .heading { font-size: 12px; letter-spacing: 3px; color: oklch(52% 0.03 45); margin-bottom: 8px; }
+    .subheading { font-size: 12.5px; color: oklch(48% 0.03 45); margin-bottom: 24px; max-width: 760px; line-height: 1.6; }
+    .stage { display: flex; gap: 32px; }
+    .card { background: oklch(99% 0.004 80); border: 1px solid oklch(88% 0.02 70); border-radius: 4px; padding: 28px; display: flex; align-items: center; justify-content: center; flex: 1.5; }
+    .card.dark { background: oklch(19% 0.025 40); }
+    .note-card { flex: 1; display: flex; flex-direction: column; gap: 12px; justify-content: center; }
+    .note-title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 20px; color: oklch(24% 0.02 40); }
+    .note { font-size: 12.5px; line-height: 1.7; color: oklch(45% 0.03 45); }
+    .note b { color: oklch(24% 0.02 40); }
+  </style>
+</helmet>
+<div class="heading">LOGO — MINARET REFERENCE PASS</div>
+<div class="subheading">Redrawn the tower as an actual Central Asian minaret silhouette — tapering brick shaft, two glazed tile rings, a muqarnas (stalactite) cornice, a flared gallery/balcony, a short neck, a ribbed dome, and a spire with a finial — instead of a plain rectangle with a triangle roof.</div>
+<div class="stage">
+  <div class="card">
+    <svg width="480" height="320" viewBox="0 0 480 320">
+      <defs>
+        <pattern id="tileLight" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="14" height="14" fill="oklch(58% 0.15 40)"/>
+          <rect width="7" height="7" fill="oklch(66% 0.1 195)"/>
+          <rect x="7" y="7" width="7" height="7" fill="oklch(66% 0.1 195)"/>
+          <circle cx="7" cy="7" r="2.2" fill="oklch(97% 0.01 75)"/>
+          <rect width="14" height="14" fill="none" stroke="oklch(97% 0.01 75 / 0.5)" stroke-width="0.5"/>
+        </pattern>
+        <linearGradient id="goldLine" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="oklch(76% 0.14 85)" stop-opacity="0"/>
+          <stop offset="0.5" stop-color="oklch(76% 0.14 85)"/>
+          <stop offset="1" stop-color="oklch(76% 0.14 85)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+
+      <path d="M40,270 C90,225 140,300 210,255" fill="none" stroke="url(#goldLine)" stroke-width="2.2"/>
+      <path d="M280,60 C320,20 370,50 430,15" fill="none" stroke="url(#goldLine)" stroke-width="2.2"/>
+
+      <text x="30" y="82" font-family="Work Sans" font-weight="600" font-size="24" letter-spacing="6" fill="oklch(76% 0.14 85)">ART</text>
+
+      <text x="30" y="230" font-family="Cormorant Garamond" font-weight="700" font-size="118" fill="url(#tileLight)" stroke="oklch(24% 0.02 40)" stroke-width="0.6">Qal</text>
+
+      <g transform="translate(212,55)">
+        <path d="M8,170 C8,145 11,120 13,95 L47,95 C49,120 52,145 52,170 Z" fill="oklch(58% 0.15 40)" stroke="oklch(24% 0.02 40)" stroke-width="0.6"/>
+        <rect x="9" y="140" width="42" height="10" fill="url(#tileLight)"/>
+        <rect x="13" y="105" width="34" height="8" fill="url(#tileLight)"/>
+        <path d="M8,85 L8,90 L14,95 L20,89 L26,95 L32,89 L38,95 L44,89 L50,95 L52,90 L52,85 Z" fill="oklch(76% 0.14 85)" stroke="oklch(24% 0.02 40)" stroke-width="0.5"/>
+        <path d="M13,85 L4,68 L56,68 L47,85 Z" fill="url(#tileLight)" stroke="oklch(24% 0.02 40)" stroke-width="0.6"/>
+        <path d="M22,68 L24,40 L36,40 L38,68 Z" fill="oklch(58% 0.15 40)" stroke="oklch(24% 0.02 40)" stroke-width="0.5"/>
+        <path d="M24,40 C14,32 14,20 22,14 C26,10 34,10 38,14 C46,20 46,32 36,40 Z" fill="url(#tileLight)" stroke="oklch(24% 0.02 40)" stroke-width="0.6"/>
+        <path d="M30,26 L30,10" stroke="oklch(24% 0.02 40)" stroke-width="0.7" opacity="0.35"/>
+        <line x1="30" y1="14" x2="30" y2="-6" stroke="oklch(76% 0.14 85)" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="30" cy="-9" r="3.2" fill="oklch(76% 0.14 85)"/>
+      </g>
+
+      <text x="282" y="230" font-family="Cormorant Garamond" font-weight="700" font-size="118" fill="url(#tileLight)" stroke="oklch(24% 0.02 40)" stroke-width="0.6">a</text>
+    </svg>
+  </div>
+  <div class="card dark">
+    <svg width="480" height="320" viewBox="0 0 480 320">
+      <defs>
+        <pattern id="tileDark" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="14" height="14" fill="oklch(70% 0.13 45)"/>
+          <rect width="7" height="7" fill="oklch(70% 0.1 195)"/>
+          <rect x="7" y="7" width="7" height="7" fill="oklch(70% 0.1 195)"/>
+          <circle cx="7" cy="7" r="2.2" fill="oklch(97% 0.01 75)"/>
+          <rect width="14" height="14" fill="none" stroke="oklch(19% 0.02 40 / 0.5)" stroke-width="0.5"/>
+        </pattern>
+        <linearGradient id="goldLine2" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="oklch(80% 0.14 85)" stop-opacity="0"/>
+          <stop offset="0.5" stop-color="oklch(80% 0.14 85)"/>
+          <stop offset="1" stop-color="oklch(80% 0.14 85)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+
+      <path d="M40,270 C90,225 140,300 210,255" fill="none" stroke="url(#goldLine2)" stroke-width="2.2"/>
+      <path d="M280,60 C320,20 370,50 430,15" fill="none" stroke="url(#goldLine2)" stroke-width="2.2"/>
+
+      <text x="30" y="82" font-family="Work Sans" font-weight="600" font-size="24" letter-spacing="6" fill="oklch(80% 0.14 85)">ART</text>
+
+      <text x="30" y="230" font-family="Cormorant Garamond" font-weight="700" font-size="118" fill="url(#tileDark)" stroke="oklch(97% 0.012 75)" stroke-width="0.6">Qal</text>
+
+      <g transform="translate(212,55)">
+        <path d="M8,170 C8,145 11,120 13,95 L47,95 C49,120 52,145 52,170 Z" fill="oklch(70% 0.13 45)" stroke="oklch(97% 0.012 75)" stroke-width="0.6"/>
+        <rect x="9" y="140" width="42" height="10" fill="url(#tileDark)"/>
+        <rect x="13" y="105" width="34" height="8" fill="url(#tileDark)"/>
+        <path d="M8,85 L8,90 L14,95 L20,89 L26,95 L32,89 L38,95 L44,89 L50,95 L52,90 L52,85 Z" fill="oklch(80% 0.14 85)" stroke="oklch(97% 0.012 75)" stroke-width="0.5"/>
+        <path d="M13,85 L4,68 L56,68 L47,85 Z" fill="url(#tileDark)" stroke="oklch(97% 0.012 75)" stroke-width="0.6"/>
+        <path d="M22,68 L24,40 L36,40 L38,68 Z" fill="oklch(70% 0.13 45)" stroke="oklch(97% 0.012 75)" stroke-width="0.5"/>
+        <path d="M24,40 C14,32 14,20 22,14 C26,10 34,10 38,14 C46,20 46,32 36,40 Z" fill="url(#tileDark)" stroke="oklch(97% 0.012 75)" stroke-width="0.6"/>
+        <line x1="30" y1="14" x2="30" y2="-6" stroke="oklch(80% 0.14 85)" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="30" cy="-9" r="3.2" fill="oklch(80% 0.14 85)"/>
+      </g>
+
+      <text x="282" y="230" font-family="Cormorant Garamond" font-weight="700" font-size="118" fill="url(#tileDark)" stroke="oklch(97% 0.012 75)" stroke-width="0.6">a</text>
+    </svg>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

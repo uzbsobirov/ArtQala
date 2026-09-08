@@ -1,0 +1,203 @@
+'use client';
+
+import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
+
+interface AdminPaintingsClientProps {
+  initialPaintings: any[];
+  categories: any[];
+  artists: any[];
+}
+
+export default function AdminPaintingsClient({
+  initialPaintings,
+  categories,
+  artists,
+}: AdminPaintingsClientProps) {
+  const [paintings, setPaintings] = useState(initialPaintings);
+  const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [artistFilter, setArtistFilter] = useState('ALL');
+
+  const filtered = useMemo(() => {
+    return paintings.filter((p) => {
+      if (categoryFilter !== 'ALL' && p.category_id !== categoryFilter) return false;
+      if (artistFilter !== 'ALL' && p.artist_id !== artistFilter) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        const matchesTitle = p.title_en.toLowerCase().includes(q);
+        const matchesArtist = p.artist?.name.toLowerCase().includes(q);
+        return matchesTitle || matchesArtist;
+      }
+      return true;
+    });
+  }, [paintings, search, categoryFilter, artistFilter]);
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/admin/paintings/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setPaintings((prev) => prev.filter((p) => p.id !== id));
+      }
+    } catch (e) {
+      alert('Failed to delete painting');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Top action row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="font-serif text-3xl font-semibold text-[#281C18]">
+            Paintings
+          </h2>
+          <p className="text-xs text-[#726861] mt-0.5">
+            Manage your gallery collection, prices, and availability
+          </p>
+        </div>
+        <Link
+          href="/admin/paintings/new"
+          className="inline-flex items-center gap-2 bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-xs px-4 py-2.5 rounded-[3px] transition-all shadow-xs self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>+ Add Painting</span>
+        </Link>
+      </div>
+
+      {/* Filter and Search Bar matching AdminPaintings.png */}
+      <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-4 flex flex-col md:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by title or artist..."
+            className="w-full pl-9 pr-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] text-xs text-[#281C18] focus:outline-none focus:border-[#BA4E25]"
+          />
+        </div>
+
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] text-xs text-[#4D3F38] focus:outline-none focus:border-[#BA4E25]"
+        >
+          <option value="ALL">All categories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name_en}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={artistFilter}
+          onChange={(e) => setArtistFilter(e.target.value)}
+          className="px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] text-xs text-[#4D3F38] focus:outline-none focus:border-[#BA4E25]"
+        >
+          <option value="ALL">All artists</option>
+          {artists.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Paintings Table matching AdminPaintings.png */}
+      <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="bg-[#FAF4EC] border-b border-[#E7E0D8] text-[#8F8178] font-bold tracking-wider uppercase text-[10.5px]">
+                <th className="py-3 px-4">TITLE</th>
+                <th className="py-3 px-4">ARTIST</th>
+                <th className="py-3 px-4">CATEGORY</th>
+                <th className="py-3 px-4">PRICE</th>
+                <th className="py-3 px-4">STATUS</th>
+                <th className="py-3 px-4 text-right">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F0EAE1]">
+              {filtered.map((p) => {
+                let thumb = '/assets/p-arch.svg';
+                try {
+                  const imgs = JSON.parse(p.images);
+                  if (imgs.length > 0) thumb = imgs[0];
+                } catch {}
+
+                const hasDiscount = !!p.discount_price && p.discount_price < p.price;
+
+                return (
+                  <tr key={p.id} className="hover:bg-[#FAF4EC]/40 transition-colors">
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-[2px] overflow-hidden relative border border-[#E7E0D8] shrink-0 bg-[#F4ECE1]">
+                          <Image src={thumb} alt={p.title_en} fill className="object-cover" />
+                        </div>
+                        <span className="font-semibold text-[#281C18] text-sm">
+                          {p.title_en}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-[#554740]">{p.artist?.name}</td>
+                    <td className="py-3 px-4 text-[#726861]">{p.category?.name_en}</td>
+                    <td className="py-3 px-4">
+                      {hasDiscount ? (
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="line-through text-[#9E9086] text-[11px]">
+                            ${p.price}
+                          </span>
+                          <span className="font-bold text-[#BA4E25] text-xs">
+                            ${p.discount_price}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="font-bold text-[#BA4E25]">${p.price}</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      {p.is_sold ? (
+                        <span className="bg-[#E7DFD9] text-[#7A6B62] text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
+                          Sold
+                        </span>
+                      ) : (
+                        <span className="bg-[#DCFCE7] text-[#16A34A] text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
+                          Available
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/admin/paintings/${p.id}`}
+                          className="p-1.5 text-[#554740] hover:text-[#BA4E25] transition-colors rounded hover:bg-[#FAF4EC]"
+                          title="Edit painting"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(p.id, p.title_en)}
+                          className="p-1.5 text-[#554740] hover:text-[#C62828] transition-colors rounded hover:bg-[#FAF4EC]"
+                          title="Delete painting"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

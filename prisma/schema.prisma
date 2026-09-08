@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Painting {
+  id               String      @id @default(cuid())
+  title_en         String
+  title_ru         String
+  title_uz         String
+  description_en   String?
+  description_ru   String?
+  description_uz   String?
+  size             String
+  technique_en     String
+  technique_ru     String?
+  technique_uz     String?
+  year             Int
+  price            Float       // Original base price in USD
+  discount_price   Float?      // Computed or manual discount price
+  discount_starts_at DateTime?
+  discount_ends_at   DateTime?
+  is_sold          Boolean     @default(false)
+  is_featured      Boolean     @default(false)
+  images           String      // JSON array of image URLs/paths
+  views_count      Int         @default(0)
+
+  artist_id        String
+  artist           Artist      @relation(fields: [artist_id], references: [id], onDelete: Cascade)
+
+  category_id      String
+  category         Category    @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  inquiries        Inquiry[]
+  reviews          Review[]
+  wishlist_items   WishlistItem[]
+
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
+}
+
+model Artist {
+  id           String     @id @default(cuid())
+  name         String
+  photo        String?
+  initials     String?
+  bio_en       String
+  bio_ru       String
+  bio_uz       String
+  specialty_en String
+  specialty_ru String
+  specialty_uz String
+
+  paintings    Painting[]
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+}
+
+model Category {
+  id         String     @id @default(cuid())
+  slug       String     @unique
+  name_en    String
+  name_ru    String
+  name_uz    String
+
+  paintings  Painting[]
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+}
+
+model Discount {
+  id         String    @id @default(cuid())
+  scope      String    // SITE, CATEGORY, ARTIST, PAINTING
+  target_id  String?   // category_id, artist_id, or painting_id (null for SITE)
+  percent    Float     // e.g. 15.0
+  starts_at  DateTime?
+  ends_at    DateTime?
+  is_active  Boolean   @default(true)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+}
+
+model User {
+  id             String           @id @default(cuid())
+  name           String
+  email          String           @unique
+  password_hash  String?
+  country        String?
+  role           String           @default("USER") // USER, ADMIN
+  email_verified Boolean          @default(false)
+  auth_provider  String           @default("EMAIL") // EMAIL, GOOGLE, APPLE
+
+  inquiries        Inquiry[]
+  service_requests ServiceRequest[]
+  reviews          Review[]
+  wishlist_items   WishlistItem[]
+
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
+}
+
+model Inquiry {
+  id           String    @id @default(cuid())
+  user_id      String?
+  user         User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  guest_name   String?
+  guest_email  String?
+  guest_phone  String?
+
+  painting_id  String
+  painting     Painting  @relation(fields: [painting_id], references: [id], onDelete: Cascade)
+
+  message      String
+  status       String    @default("NEW") // NEW, IN_PROGRESS, ANSWERED, COMPLETED
+  admin_reply  String?
+
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+}
+
+model ServiceRequest {
+  id            String    @id @default(cuid())
+  user_id       String?
+  user          User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  guest_name    String
+  guest_contact String    // Email or Telegram
+  service_type  String    // MURAL, CERAMICS, CUSTOM
+  description   String
+  status        String    @default("NEW") // NEW, IN_PROGRESS, COMPLETED
+  admin_notes   String?
+
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+}
+
+model Review {
+  id          String    @id @default(cuid())
+  user_id     String?
+  user        User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  author_name String
+  painting_id String?
+  painting    Painting? @relation(fields: [painting_id], references: [id], onDelete: SetNull)
+
+  rating      Int       @default(5)
+  text        String
+  is_approved Boolean   @default(true)
+
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+}
+
+model WishlistItem {
+  id          String   @id @default(cuid())
+  user_id     String
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  painting_id String
+  painting    Painting @relation(fields: [painting_id], references: [id], onDelete: Cascade)
+
+  created_at  DateTime @default(now())
+
+  @@unique([user_id, painting_id])
+}
+
+model OtpVerification {
+  id         String   @id @default(cuid())
+  email      String
+  code       String
+  expires_at DateTime
+  created_at DateTime @default(now())
+}

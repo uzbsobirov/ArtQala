@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Work+Sans:wght@400;500;600&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    .ftr {
+      font-family: 'Work Sans', system-ui, sans-serif;
+      background: oklch(24% 0.02 40);
+      color: oklch(90% 0.01 70);
+      padding: 48px 56px 24px;
+    }
+    .ftr-top { display: flex; justify-content: space-between; gap: 40px; flex-wrap: wrap; padding-bottom: 32px; border-bottom: 1px solid oklch(35% 0.02 40); }
+    .ftr-brand { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 24px; color: oklch(97% 0.012 75); }
+    .ftr-sub { font-size: 13px; color: oklch(70% 0.02 60); margin-top: 8px; max-width: 280px; line-height: 1.6; }
+    .ftr-col { display: flex; flex-direction: column; gap: 10px; }
+    .ftr-heading { font-size: 12px; letter-spacing: 2px; color: oklch(62% 0.08 200); margin-bottom: 6px; }
+    .ftr-link { font-size: 13px; color: oklch(88% 0.01 70); text-decoration: none; }
+    .ftr-bottom { display: flex; justify-content: space-between; padding-top: 20px; font-size: 12px; color: oklch(60% 0.02 60); flex-wrap: wrap; gap: 8px; }
+    a { color: oklch(90% 0.01 70); }
+    a:hover { color: oklch(62% 0.08 200); }
+  </style>
+</helmet>
+<div class="ftr">
+  <div class="ftr-top">
+    <div style="flex: 2; min-width: 220px;">
+      <img src="logo.png" alt="Art Qala" style="height: 52px; width: auto; display: block;">
+      <div class="ftr-sub">A gallery in the heart of Uzbekistan, sharing paintings of our monuments, our people and our craft with the world.</div>
+    </div>
+    <div class="ftr-col">
+      <div class="ftr-heading">VISIT</div>
+      <a class="ftr-link" href="#">4 Registon Street, Samarkand</a>
+      <a class="ftr-link" href="#">Open daily, 10:00 – 19:00</a>
+    </div>
+    <div class="ftr-col">
+      <div class="ftr-heading">CONTACT</div>
+      <a class="ftr-link" href="#">+998 90 123 45 67</a>
+      <a class="ftr-link" href="#">Telegram · @artqala</a>
+      <a class="ftr-link" href="#">Instagram · @artqala.gallery</a>
+    </div>
+    <div class="ftr-col">
+      <div class="ftr-heading">EXPLORE</div>
+      <a class="ftr-link" href="#">Gallery</a>
+      <a class="ftr-link" href="#">Artists</a>
+      <a class="ftr-link" href="#">Services</a>
+    </div>
+  </div>
+  <div class="ftr-bottom">
+    <span>© 2026 Art Qala Gallery. All rights reserved.</span>
+    <span>EN · RU · UZ</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

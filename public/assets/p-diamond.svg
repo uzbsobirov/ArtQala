@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+  <rect width="400" height="400" fill="#F4ECE1"/>
+  <!-- Uzbek Ikat Diamonds Grid Pattern -->
+  <g transform="translate(65, 65)">
+    <!-- Row 1 -->
+    <rect x="0" y="0" width="60" height="60" rx="4" transform="rotate(45 30 30)" fill="#BA4E25"/>
+    <rect x="105" y="0" width="60" height="60" rx="4" transform="rotate(45 135 30)" fill="#429599"/>
+    <rect x="210" y="0" width="60" height="60" rx="4" transform="rotate(45 240 30)" fill="#DAA932"/>
+    
+    <!-- Row 2 -->
+    <rect x="0" y="105" width="60" height="60" rx="4" transform="rotate(45 30 135)" fill="#429599"/>
+    <rect x="105" y="105" width="60" height="60" rx="4" transform="rotate(45 135 135)" fill="#DAA932"/>
+    <rect x="210" y="105" width="60" height="60" rx="4" transform="rotate(45 240 135)" fill="#BA4E25"/>
+    
+    <!-- Row 3 -->
+    <rect x="0" y="210" width="60" height="60" rx="4" transform="rotate(45 30 240)" fill="#DAA932"/>
+    <rect x="105" y="210" width="60" height="60" rx="4" transform="rotate(45 135 240)" fill="#BA4E25"/>
+    <rect x="210" y="210" width="60" height="60" rx="4" transform="rotate(45 240 240)" fill="#429599"/>
+  </g>
+</svg>

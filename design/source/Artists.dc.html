@@ -1,0 +1,169 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600&family=Work+Sans:wght@400;500;600&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: oklch(97% 0.012 75); font-family: 'Work Sans', system-ui, sans-serif; color: oklch(24% 0.02 40); }
+    a { color: oklch(56% 0.15 40); }
+    a:hover { color: oklch(46% 0.15 38); }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 56px; }
+    .page-head { padding: 56px 0 40px; }
+    .eyebrow { font-size: 12px; letter-spacing: 3px; color: oklch(62% 0.08 200); font-weight: 600; }
+    .h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 40px; margin: 10px 0 10px; }
+    .lede { font-size: 14.5px; line-height: 1.7; color: oklch(45% 0.03 45); max-width: 560px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; padding-bottom: 84px; }
+    .artist-card {
+      background: oklch(99% 0.004 80); border: 1px solid oklch(88% 0.02 70); border-radius: 3px; padding: 28px;
+      display: flex; flex-direction: column; gap: 14px;
+      transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease;
+    }
+    .artist-card:hover { transform: translateY(-5px); box-shadow: 0 20px 36px -20px oklch(24% 0.02 40 / 0.3); border-color: oklch(56% 0.15 40 / 0.4); }
+    .avatar-row { display: flex; align-items: center; gap: 14px; }
+    .avatar { width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; color: oklch(99% 0.004 80); flex-shrink: 0; transition: transform .4s cubic-bezier(.2,.8,.2,1); }
+    .artist-card:hover .avatar { transform: scale(1.08) rotate(-4deg); }
+    .a-name { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 20px; }
+    .a-role { font-size: 12px; color: oklch(62% 0.08 200); font-weight: 600; letter-spacing: 0.5px; }
+    .a-bio { font-size: 13.5px; line-height: 1.65; color: oklch(45% 0.03 45); }
+    .thumbs { display: flex; gap: 8px; }
+    .thumb { flex: 1; aspect-ratio: 1/1; border-radius: 2px; overflow: hidden; border: 1px solid oklch(88% 0.02 70); }
+    .thumb-inner { width: 100%; height: 100%; transition: transform .5s ease; }
+    .thumb:hover .thumb-inner { transform: scale(1.12); }
+    .view-link { font-size: 13px; font-weight: 600; margin-top: auto; }
+
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
+    .reveal.in { opacity: 1; transform: translateY(0); }
+    .grid-3 > .reveal:nth-child(3n+1) { transition-delay: 0s; }
+    .grid-3 > .reveal:nth-child(3n+2) { transition-delay: .1s; }
+    .grid-3 > .reveal:nth-child(3n+3) { transition-delay: .2s; }
+  </style>
+</helmet>
+
+<dc-import name="Header" active="artists" hint-size="100%,76px"></dc-import>
+
+<div class="wrap">
+  <div class="page-head">
+    <div class="eyebrow">THE PEOPLE BEHIND THE WORK</div>
+    <div class="h1">Artists</div>
+    <div class="lede">Art Qala represents a small circle of painters and craftspeople from Samarkand and beyond. Every canvas in the gallery is signed, and every artist has a story.</div>
+  </div>
+
+  <div class="grid-3">
+    <div class="artist-card reveal">
+      <div class="avatar-row">
+        <div class="avatar" style="background: oklch(56% 0.15 40);">DY</div>
+        <div>
+          <div class="a-name">Dilnoza Yusupova</div>
+          <div class="a-role">HISTORICAL &amp; ARCHITECTURE</div>
+        </div>
+      </div>
+      <div class="a-bio">Paints Samarkand's monuments at golden hour. Trained at the Tashkent State Art Institute; with the gallery since 2019.</div>
+      <div class="thumbs">
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="arch" hint-size="100%,100%"></dc-import></div></div>
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="dome" hint-size="100%,100%"></dc-import></div></div>
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="courtyard" hint-size="100%,100%"></dc-import></div></div>
+      </div>
+      <a class="view-link" href="#">View works →</a>
+    </div>
+
+    <div class="artist-card reveal">
+      <div class="avatar-row">
+        <div class="avatar" style="background: oklch(62% 0.08 200);">SR</div>
+        <div>
+          <div class="a-name">Sardor Rakhimov</div>
+          <div class="a-role">PORTRAITS &amp; COURTYARDS</div>
+        </div>
+      </div>
+      <div class="a-bio">Known for warm, intimate portraits of elders and everyday courtyard life across the old city.</div>
+      <div class="thumbs">
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="portrait" hint-size="100%,100%"></dc-import></div></div>
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="courtyard" hint-size="100%,100%"></dc-import></div></div>
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="arch" hint-size="100%,100%"></dc-import></div></div>
+      </div>
+      <a class="view-link" href="#">View works →</a>
+    </div>
+
+    <div class="artist-card reveal">
+      <div class="avatar-row">
+        <div class="avatar" style="background: oklch(66% 0.1 50);">GA</div>
+        <div>
+          <div class="a-name">Gulnora Azimova</div>
+          <div class="a-role">TEXTILE &amp; HANDICRAFT</div>
+        </div>
+      </div>
+      <div class="a-bio">Brings ikat and suzani motifs into oil and gouache. Also leads the gallery's ceramics workshop.</div>
+      <div class="thumbs">
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="diamond" hint-size="100%,100%"></dc-import></div></div>
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="handicraft" hint-size="100%,100%"></dc-import></div></div>
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="portrait" hint-size="100%,100%"></dc-import></div></div>
+      </div>
+      <a class="view-link" href="#">View works →</a>
+    </div>
+
+    <div class="artist-card reveal">
+      <div class="avatar-row">
+        <div class="avatar" style="background: oklch(48% 0.13 42);">BN</div>
+        <div>
+          <div class="a-name">Bekzod Nurov</div>
+          <div class="a-role">HISTORICAL MONUMENTS</div>
+        </div>
+      </div>
+      <div class="a-bio">Focuses on domes and skies — Gur-e-Amir, Bibi-Khanym and the mausoleums of the Shah-i-Zinda.</div>
+      <div class="thumbs">
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="dome" hint-size="100%,100%"></dc-import></div></div>
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="arch" hint-size="100%,100%"></dc-import></div></div>
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="dome" hint-size="100%,100%"></dc-import></div></div>
+      </div>
+      <a class="view-link" href="#">View works →</a>
+    </div>
+
+    <div class="artist-card reveal">
+      <div class="avatar-row">
+        <div class="avatar" style="background: oklch(56% 0.15 40);">JT</div>
+        <div>
+          <div class="a-name">Jasur Tashkentov</div>
+          <div class="a-role">CERAMICS &amp; OBJECTS</div>
+        </div>
+      </div>
+      <div class="a-bio">Hand-throws and paints ceramic vases and tableware inspired by Rishtan and Gijduvan traditions.</div>
+      <div class="thumbs">
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="handicraft" hint-size="100%,100%"></dc-import></div></div>
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="diamond" hint-size="100%,100%"></dc-import></div></div>
+        <div class="thumb"><div class="thumb-inner"><dc-import name="PaintingArt" variant="handicraft" hint-size="100%,100%"></dc-import></div></div>
+      </div>
+      <a class="view-link" href="#">View works →</a>
+    </div>
+
+    <div class="artist-card reveal" style="justify-content: center; align-items: flex-start;">
+      <div class="a-name" style="font-size: 22px;">Join the gallery</div>
+      <div class="a-bio">Are you a painter or ceramicist based in Uzbekistan? We are always looking for new voices to represent.</div>
+      <a class="view-link" href="#">Submit your portfolio →</a>
+    </div>
+  </div>
+</div>
+
+<dc-import name="Footer" hint-size="100%,260px"></dc-import>
+
+</x-dc>
+<script data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    const els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach((el) => el.classList.add('in')); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.15 });
+    els.forEach((el) => io.observe(el));
+  }
+}
+</script>
+</body>
+</html>

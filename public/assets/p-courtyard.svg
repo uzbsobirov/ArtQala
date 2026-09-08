@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="warmSun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F7E6CE"/>
+      <stop offset="100%" stop-color="#D9A372"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#warmSun)"/>
+  <!-- Sunlit courtyard wall -->
+  <rect x="0" y="240" width="400" height="160" fill="#9C4424"/>
+  <polygon points="0,240 400,240 400,260 0,260" fill="#BA4E25"/>
+  <!-- Ayvan wooden colonnade & roof -->
+  <rect x="30" y="70" width="340" height="24" fill="#522D1D"/>
+  <rect x="50" y="94" width="16" height="146" fill="#6A3B26"/>
+  <rect x="192" y="94" width="16" height="146" fill="#6A3B26"/>
+  <rect x="334" y="94" width="16" height="146" fill="#6A3B26"/>
+  <!-- Carved pillar capitals -->
+  <polygon points="40,94 76,94 65,110 51,110" fill="#DAA932"/>
+  <polygon points="182,94 218,94 207,110 193,110" fill="#DAA932"/>
+  <polygon points="324,94 360,94 349,110 335,110" fill="#DAA932"/>
+  <!-- Turquoise painted door -->
+  <path d="M100 240 V150 A30 30 0 0 1 160 150 V240 Z" fill="#429599"/>
+  <path d="M108 240 V155 A22 22 0 0 1 152 155 V240 Z" fill="#296A6D"/>
+  <!-- Clay pots with geraniums -->
+  <path d="M250 240 h30 l-6 24 h-18 z" fill="#BA4E25"/>
+  <circle cx="265" cy="235" r="12" fill="#2E6B34"/>
+  <circle cx="260" cy="230" r="5" fill="#E24646"/>
+  <circle cx="270" cy="232" r="4" fill="#E24646"/>
+</svg>

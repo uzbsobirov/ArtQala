@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Work+Sans:wght@400;500;600&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: oklch(97% 0.012 75); font-family: 'Work Sans', system-ui, sans-serif; color: oklch(24% 0.02 40); padding: 40px; }
+    .heading { font-size: 12px; letter-spacing: 3px; color: oklch(52% 0.03 45); margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+    .opt { background: oklch(99% 0.004 80); border: 1px solid oklch(88% 0.02 70); border-radius: 4px; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+    .opt-label { font-size: 11px; letter-spacing: 1.5px; color: oklch(56% 0.15 40); font-weight: 600; }
+    .swatch-light, .swatch-dark { border-radius: 3px; display: flex; align-items: center; justify-content: center; padding: 28px 16px; }
+    .swatch-light { background: oklch(97% 0.012 75); border: 1px solid oklch(90% 0.02 70); }
+    .swatch-dark { background: oklch(19% 0.025 40); }
+    .note { font-size: 12px; line-height: 1.6; color: oklch(48% 0.03 45); }
+  </style>
+</helmet>
+<div class="heading">LOGO CONCEPTS — TERRACOTTA / TURQUOISE / GOLD-ACCENT PALETTE</div>
+<div class="grid">
+
+  <div class="opt">
+    <div class="opt-label">OPTION A — ARCH WORDMARK</div>
+    <div class="swatch-light">
+      <svg width="200" height="80" viewBox="0 0 200 80">
+        <path d="M18 62 V38 A16 16 0 0 1 50 38 V62" fill="none" stroke="oklch(56% 0.15 40)" stroke-width="3.4" stroke-linecap="round"/>
+        <circle cx="34" cy="30" r="3.4" fill="oklch(70% 0.14 82)"/>
+        <text x="66" y="46" font-family="Cormorant Garamond" font-weight="600" font-size="30" fill="oklch(24% 0.02 40)">Art Qala</text>
+        <line x1="66" y1="56" x2="182" y2="56" stroke="oklch(70% 0.14 82)" stroke-width="1.6"/>
+      </svg>
+    </div>
+    <div class="swatch-dark">
+      <svg width="200" height="80" viewBox="0 0 200 80">
+        <path d="M18 62 V38 A16 16 0 0 1 50 38 V62" fill="none" stroke="oklch(70% 0.13 45)" stroke-width="3.4" stroke-linecap="round"/>
+        <circle cx="34" cy="30" r="3.4" fill="oklch(78% 0.14 82)"/>
+        <text x="66" y="46" font-family="Cormorant Garamond" font-weight="600" font-size="30" fill="oklch(97% 0.012 75)">Art Qala</text>
+        <line x1="66" y1="56" x2="182" y2="56" stroke="oklch(78% 0.14 82)" stroke-width="1.6"/>
+      </svg>
+    </div>
+    <div class="note">A single arch (Registon silhouette) reading as an "A", paired with a refined serif wordmark and a thin gold rule — quiet, editorial, works small.</div>
+  </div>
+
+  <div class="opt">
+    <div class="opt-label">OPTION B — IKAT MEDALLION</div>
+    <div class="swatch-light">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <circle cx="70" cy="70" r="62" fill="none" stroke="oklch(56% 0.15 40)" stroke-width="2"/>
+        <circle cx="70" cy="70" r="54" fill="none" stroke="oklch(70% 0.14 82)" stroke-width="1"/>
+        <g transform="translate(70,70)">
+          <rect x="-14" y="-14" width="28" height="28" rx="3" transform="rotate(45)" fill="oklch(56% 0.15 40)"/>
+          <rect x="-8" y="-8" width="16" height="16" rx="2" transform="rotate(45)" fill="oklch(62% 0.08 200)"/>
+        </g>
+        <text x="70" y="112" text-anchor="middle" font-family="Work Sans" font-weight="600" font-size="10.5" letter-spacing="2.5" fill="oklch(24% 0.02 40)">ART QALA</text>
+        <path id="topArc" d="M20,40 A54,54 0 0 1 120,40" fill="none"/>
+      </svg>
+    </div>
+    <div class="swatch-dark">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <circle cx="70" cy="70" r="62" fill="none" stroke="oklch(70% 0.13 45)" stroke-width="2"/>
+        <circle cx="70" cy="70" r="54" fill="none" stroke="oklch(78% 0.14 82)" stroke-width="1"/>
+        <g transform="translate(70,70)">
+          <rect x="-14" y="-14" width="28" height="28" rx="3" transform="rotate(45)" fill="oklch(70% 0.13 45)"/>
+          <rect x="-8" y="-8" width="16" height="16" rx="2" transform="rotate(45)" fill="oklch(66% 0.09 195)"/>
+        </g>
+        <text x="70" y="112" text-anchor="middle" font-family="Work Sans" font-weight="600" font-size="10.5" letter-spacing="2.5" fill="oklch(97% 0.012 75)">ART QALA</text>
+      </svg>
+    </div>
+    <div class="note">A round seal/medallion built from a nested ikat diamond — reads well as a small app icon or wax-seal stamp on packaging and certificates.</div>
+  </div>
+
+  <div class="opt">
+    <div class="opt-label">OPTION C — DOME + SCRIPT</div>
+    <div class="swatch-light">
+      <svg width="210" height="90" viewBox="0 0 210 90">
+        <path d="M20 66 V44 A22 20 0 0 1 62 44 V66 Z" fill="oklch(56% 0.15 40)"/>
+        <path d="M32 44 A10 12 0 0 1 50 44 Z" fill="oklch(62% 0.08 200)"/>
+        <rect x="38" y="22" width="6" height="16" fill="oklch(56% 0.15 40)"/>
+        <circle cx="41" cy="18" r="4" fill="oklch(70% 0.14 82)"/>
+        <text x="78" y="40" font-family="Cormorant Garamond" font-weight="600" font-style="italic" font-size="26" fill="oklch(24% 0.02 40)">Art</text>
+        <text x="78" y="68" font-family="Cormorant Garamond" font-weight="600" font-size="30" fill="oklch(24% 0.02 40)">Qala</text>
+      </svg>
+    </div>
+    <div class="swatch-dark">
+      <svg width="210" height="90" viewBox="0 0 210 90">
+        <path d="M20 66 V44 A22 20 0 0 1 62 44 V66 Z" fill="oklch(70% 0.13 45)"/>
+        <path d="M32 44 A10 12 0 0 1 50 44 Z" fill="oklch(66% 0.09 195)"/>
+        <rect x="38" y="22" width="6" height="16" fill="oklch(70% 0.13 45)"/>
+        <circle cx="41" cy="18" r="4" fill="oklch(78% 0.14 82)"/>
+        <text x="78" y="40" font-family="Cormorant Garamond" font-weight="600" font-style="italic" font-size="26" fill="oklch(97% 0.012 75)">Art</text>
+        <text x="78" y="68" font-family="Cormorant Garamond" font-weight="600" font-size="30" fill="oklch(97% 0.012 75)">Qala</text>
+      </svg>
+    </div>
+    <div class="note">A small gilded dome icon beside a two-line script/serif pairing ("Art" italic, "Qala" upright) — warmer and more decorative, closer in spirit to your current mark.</div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

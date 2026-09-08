@@ -1,0 +1,20 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1280, "h": 2050 },
+    { "file": "Gallery.dc.html", "x": 1400, "y": 0, "w": 1280, "h": 1500 },
+    { "file": "Artists.dc.html", "x": 2800, "y": 0, "w": 1280, "h": 1600 },
+    { "file": "Services.dc.html", "x": 4200, "y": 0, "w": 1280, "h": 1750 },
+    { "file": "Contact.dc.html", "x": 5600, "y": 0, "w": 1280, "h": 1150 },
+    { "file": "Header.dc.html", "x": 0, "y": 2200, "w": 1280, "h": 90 },
+    { "file": "Footer.dc.html", "x": 1400, "y": 2200, "w": 1280, "h": 280 },
+    { "file": "PaintingCard.dc.html", "x": 2800, "y": 2200, "w": 320, "h": 320 },
+    { "file": "PaintingArt.dc.html", "x": 3200, "y": 2200, "w": 320, "h": 320 },
+    { "file": "Logo.dc.html", "x": 3700, "y": 2200, "w": 900, "h": 520 },
+    { "file": "LogoDetailed.dc.html", "x": 4700, "y": 2200, "w": 980, "h": 460 },
+    { "file": "AdminDashboard.dc.html", "x": 0, "y": 2820, "w": 1280, "h": 900 },
+    { "file": "AdminPaintings.dc.html", "x": 1400, "y": 2820, "w": 1280, "h": 900 },
+    { "file": "AdminPaintingForm.dc.html", "x": 2800, "y": 2820, "w": 1280, "h": 900 },
+    { "file": "AdminInquiries.dc.html", "x": 4200, "y": 2820, "w": 1280, "h": 900 }
+  ],
+  "launch": { "view": "focused", "file": "AdminDashboard.dc.html" }
+}

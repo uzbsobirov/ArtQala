@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    .frame { width: 100%; height: 100%; overflow: hidden; display: block; }
+    svg { display: block; width: 100%; height: 100%; }
+  </style>
+</helmet>
+<div class="frame" data-props='{"$preview":{"width":320,"height":320}}'>
+  <sc-if value="{{isArch}}" hint-placeholder-val="{{true}}">
+    <svg viewBox="0 0 320 320" preserveAspectRatio="xMidYMid slice">
+      <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="oklch(78% 0.06 210)"/><stop offset="1" stop-color="oklch(90% 0.03 90)"/>
+      </linearGradient></defs>
+      <rect width="320" height="320" fill="url(#g1)"/>
+      <path d="M60 320 V180 A100 100 0 0 1 260 180 V320 Z" fill="oklch(56% 0.15 40)"/>
+      <path d="M90 320 V190 A70 70 0 0 1 230 190 V320 Z" fill="oklch(90% 0.03 90)"/>
+      <circle cx="160" cy="150" r="14" fill="oklch(62% 0.08 200)"/>
+      <rect x="20" y="300" width="280" height="20" fill="oklch(40% 0.03 45)"/>
+    </svg>
+  </sc-if>
+  <sc-if value="{{isDome}}" hint-placeholder-val="{{false}}">
+    <svg viewBox="0 0 320 320" preserveAspectRatio="xMidYMid slice">
+      <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="oklch(62% 0.08 200)"/><stop offset="1" stop-color="oklch(85% 0.05 95)"/>
+      </linearGradient></defs>
+      <rect width="320" height="320" fill="url(#g2)"/>
+      <path d="M60 320 V210 A100 90 0 0 1 260 210 V320 Z" fill="oklch(48% 0.09 195)"/>
+      <path d="M100 210 A60 70 0 0 1 220 210 Z" fill="oklch(56% 0.15 40)"/>
+      <rect x="150" y="90" width="20" height="40" fill="oklch(56% 0.15 40)"/>
+      <circle cx="160" cy="80" r="12" fill="oklch(56% 0.15 40)"/>
+    </svg>
+  </sc-if>
+  <sc-if value="{{isCourtyard}}" hint-placeholder-val="{{false}}">
+    <svg viewBox="0 0 320 320" preserveAspectRatio="xMidYMid slice">
+      <rect width="320" height="320" fill="oklch(88% 0.03 85)"/>
+      <rect x="0" y="220" width="320" height="100" fill="oklch(66% 0.1 50)"/>
+      <rect x="30" y="120" width="80" height="100" fill="oklch(56% 0.15 40)"/>
+      <rect x="130" y="90" width="90" height="130" fill="oklch(48% 0.13 42)"/>
+      <rect x="240" y="140" width="60" height="80" fill="oklch(56% 0.15 40)"/>
+      <rect x="150" y="130" width="30" height="45" fill="oklch(62% 0.08 200)"/>
+    </svg>
+  </sc-if>
+  <sc-if value="{{isPortrait}}" hint-placeholder-val="{{false}}">
+    <svg viewBox="0 0 320 320" preserveAspectRatio="xMidYMid slice">
+      <rect width="320" height="320" fill="oklch(84% 0.04 80)"/>
+      <ellipse cx="160" cy="200" rx="80" ry="100" fill="oklch(56% 0.15 40)"/>
+      <circle cx="160" cy="130" r="55" fill="oklch(66% 0.1 50)"/>
+      <path d="M40 320 Q160 260 280 320 Z" fill="oklch(48% 0.13 42)"/>
+    </svg>
+  </sc-if>
+  <sc-if value="{{isHandicraft}}" hint-placeholder-val="{{false}}">
+    <svg viewBox="0 0 320 320" preserveAspectRatio="xMidYMid slice">
+      <rect width="320" height="320" fill="oklch(90% 0.03 90)"/>
+      <path d="M130 90 h60 v30 q30 20 30 70 v90 q0 30 -40 30 h-40 q-40 0 -40 -30 v-90 q0 -50 30 -70 z" fill="oklch(62% 0.08 200)"/>
+      <rect x="130" y="150" width="60" height="14" fill="oklch(56% 0.15 40)"/>
+      <rect x="120" y="185" width="80" height="14" fill="oklch(56% 0.15 40)"/>
+    </svg>
+  </sc-if>
+  <sc-if value="{{isDiamond}}" hint-placeholder-val="{{false}}">
+    <svg viewBox="0 0 320 320" preserveAspectRatio="xMidYMid slice">
+      <rect width="320" height="320" fill="oklch(93% 0.02 80)"/>
+      <sc-for list="{{diamonds}}" as="d" hint-placeholder-count="9">
+        <rect x="{{d.x}}" y="{{d.y}}" width="46" height="46" rx="4" transform="rotate(45 {{d.cx}} {{d.cy}})" fill="{{d.color}}"/>
+      </sc-for>
+    </svg>
+  </sc-if>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"variant":{"editor":"enum","options":["arch","dome","courtyard","portrait","handicraft","diamond"],"default":"arch"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const v = this.props.variant ?? 'arch';
+    const colors = ['oklch(56% 0.15 40)', 'oklch(62% 0.08 200)', 'oklch(66% 0.1 50)'];
+    const diamonds = [];
+    let i = 0;
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        const cx = 55 + col * 105;
+        const cy = 55 + row * 105;
+        diamonds.push({ x: cx - 23, y: cy - 23, cx, cy, color: colors[i % 3] });
+        i++;
+      }
+    }
+    return {
+      isArch: v === 'arch',
+      isDome: v === 'dome',
+      isCourtyard: v === 'courtyard',
+      isPortrait: v === 'portrait',
+      isHandicraft: v === 'handicraft',
+      isDiamond: v === 'diamond',
+      diamonds,
+    };
+  }
+}
+</script>
+</body>
+</html>

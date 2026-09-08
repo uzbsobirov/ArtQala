@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="portraitGlow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#EEDAC5"/>
+      <stop offset="60%" stop-color="#CA865A"/>
+      <stop offset="100%" stop-color="#281C18"/>
+    </radialGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#portraitGlow)"/>
+  <!-- Elder shoulders and chapan robe -->
+  <path d="M40 400 C60 290, 140 260, 200 260 C260 260, 340 290, 360 400 Z" fill="#1C383A"/>
+  <!-- Chapan collar & embroidered gold lapels -->
+  <path d="M140 260 L200 370 L260 260" stroke="#DAA932" stroke-width="12" fill="#BA4E25"/>
+  <path d="M140 260 L200 370 L260 260" stroke="#FFF" stroke-width="2" stroke-dasharray="6 4" fill="none"/>
+  <!-- Head & neck -->
+  <rect x="175" y="210" width="50" height="60" fill="#CA865A" rx="8"/>
+  <ellipse cx="200" cy="170" rx="60" ry="75" fill="#DC996E"/>
+  <!-- Beard -->
+  <path d="M150 180 Q200 270 250 180 Z" fill="#F4EFEA"/>
+  <!-- Traditional Doppa cap with almond/bodom motif -->
+  <path d="M136 140 Q200 80 264 140 Z" fill="#1D100B"/>
+  <path d="M140 140 Q200 90 260 140" stroke="#FAF4EC" stroke-width="4" stroke-dasharray="10 8" fill="none"/>
+  <!-- Pomegranate in hand -->
+  <circle cx="200" cy="360" r="26" fill="#A8281C"/>
+  <polygon points="194,334 206,334 202,326" fill="#6B140D"/>
+</svg>

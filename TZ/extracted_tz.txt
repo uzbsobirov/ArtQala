@@ -1,0 +1,142 @@
+ART QALA
+Galereya veb-sayti — Texnik Topshiriq (TZ)
+Tayyorlangan: Claude · 2026-yil sentyabr
+1. Loyiha haqida
+Art Qala — Samarqandda joylashgan, asl kartinalar sotadigan galereya. Kartinalarning asosiy mavzulari: O'zbekiston tarixiy obidalari, odamlar (portretlar), hovli-joylar, mahalliy/an'anaviy buyumlar, bobokalonlar va hunarmandchilikka bag'ishlangan asarlar. Galereya, shuningdek, devorga rasm chizish (mural), keramika va bo'yash xizmatlarini ham taklif qiladi.
+Saytning asosiy maqsadi — galereyaning asarlarini onlayn namoyish qilish, xorijiy sayyohlar va mahalliy mijozlardan buyurtma/so'rov qabul qilish, hamda qo'shimcha xizmatlar (mural, keramika, buyurtma bo'yicha rasm) uchun mijoz jalb qilish.
+Maqsadli auditoriya
+Asosiy auditoriya — O'zbekistonga tashrif buyurgan xorijiy sayyohlar (shuning uchun ingliz tiliga alohida urg'u beriladi).
+Ikkinchi darajali auditoriya — mahalliy mijozlar (uy/ofis uchun kartina yoki mural buyurtma qiluvchilar).
+Tillar
+Sayt uch tilda ishlaydi: ingliz (EN), rus (RU), o'zbek (UZ) — lotin yozuvida.
+Har bir sahifada til almashtirish tugmasi (header'da) bo'ladi.
+Valyutalar
+Narxlar to'rt valyutada ko'rsatilishi mumkin: USD, UZS, RUB, EUR — header'dagi til tugmasi yonida valyuta tanlash tugmasi bo'ladi.
+Asl narx bazada bitta valyutada (masalan USD) saqlanadi, boshqa valyutalar joriy kursga qarab avtomatik hisoblanadi (kurs admin panelda qo'lda yangilanadi yoki tashqi API orqali olinadi).
+2. Sayt sahifalari (foydalanuvchi qismi)
+Bosh sahifa (Home)
+Katta "tungi galereya" uslubidagi hero bo'lim: qorong'i fon, animatsion ikat naqshi, porlayotgan yorug'lik effekti, sarlavha matni.
+Tanlangan (Featured) kartinalar qatori.
+"Nima taklif qilamiz" bo'limi — Kartinalar / Rassomlar / Xizmatlarga tezkor havolalar.
+Galereyaga taklif qiluvchi CTA banner.
+Galereya (Gallery)
+Barcha kartinalar ro'yxati, grid ko'rinishida.
+Kategoriya bo'yicha filtr (Tarixiy obidalar, Portretlar, Hovli-joylar, Hunarmandchilik va h.k. — kategoriyalar admin panelda boshqariladi).
+Har bir kartina kartochkasida: rasm, sarlavha, rassom ismi, narx (agar skidka bo'lsa — eski narx chizib tashlangan, yangi narx tagida), "Sotib olish / So'rov yuborish" tugmasi.
+Rassomlar (Artists)
+Har bir rassom uchun: surat, qisqa tarjimai holi, mutaxassislik yo'nalishi, ishlaridan namunalar.
+"Galereyaga qo'shiling" — yangi rassomlar o'z portfoliosini yuborishi uchun forma/havola.
+Xizmatlar (Services)
+Uchta xizmat: Devorga rasm chizish (mural), Keramika, Buyurtma bo'yicha rasm (custom painting).
+Har biri uchun tavsif, namuna rasmlar va "So'rov yuborish" formasi (xizmat turi, loyiha tavsifi, kontakt).
+Kontakt (Contact)
+Kontakt formasi, manzil, xarita, telefon, Telegram, Instagram, ish vaqti.
+Ro'yxatdan o'tish / Kirish (Sign up / Sign in)
+Wishlist (sevimlilar) ro'yxatdan o'tmasdan ishlaydi — brauzerda saqlanadi.
+So'rov yuborish yoki sotib olish bosqichida ro'yxatdan o'tish talab qilinadi.
+Sign up maydonlari: ism, davlat, email, parol.
+Emailga tasdiqlash kodi (OTP) yuboriladi va tasdiqlangandan keyin hisob faollashadi.
+Google va Apple orqali ro'yxatdan o'tish/kirish tugmalari ham qo'shiladi.
+"Parolni unutdingizmi" (parolni tiklash) funksiyasi.
+Mijozning shaxsiy kabineti (Account)
+Yuborilgan so'rovlar/buyurtmalar holati ("ko'rib chiqilmoqda / javob berildi / yakunlandi").
+Sevimlilar ro'yxati (agar hisobga kirgan bo'lsa, saqlanadi).
+Qo'shimcha sahifalar
+Maxfiylik siyosati (Privacy Policy) va Foydalanish shartlari (Terms of Service).
+Asillik sertifikati (Certificate of Authenticity) — sotib olingan har bir asl kartina uchun PDF hujjat.
+Mijozlar sharhlari (Reviews) — sotib olgan mijozlar fikr qoldirishi mumkin.
+3. Admin panel
+Kartinalar boshqaruvi
+Kartina qo'shish/tahrirlash/o'chirish: rasm(lar), sarlavha, tavsif, o'lcham, texnika (moy bo'yoq, akril va h.k.), yaratilgan yili, rassom, kategoriya, asl narx, "Sotildi" belgisi.
+Bir nechta rasm yuklash imkoniyati (turli burchaklardan).
+Rassomlar va kategoriyalar boshqaruvi
+Rassomlar ro'yxatini qo'shish/tahrirlash (ism, surat, bio, mutaxassislik).
+Kategoriyalarni qo'shish/tahrirlash — kartina qo'shish formasidagi tanlov ro'yxati va saytdagi filtrlar shu ro'yxatga bog'liq.
+Narx va skidka tizimi
+Har bir kartinada: asl narx (majburiy) va skidka narxi (ixtiyoriy).
+Skidka to'rt darajada belgilanadi: 1) bitta kartinaga alohida, 2) bitta rassomning barcha ishlariga, 3) bitta kategoriyaga, 4) butun sayt bo'yicha umumiy.
+Ustunlik qoidasi: kartinaning o'z skidkasi > rassom skidkasi > kategoriya skidkasi > umumiy sayt skidkasi (eng aniqi ustunlik qiladi).
+Skidkaga boshlanish/tugash sanasi qo'yish mumkin (avtomatik aksiya).
+Saytda ko'rinishi: asl narx ustidan chizilgan, tagida skidka narxi, kartina ustida "-X%" belgisi.
+Buyurtma va so'rovlar
+Mijozlardan kelgan barcha so'rovlar/buyurtmalar ro'yxati: qaysi kartina, kim, qachon, holati.
+Xizmat so'rovlari (mural/keramika/buyurtma rasm) alohida ro'yxatda, holat belgilash bilan (yangi/jarayonda/bajarildi).
+Foydalanuvchilar va statistika
+Ro'yxatdan o'tgan mijozlar ro'yxati.
+Sayt statistikasi: tashrif soni, qaysi kartinalar ko'p ko'rilgan, qaysi til ko'p tanlangan, sotuvlar statistikasi (qaysi kartina/rassom/oy).
+Uch tildagi matnlarni tahrirlash imkoniyati.
+4. Admin panel dizayni
+Admin panel mijozlar ko'radigan sayt uslubidan farqli, funksional/dashboard uslubida: chap tomonda doimiy navigatsiya paneli (Dashboard, Paintings, Artists, Categories, Discounts, Inquiries, Service Requests, Customers, Reviews, Settings), o'ng tomonda tanlangan bo'lim tarkibi. Rang palitrasi saytniki bilan bir xil (terrakota/feruza/oltin), lekin ko'proq neytral fonlar bilan — ma'lumot bilan ishlash qulay bo'lishi uchun.
+Dashboard (bosh sahifa)
+Umumiy statistika (kartinalar soni, yangi so'rovlar, xizmat so'rovlari, faol skidkalar) va oxirgi so'rovlar/eng ko'p ko'rilgan kartinalar ro'yxati.
+Kartinalar ro'yxati
+Qidiruv va filtr (kategoriya, rassom) bilan barcha kartinalar jadvali — narx va skidka narxi bir vaqtda ko'rinadi, holat belgisi (Available/Sold).
+Kartina qo'shish/tahrirlash formasi
+Chapda asosiy ma'lumotlar va rasm yuklash, o'ngda narx/skidka boshqaruvi (qaysi darajadan meros olishini tanlash bilan) va "Sotildi" / "Bosh sahifada ko'rsatish" kalitlari.
+So'rovlar (Inquiries)
+Chapda barcha so'rovlar ro'yxati holati bilan, o'ngda tanlangan so'rovning to'liq matni va javob yozish oynasi.
+5. Ma'lumotlar bazasi tuzilishi (asosiy jadvallar)
+Jadval
+Asosiy maydonlar
+paintings
+id, title, description, size, technique, year, artist_id, category_id, price, discount_price, discount_starts_at, discount_ends_at, is_sold, images[]
+artists
+id, name, photo, bio, specialty
+categories
+id, name (EN/RU/UZ)
+discounts
+id, scope (site/category/artist/painting), target_id, percent_or_amount, starts_at, ends_at
+users
+id, name, country, email, password_hash, email_verified, auth_provider (email/google/apple)
+inquiries
+id, user_id, painting_id, status, message, created_at
+service_requests
+id, user_id, service_type (mural/ceramics/custom), description, status, created_at
+reviews
+id, user_id, painting_id (nullable), rating, text, created_at
+wishlist
+user_id (nullable — local storage if no account), painting_id
+6. Sayt dizayni (mijozlar qismi)
+Rang palitrasi
+Rang
+HEX
+Qo'llanilishi
+Fon (asosiy)
+#FAF4EC
+Sahifa foni
+Karta foni
+#FDFBF9
+Kartochkalar, forma foni
+Terrakota (asosiy)
+#BA4E25
+Tugmalar, narxlar, aksentlar
+Feruza (ikkinchi)
+#429599
+Kichik yozuvlar, aksentlar
+Oltin
+#DAA932
+Logotip, dekorativ chiziqlar
+Asosiy matn / Footer
+#281C18
+Sarlavhalar, footer foni
+Tungi hero foni
+#1D100B
+Bosh sahifa hero bo'limi
+Shriftlar
+Sarlavhalar: Cormorant Garamond (serif, nafis uslub).
+Asosiy matn: Work Sans (sans-serif, oson o'qiladigan).
+Animatsiyalar
+Bosh sahifa hero: sekin harakatlanuvchi ikat naqshi, porlayotgan spotlight effekti, matn bosqichma-bosqich paydo bo'lishi.
+Sahifani pastga surganda bo'limlar sekin paydo bo'ladi (scroll-reveal); ba'zi joylarda dekorativ chiziq "chiziladi".
+Kartina kartochkalari, tugmalar, menyu ustiga borilganda harakat effektlari.
+Dizayn namunasi
+To'liq interaktiv dizayn namunasi (barcha sahifalar) quyidagi havolada: https://claude.ai/code/artifact/e886511e-2a0e-484c-b959-61bb760e0bbb
+7. Texnik tavsiyalar
+Email tasdiqlash kodi (OTP) yuborish uchun: Resend (oyiga 3000 ta, kuniga 100 tagacha bepul) yoki Brevo (kuniga 300 tagacha bepul) — boshlang'ich bosqich uchun yetarli.
+Google va Apple orqali kirish — mos SDK/OAuth integratsiyasi kerak bo'ladi.
+To'lov: boshlang'ich bosqichda onlayn to'lovsiz, so'rov/buyurtma asosida ishlaydi; keyinchalik Click/Payme qo'shilishi mumkin.
+Valyuta kurslari uchun tashqi API (masalan Central Bank of Uzbekistan yoki exchangerate-api.com) integratsiya qilinishi mumkin.
+8. Ishga tushirish tartibi (tavsiya)
+1-bosqich: Kartinalar, rassomlar, kategoriyalar, galereya va kontakt sahifalari + admin panelning asosiy qismi.
+2-bosqich: Ro'yxatdan o'tish, so'rov/buyurtma tizimi, narx-skidka tizimi.
+3-bosqich: Wishlist, sharhlar, asillik sertifikati, statistika, Google/Apple kirish.

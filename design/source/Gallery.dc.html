@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600&family=Work+Sans:wght@400;500;600&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: oklch(97% 0.012 75); font-family: 'Work Sans', system-ui, sans-serif; color: oklch(24% 0.02 40); }
+    a { color: oklch(56% 0.15 40); }
+    a:hover { color: oklch(46% 0.15 38); }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 56px; }
+    .page-head { padding: 56px 0 28px; }
+    .eyebrow { font-size: 12px; letter-spacing: 3px; color: oklch(62% 0.08 200); font-weight: 600; }
+    .h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 40px; margin: 10px 0 10px; }
+    .lede { font-size: 14.5px; line-height: 1.7; color: oklch(45% 0.03 45); max-width: 560px; }
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; padding: 8px 0 40px; }
+    .filter-pill { font-size: 13px; font-weight: 500; padding: 9px 18px; border-radius: 20px; border: 1px solid oklch(88% 0.02 70); color: oklch(38% 0.02 45); transition: background .3s ease, color .3s ease, border-color .3s ease, transform .3s ease; }
+    .filter-pill:hover { border-color: oklch(56% 0.15 40); color: oklch(56% 0.15 40); transform: translateY(-2px); }
+    .filter-pill.active { background: oklch(24% 0.02 40); color: oklch(99% 0.004 80); border-color: oklch(24% 0.02 40); }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; padding-bottom: 80px; }
+
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
+    .reveal.in { opacity: 1; transform: translateY(0); }
+    .grid-4 > .reveal:nth-child(4n+1) { transition-delay: 0s; }
+    .grid-4 > .reveal:nth-child(4n+2) { transition-delay: .08s; }
+    .grid-4 > .reveal:nth-child(4n+3) { transition-delay: .16s; }
+    .grid-4 > .reveal:nth-child(4n+4) { transition-delay: .24s; }
+    .divider { padding: 0 0 36px; overflow: hidden; }
+    .divider svg { display: block; width: 100%; height: 40px; }
+    .divider path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.6s cubic-bezier(.2,.8,.2,1); }
+    .divider.in path { stroke-dashoffset: 0; }
+  </style>
+</helmet>
+
+<dc-import name="Header" active="gallery" hint-size="100%,76px"></dc-import>
+
+<div class="wrap">
+  <div class="page-head">
+    <div class="eyebrow">THE COLLECTION</div>
+    <div class="h1">Gallery</div>
+    <div class="lede">Original paintings by artists working in and around Samarkand — every piece can be shipped, or collected in person from the gallery.</div>
+  </div>
+  <div class="filters">
+    <span class="filter-pill active">All Works</span>
+    <span class="filter-pill">Historical Monuments</span>
+    <span class="filter-pill">Portraits</span>
+    <span class="filter-pill">Courtyards &amp; Homes</span>
+    <span class="filter-pill">Handicrafts</span>
+  </div>
+  <div class="divider reveal">
+    <svg viewBox="0 0 1200 40" preserveAspectRatio="none">
+      <path d="M0,20 L30,4 L60,36 L90,4 L120,36 L150,4 L180,36 L210,4 L240,36 L270,4 L300,36 L330,4 L360,36 L390,4 L420,36 L450,4 L480,36 L510,4 L540,36 L570,4 L600,36 L630,4 L660,36 L690,4 L720,36 L750,4 L780,36 L810,4 L840,36 L870,4 L900,36 L930,4 L960,36 L990,4 L1020,36 L1050,4 L1080,36 L1110,4 L1140,36 L1170,4 L1200,36"
+        fill="none" stroke="oklch(56% 0.15 40)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/>
+    </svg>
+  </div>
+  <div class="grid-4">
+    <div class="reveal"><dc-import name="PaintingCard" variant="arch" category="Historical" title="Registon at Dusk" artist="Dilnoza Yusupova" price="$420" hint-size="100%,320px"></dc-import></div>
+    <div class="reveal"><dc-import name="PaintingCard" variant="dome" category="Historical" title="Gur-e-Amir Sky" artist="Bekzod Nurov" price="$390" hint-size="100%,320px"></dc-import></div>
+    <div class="reveal"><dc-import name="PaintingCard" variant="portrait" category="Portraits" title="The Weaver" artist="Gulnora Azimova" price="$260" hint-size="100%,320px"></dc-import></div>
+    <div class="reveal"><dc-import name="PaintingCard" variant="portrait" category="Portraits" title="Bobom's Gaze" artist="Sardor Rakhimov" price="$310" hint-size="100%,320px"></dc-import></div>
+    <div class="reveal"><dc-import name="PaintingCard" variant="courtyard" category="Courtyards" title="Old Bukhara Hovli" artist="Sardor Rakhimov" price="$310" hint-size="100%,320px"></dc-import></div>
+    <div class="reveal"><dc-import name="PaintingCard" variant="courtyard" category="Courtyards" title="Evening in the Mahalla" artist="Dilnoza Yusupova" price="$275" hint-size="100%,320px"></dc-import></div>
+    <div class="reveal"><dc-import name="PaintingCard" variant="handicraft" category="Handicraft" title="Blue Suzani Vase" artist="Jasur Tashkentov" price="$180" hint-size="100%,320px"></dc-import></div>
+    <div class="reveal"><dc-import name="PaintingCard" variant="diamond" category="Handicraft" title="Ikat Study No. 4" artist="Gulnora Azimova" price="$220" hint-size="100%,320px"></dc-import></div>
+  </div>
+</div>
+
+<dc-import name="Footer" hint-size="100%,260px"></dc-import>
+
+</x-dc>
+<script data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    const els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach((el) => el.classList.add('in')); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.15 });
+    els.forEach((el) => io.observe(el));
+  }
+}
+</script>
+</body>
+</html>

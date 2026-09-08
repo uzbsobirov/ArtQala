@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Work+Sans:wght@400;500;600&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: oklch(97% 0.012 75); font-family: 'Work Sans', system-ui, sans-serif; color: oklch(24% 0.02 40); }
+    a { color: oklch(56% 0.15 40); }
+    a:hover { color: oklch(46% 0.15 38); }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 56px; }
+    .eyebrow { font-size: 12px; letter-spacing: 3px; color: oklch(62% 0.08 200); font-weight: 600; }
+    .h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 52px; line-height: 1.12; margin: 14px 0 18px; }
+    .lede { font-size: 16px; line-height: 1.7; color: oklch(40% 0.03 45); max-width: 460px; }
+    .btn-primary { display: inline-block; background: oklch(56% 0.15 40); color: oklch(99% 0.004 80); font-weight: 600; font-size: 14px; padding: 13px 26px; border-radius: 3px; text-decoration: none; }
+    .btn-primary:hover { background: oklch(46% 0.15 38); color: oklch(99% 0.004 80); }
+    .btn-outline { display: inline-block; border: 1.5px solid oklch(24% 0.02 40); color: oklch(24% 0.02 40); font-weight: 600; font-size: 14px; padding: 11.5px 24px; border-radius: 3px; text-decoration: none; }
+    .btn-outline:hover { border-color: oklch(56% 0.15 40); color: oklch(56% 0.15 40); }
+    .section { padding: 80px 0; }
+    .section-alt { background: oklch(93% 0.02 70); }
+    .section-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 36px; flex-wrap: wrap; gap: 12px; }
+    .h2 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 34px; margin: 6px 0 0; }
+    .section-note { font-size: 13.5px; color: oklch(48% 0.03 45); max-width: 420px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+    .quick-card { background: oklch(99% 0.004 80); border: 1px solid oklch(88% 0.02 70); border-radius: 3px; padding: 30px 26px; display: flex; flex-direction: column; gap: 12px; }
+    .quick-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; }
+    .quick-text { font-size: 13.5px; line-height: 1.6; color: oklch(45% 0.03 45); flex-grow: 1; }
+    .quick-link { font-size: 13px; font-weight: 600; }
+    .quick-card { transition: transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease, border-color .4s ease; }
+    .quick-card:hover { transform: translateY(-5px); box-shadow: 0 20px 36px -20px oklch(24% 0.02 40 / 0.3); border-color: oklch(56% 0.15 40 / 0.4); }
+    .quick-card svg { transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+    .quick-card:hover svg { transform: scale(1.15) rotate(-4deg); }
+    .cta-btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 14px 26px -10px oklch(0% 0 0 / 0.35); }
+
+    /* ---- Hero: night-gallery, patterned, animated ---- */
+    @keyframes patternDrift { from { background-position: 0 0, 0 0; } to { background-position: 240px 240px, -240px 120px; } }
+    @keyframes glowPulse { 0%, 100% { opacity: .55; transform: scale(1); } 50% { opacity: .85; transform: scale(1.08); } }
+    @keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+    @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes shimmerText { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+    .hero {
+      position: relative; overflow: hidden;
+      background: oklch(19% 0.025 40);
+      padding: 88px 0 96px;
+    }
+    .hero::before {
+      content: ""; position: absolute; inset: -20% -10%;
+      background-image:
+        repeating-linear-gradient(45deg, oklch(56% 0.15 40 / 0.14) 0 2px, transparent 2px 60px),
+        repeating-linear-gradient(-45deg, oklch(62% 0.08 200 / 0.12) 0 2px, transparent 2px 60px);
+      animation: patternDrift 34s linear infinite;
+      pointer-events: none;
+    }
+    .hero-wrap { position: relative; z-index: 1; display: flex; align-items: center; gap: 56px; }
+    .hero-eyebrow { font-size: 12px; letter-spacing: 4px; color: oklch(70% 0.1 195); font-weight: 600; opacity: 0; animation: fadeSlideUp .8s ease .1s forwards; }
+    .hero-h1 {
+      font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 54px; line-height: 1.12; margin: 16px 0 20px;
+      color: oklch(97% 0.012 75);
+      background: linear-gradient(100deg, oklch(97% 0.012 75) 30%, oklch(72% 0.13 45) 50%, oklch(97% 0.012 75) 70%);
+      background-size: 220% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: fadeSlideUp .8s ease .25s forwards, shimmerText 7s ease-in-out 1.2s infinite;
+      opacity: 0;
+    }
+    .hero-lede { font-size: 16px; line-height: 1.7; color: oklch(78% 0.02 65); max-width: 460px; opacity: 0; animation: fadeSlideUp .8s ease .4s forwards; }
+    .hero-actions { display: flex; gap: 14px; margin-top: 32px; opacity: 0; animation: fadeSlideUp .8s ease .55s forwards; }
+    .hero-actions .btn-outline { border-color: oklch(78% 0.02 65); color: oklch(94% 0.01 70); }
+    .hero-actions .btn-outline:hover { border-color: oklch(66% 0.1 50); color: oklch(66% 0.1 50); }
+    .hero-art-wrap {
+      position: relative; flex: 1; aspect-ratio: 1 / 0.9;
+      opacity: 0; animation: fadeSlideUp 1s ease .35s forwards;
+    }
+    .hero-glow {
+      position: absolute; inset: -18%; border-radius: 50%;
+      background: radial-gradient(circle, oklch(66% 0.15 45 / 0.55) 0%, oklch(62% 0.1 200 / 0.25) 45%, transparent 72%);
+      filter: blur(6px);
+      animation: glowPulse 6s ease-in-out infinite;
+    }
+    .hero-art {
+      position: relative; width: 100%; height: 100%; border-radius: 3px; overflow: hidden;
+      border: 1px solid oklch(45% 0.03 45); box-shadow: 0 40px 80px -30px oklch(0% 0 0 / 0.6);
+      animation: floatY 7s ease-in-out infinite;
+    }
+
+    /* ---- Scroll-triggered reveals ---- */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
+    .reveal.in { opacity: 1; transform: translateY(0); }
+    .grid-4 > .reveal:nth-child(1) { transition-delay: 0s; }
+    .grid-4 > .reveal:nth-child(2) { transition-delay: .09s; }
+    .grid-4 > .reveal:nth-child(3) { transition-delay: .18s; }
+    .grid-4 > .reveal:nth-child(4) { transition-delay: .27s; }
+    .grid-3 > .reveal:nth-child(1) { transition-delay: 0s; }
+    .grid-3 > .reveal:nth-child(2) { transition-delay: .1s; }
+    .grid-3 > .reveal:nth-child(3) { transition-delay: .2s; }
+
+    .divider { padding: 0 0 8px; overflow: hidden; }
+    .divider svg { display: block; width: 100%; height: 40px; }
+    .divider path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.6s cubic-bezier(.2,.8,.2,1); }
+    .divider.in path { stroke-dashoffset: 0; }
+  </style>
+</helmet>
+
+<dc-import name="Header" active="home" hint-size="100%,76px"></dc-import>
+
+<div class="hero">
+  <div class="wrap hero-wrap">
+    <div style="flex: 1;">
+      <div class="hero-eyebrow">SAMARKAND, UZBEKISTAN</div>
+      <div class="hero-h1">Paintings that carry<br>the soul of Uzbekistan</div>
+      <div class="hero-lede">Art Qala is a working gallery of historical monuments, portraits and everyday craft, painted by local artists — alongside custom murals, ceramics and hand-painted commissions.</div>
+      <div class="hero-actions">
+        <a class="btn-primary" href="#">Explore the Gallery</a>
+        <a class="btn-outline" href="#">Meet the Artists</a>
+      </div>
+    </div>
+    <div class="hero-art-wrap">
+      <div class="hero-glow"></div>
+      <div class="hero-art">
+        <dc-import name="PaintingArt" variant="arch" hint-size="100%,100%"></dc-import>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section section-alt">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div>
+        <div class="eyebrow">FEATURED WORKS</div>
+        <div class="h2">From this month's collection</div>
+      </div>
+      <a class="btn-outline" href="#">View Full Gallery</a>
+    </div>
+    <div class="grid-4">
+      <div class="reveal"><dc-import name="PaintingCard" variant="arch" category="Historical" title="Registon at Dusk" artist="Dilnoza Yusupova" price="$420" hint-size="100%,320px"></dc-import></div>
+      <div class="reveal"><dc-import name="PaintingCard" variant="courtyard" category="Courtyards" title="Old Bukhara Hovli" artist="Sardor Rakhimov" price="$310" hint-size="100%,320px"></dc-import></div>
+      <div class="reveal"><dc-import name="PaintingCard" variant="portrait" category="Portraits" title="The Weaver" artist="Gulnora Azimova" price="$260" hint-size="100%,320px"></dc-import></div>
+      <div class="reveal"><dc-import name="PaintingCard" variant="handicraft" category="Handicraft" title="Blue Suzani Vase" artist="Jasur Tashkentov" price="$180" hint-size="100%,320px"></dc-import></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap divider reveal">
+  <svg viewBox="0 0 1200 40" preserveAspectRatio="none">
+    <path d="M0,20 L30,4 L60,36 L90,4 L120,36 L150,4 L180,36 L210,4 L240,36 L270,4 L300,36 L330,4 L360,36 L390,4 L420,36 L450,4 L480,36 L510,4 L540,36 L570,4 L600,36 L630,4 L660,36 L690,4 L720,36 L750,4 L780,36 L810,4 L840,36 L870,4 L900,36 L930,4 L960,36 L990,4 L1020,36 L1050,4 L1080,36 L1110,4 L1140,36 L1170,4 L1200,36"
+      fill="none" stroke="oklch(56% 0.15 40)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/>
+  </svg>
+</div>
+
+<div class="section">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div>
+        <div class="eyebrow">WHAT WE OFFER</div>
+        <div class="h2">Beyond the gallery walls</div>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="quick-card reveal">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="oklch(56% 0.15 40)" stroke-width="1.6"><rect x="3" y="4" width="18" height="14" rx="1.5"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M3 15l5-4 4 3 5-5 4 4"/></svg>
+        <div class="quick-title">Original Paintings</div>
+        <div class="quick-text">Browse originals inspired by monuments, portraits, courtyards and craft — each with the artist's story attached.</div>
+        <a class="quick-link" href="#">Visit the Gallery →</a>
+      </div>
+      <div class="quick-card reveal">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="oklch(62% 0.08 200)" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/></svg>
+        <div class="quick-title">Our Artists</div>
+        <div class="quick-text">Meet the painters and craftspeople behind every piece, and see the full body of their work.</div>
+        <a class="quick-link" href="#">Meet the Artists →</a>
+      </div>
+      <div class="quick-card reveal">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="oklch(56% 0.15 40)" stroke-width="1.6"><path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6"/></svg>
+        <div class="quick-title">Murals, Ceramics &amp; Commissions</div>
+        <div class="quick-text">Have us paint a wall, throw a ceramic piece, or create a custom work for your home or business.</div>
+        <a class="quick-link" href="#">See Services →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="reveal" style="background: linear-gradient(120deg, oklch(56% 0.15 40), oklch(50% 0.12 25)); padding: 56px 0;">
+  <div class="wrap" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+    <div>
+      <div class="h2" style="color: oklch(99% 0.004 80); font-size: 28px;">Looking for a piece of Uzbekistan to take home?</div>
+      <div style="color: oklch(94% 0.02 60); font-size: 14px; margin-top: 6px;">Visit us in Samarkand, or reach out and we'll help you choose.</div>
+    </div>
+    <a href="#" class="cta-btn" style="background: oklch(99% 0.004 80); color: oklch(56% 0.15 40); font-weight: 600; font-size: 14px; padding: 13px 26px; border-radius: 3px; text-decoration: none; display: inline-block; transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease;">Get in Touch</a>
+  </div>
+</div>
+
+<dc-import name="Footer" hint-size="100%,260px"></dc-import>
+
+</x-dc>
+<script data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    const els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) {
+      els.forEach((el) => el.classList.add('in'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    els.forEach((el) => io.observe(el));
+  }
+}
+</script>
+</body>
+</html>

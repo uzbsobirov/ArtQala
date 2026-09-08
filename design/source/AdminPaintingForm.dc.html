@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600&family=Work+Sans:wght@400;500;600&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    x-dc { display: block; }
+    body { margin: 0; font-family: 'Work Sans', system-ui, sans-serif; color: oklch(24% 0.02 40); background: oklch(97% 0.012 75); }
+    .shell { display: flex; min-height: 900px; }
+    .sidebar { width: 232px; background: oklch(19% 0.025 40); color: oklch(90% 0.01 70); display: flex; flex-direction: column; padding: 22px 0; flex-shrink: 0; }
+    .side-logo { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 20px; color: oklch(97% 0.012 75); padding: 0 22px 22px; border-bottom: 1px solid oklch(30% 0.02 40); margin-bottom: 12px; }
+    .side-logo span { color: oklch(76% 0.14 85); }
+    .side-item { display: flex; align-items: center; gap: 12px; padding: 11px 22px; font-size: 13.5px; color: oklch(78% 0.02 65); text-decoration: none; border-left: 3px solid transparent; }
+    .side-item.active { background: oklch(24% 0.03 40); color: oklch(97% 0.012 75); border-left: 3px solid oklch(70% 0.13 45); }
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar { height: 64px; border-bottom: 1px solid oklch(88% 0.02 70); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; background: oklch(99% 0.004 80); }
+    .topbar-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; }
+    .btn-primary { background: oklch(56% 0.15 40); color: white; font-size: 13px; font-weight: 600; padding: 10px 18px; border-radius: 4px; border: none; }
+    .btn-ghost { background: transparent; color: oklch(45% 0.03 45); font-size: 13px; font-weight: 600; padding: 10px 16px; border-radius: 4px; border: 1px solid oklch(85% 0.02 70); }
+    .content { padding: 28px; flex: 1; display: flex; gap: 22px; }
+    .col-main { flex: 1.6; display: flex; flex-direction: column; gap: 18px; }
+    .col-side { flex: 1; display: flex; flex-direction: column; gap: 18px; }
+    .panel { background: oklch(99% 0.004 80); border: 1px solid oklch(88% 0.02 70); border-radius: 4px; padding: 20px; }
+    .panel-title { font-weight: 600; font-size: 13.5px; margin-bottom: 14px; color: oklch(56% 0.15 40); text-transform: uppercase; letter-spacing: 0.5px; }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .field-row { display: flex; gap: 12px; }
+    .field-row .field { flex: 1; }
+    label { font-size: 11px; letter-spacing: 0.5px; color: oklch(50% 0.03 45); }
+    input, select, textarea { font-family: 'Work Sans'; font-size: 13px; padding: 9px 11px; border-radius: 3px; border: 1px solid oklch(85% 0.02 70); background: white; color: oklch(24% 0.02 40); }
+    textarea { min-height: 80px; resize: none; }
+    .upload-box { border: 1.5px dashed oklch(80% 0.03 60); border-radius: 4px; padding: 28px; text-align: center; color: oklch(52% 0.03 45); font-size: 12.5px; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid oklch(93% 0.02 70); }
+    .toggle { width: 38px; height: 20px; border-radius: 20px; background: oklch(88% 0.02 70); position: relative; }
+    .toggle.on { background: oklch(56% 0.15 40); }
+    .toggle-dot { width: 16px; height: 16px; border-radius: 50%; background: white; position: absolute; top: 2px; left: 2px; }
+    .toggle.on .toggle-dot { left: 20px; }
+    .discount-scope { display: flex; gap: 8px; margin-bottom: 12px; }
+    .scope-pill { font-size: 11.5px; padding: 6px 11px; border-radius: 20px; border: 1px solid oklch(85% 0.02 70); color: oklch(45% 0.03 45); }
+    .scope-pill.active { background: oklch(24% 0.02 40); color: white; border-color: oklch(24% 0.02 40); }
+  </style>
+</helmet>
+<div class="shell">
+  <div class="sidebar">
+    <div class="side-logo">Art <span>Qala</span> Admin</div>
+    <a class="side-item" href="#">Dashboard</a>
+    <a class="side-item active" href="#">Paintings</a>
+    <a class="side-item" href="#">Artists</a>
+    <a class="side-item" href="#">Categories</a>
+    <a class="side-item" href="#">Discounts</a>
+    <a class="side-item" href="#">Inquiries</a>
+    <a class="side-item" href="#">Service Requests</a>
+    <a class="side-item" href="#">Customers</a>
+    <a class="side-item" href="#">Reviews</a>
+    <a class="side-item" href="#">Settings</a>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Edit Painting — Registon at Dusk</div>
+      <div style="display: flex; gap: 10px;"><button class="btn-ghost">Cancel</button><button class="btn-primary">Save Changes</button></div>
+    </div>
+    <div class="content">
+      <div class="col-main">
+        <div class="panel">
+          <div class="panel-title">Details</div>
+          <div class="field"><label>TITLE</label><input value="Registon at Dusk"></div>
+          <div class="field"><label>DESCRIPTION</label><textarea>Oil on canvas view of the Registan ensemble at golden hour...</textarea></div>
+          <div class="field-row">
+            <div class="field"><label>SIZE (CM)</label><input value="60 × 80"></div>
+            <div class="field"><label>TECHNIQUE</label><input value="Oil on canvas"></div>
+            <div class="field"><label>YEAR</label><input value="2024"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>ARTIST</label><select><option>Dilnoza Yusupova</option><option>Sardor Rakhimov</option></select></div>
+            <div class="field"><label>CATEGORY</label><select><option>Historical Monuments</option><option>Portraits</option></select></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Images</div>
+          <div class="upload-box">Drag images here or click to upload — first image is used as the cover</div>
+        </div>
+      </div>
+      <div class="col-side">
+        <div class="panel">
+          <div class="panel-title">Pricing</div>
+          <div class="field"><label>ORIGINAL PRICE (USD)</label><input value="420"></div>
+          <div class="discount-scope">
+            <span class="scope-pill active">This painting</span>
+            <span class="scope-pill">Inherit from artist</span>
+            <span class="scope-pill">Inherit from category</span>
+          </div>
+          <div class="field"><label>DISCOUNT</label><input value="15%"></div>
+          <div class="field-row">
+            <div class="field"><label>STARTS</label><input value="2026-09-10"></div>
+            <div class="field"><label>ENDS</label><input value="2026-09-20"></div>
+          </div>
+          <div class="field"><label>PREVIEW</label>
+            <div style="font-size: 13px;"><span style="text-decoration: line-through; color: oklch(60% 0.03 45);">$420</span> &nbsp; <b style="color: oklch(56% 0.15 40);">$357</b></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="toggle-row"><span style="font-size: 13px;">Mark as Sold</span><div class="toggle"><div class="toggle-dot"></div></div></div>
+          <div class="toggle-row"><span style="font-size: 13px;">Featured on homepage</span><div class="toggle on"><div class="toggle-dot"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
