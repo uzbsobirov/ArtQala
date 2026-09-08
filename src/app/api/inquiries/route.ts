@@ -32,6 +32,16 @@ export async function POST(request: Request) {
         message: message.trim(),
         user_id: effectiveUserId || null,
         status: 'NEW',
+        messages: {
+          create: {
+            sender: 'CUSTOMER',
+            message: message.trim(),
+            is_read: false,
+          },
+        },
+      },
+      include: {
+        messages: true,
       },
     });
 

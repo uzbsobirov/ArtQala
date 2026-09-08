@@ -6,6 +6,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminServicesPage() {
   const serviceRequests = await prisma.serviceRequest.findMany({
+    include: {
+      messages: {
+        orderBy: { created_at: 'asc' },
+      },
+    },
     orderBy: { created_at: 'desc' },
   });
 

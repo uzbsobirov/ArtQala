@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
+import ChatModal, { ThreadMessage } from '@/components/chat/ChatModal';
 import {
   User,
   Heart,
@@ -18,30 +19,57 @@ import {
   Shield,
   Palette,
   ExternalLink,
+  MessageCircle,
 } from 'lucide-react';
 
 export default function AccountPage() {
   const router = useRouter();
-  const { user, signOut, formatPrice, wishlist, lang } = useApp();
+  const { user, signOut, formatPrice, wishlist, lang, t } = useApp();
 
   const [activeTab, setActiveTab] = useState<'inquiries' | 'wishlist' | 'profile'>('inquiries');
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [serviceRequests, setServiceRequests] = useState<any[]>([]);
+  const [totalUnread, setTotalUnread] = useState(0);
   const [wishlistPaintings, setWishlistPaintings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Active chat state
+  const [activeChat, setActiveChat] = useState<{
+    type: 'inquiry' | 'service';
+    item: any;
+  } | null>(null);
+
+  const fetchInquiries = async () => {
+    try {
+      const inqRes = await fetch('/api/user/inquiries');
+      if (inqRes.ok) {
+        const inqData = await inqRes.json();
+        if (inqData.success) {
+          setInquiries(inqData.inquiries || []);
+          setServiceRequests(inqData.serviceRequests || []);
+          setTotalUnread(inqData.totalUnreadCount || 0);
+
+          // Update activeChat if currently open
+          if (activeChat) {
+            const updatedItem =
+              activeChat.type === 'inquiry'
+                ? (inqData.inquiries || []).find((i: any) => i.id === activeChat.item.id)
+                : (inqData.serviceRequests || []).find((s: any) => s.id === activeChat.item.id);
+            if (updatedItem) {
+              setActiveChat({ type: activeChat.type, item: updatedItem });
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching inquiries:', err);
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // Fetch inquiries
-        const inqRes = await fetch('/api/user/inquiries');
-        if (inqRes.ok) {
-          const inqData = await inqRes.json();
-          if (inqData.success) {
-            setInquiries(inqData.inquiries || []);
-            setServiceRequests(inqData.serviceRequests || []);
-          }
-        }
+        await fetchInquiries();
 
         // Fetch wishlist items
         const wishRes = await fetch('/api/paintings');
@@ -61,6 +89,96 @@ export default function AccountPage() {
 
     fetchData();
   }, [wishlist]);
+
+  // Handle opening chat
+  const handleOpenChat = async (type: 'inquiry' | 'service', item: any) => {
+    setActiveChat({ type, item });
+
+    // If there were unread messages, mark as read
+    if (item.unreadCount > 0) {
+      try {
+        await fetch(`/api/${type === 'inquiry' ? 'inquiries' : 'services'}/${item.id}/read`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ viewer: 'CUSTOMER' }),
+        });
+
+        // Update local state
+        setTotalUnread((prev) => Math.max(0, prev - item.unreadCount));
+        if (type === 'inquiry') {
+          setInquiries((prev) =>
+            prev.map((i) =>
+              i.id === item.id
+                ? {
+                    ...i,
+                    unreadCount: 0,
+                    messages: i.messages.map((m: any) =>
+                      m.sender === 'ADMIN' ? { ...m, is_read: true } : m
+                    ),
+                  }
+                : i
+            )
+          );
+        } else {
+          setServiceRequests((prev) =>
+            prev.map((s) =>
+              s.id === item.id
+                ? {
+                    ...s,
+                    unreadCount: 0,
+                    messages: s.messages.map((m: any) =>
+                      m.sender === 'ADMIN' ? { ...m, is_read: true } : m
+                    ),
+                  }
+                : s
+            )
+          );
+        }
+      } catch (e) {
+        console.error('Error marking messages as read:', e);
+      }
+    }
+  };
+
+  // Handle sending a reply in chat
+  const handleSendMessage = async (text: string): Promise<boolean> => {
+    if (!activeChat) return false;
+
+    try {
+      const url = `/api/${activeChat.type === 'inquiry' ? 'inquiries' : 'services'}/${activeChat.item.id}/messages`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: 'CUSTOMER',
+          message: text,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.message) {
+        // Append message to active chat item
+        const updatedMessages = [...(activeChat.item.messages || []), data.message];
+        const updatedItem = { ...activeChat.item, messages: updatedMessages, status: 'IN_PROGRESS' };
+        setActiveChat({ type: activeChat.type, item: updatedItem });
+
+        if (activeChat.type === 'inquiry') {
+          setInquiries((prev) =>
+            prev.map((i) => (i.id === activeChat.item.id ? updatedItem : i))
+          );
+        } else {
+          setServiceRequests((prev) =>
+            prev.map((s) => (s.id === activeChat.item.id ? updatedItem : s))
+          );
+        }
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error sending message:', err);
+      return false;
+    }
+  };
 
   // If not logged in, show prompt
   if (!user && !loading) {
@@ -187,7 +305,12 @@ export default function AccountPage() {
             }`}
           >
             <MessageSquare className="w-4 h-4" />
-            <span>Inquiries &amp; Orders ({inquiries.length + serviceRequests.length})</span>
+            <span>{t.chat.myInquiries} ({inquiries.length + serviceRequests.length})</span>
+            {totalUnread > 0 && (
+              <span className="bg-[#BA4E25] text-white text-[10.5px] font-bold px-2 py-0.5 rounded-full animate-pulse shadow-xs">
+                {totalUnread} {t.chat.unread}
+              </span>
+            )}
           </button>
 
           <button
@@ -233,13 +356,21 @@ export default function AccountPage() {
                       if (pImages.length > 0) thumb = pImages[0];
                     } catch {}
 
+                    const messagesCount = inq.messages?.length || 0;
+                    const lastMsg = inq.messages?.[messagesCount - 1];
+                    const hasUnread = inq.unreadCount > 0;
+
                     return (
                       <div
                         key={inq.id}
-                        className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[3px] p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs"
+                        className={`bg-[#FDFBF9] border rounded-[3px] p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs transition ${
+                          hasUnread
+                            ? 'border-[#BA4E25] ring-1 ring-[#BA4E25]/20 bg-[#FAF4EC]'
+                            : 'border-[#E7E0D8]'
+                        }`}
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-[2px] overflow-hidden relative border border-[#E7E0D8] shrink-0 bg-[#F4ECE1]">
+                        <div className="flex items-start sm:items-center gap-4 flex-1">
+                          <div className="w-16 h-16 rounded-[2px] overflow-hidden relative border border-[#E7E0D8] shrink-0 bg-[#F4ECE1]">
                             <Image
                               src={thumb}
                               alt="Painting thumbnail"
@@ -247,33 +378,52 @@ export default function AccountPage() {
                               className="object-cover"
                             />
                           </div>
-                          <div>
-                            <Link
-                              href={`/gallery/${inq.painting?.id}`}
-                              className="font-serif font-semibold text-lg text-[#281C18] hover:text-[#BA4E25] flex items-center gap-1.5"
-                            >
-                              <span>{inq.painting?.title_en || 'Painting'}</span>
-                              <ExternalLink className="w-3.5 h-3.5 text-[#8F8178]" />
-                            </Link>
-                            <p className="text-xs text-[#726861] mt-0.5">
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Link
+                                href={`/gallery/${inq.painting?.id}`}
+                                className="font-serif font-semibold text-lg text-[#281C18] hover:text-[#BA4E25] flex items-center gap-1.5 truncate"
+                              >
+                                <span>{inq.painting?.title_en || 'Painting'}</span>
+                                <ExternalLink className="w-3.5 h-3.5 text-[#8F8178]" />
+                              </Link>
+                              {hasUnread && (
+                                <span className="bg-[#BA4E25] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                  {inq.unreadCount} {t.chat.newInquiryBadge}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-[#726861]">
                               by {inq.painting?.artist?.name} · {formatPrice(inq.painting?.price || 0)}
                             </p>
-                            <p className="text-xs text-[#554740] mt-1.5 italic bg-[#F7F3EE] p-2 rounded-[2px] max-w-lg">
-                              "{inq.message}"
-                            </p>
-                            {inq.admin_reply && (
-                              <div className="mt-2 text-xs text-[#15803D] bg-[#DCFCE7]/50 p-2 rounded-[2px] border border-[#BBF7D0]">
-                                <strong>Curator Reply:</strong> {inq.admin_reply}
-                              </div>
+                            {lastMsg && (
+                              <p className="text-xs text-[#554740] bg-[#F7F3EE] p-2 rounded-[2px] line-clamp-2 max-w-xl border border-[#EFE8DE]">
+                                <strong className="text-[#281C18]">
+                                  {lastMsg.sender === 'ADMIN' ? `${t.chat.curator}: ` : `${t.chat.you}: `}
+                                </strong>
+                                {lastMsg.message}
+                              </p>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex flex-col items-end gap-1 shrink-0">
-                          {getStatusBadge(inq.status)}
-                          <span className="text-[11px] text-[#9E9086] mt-1">
-                            {new Date(inq.created_at).toLocaleDateString()}
-                          </span>
+                        <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-[#EFE8DE]">
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(inq.status)}
+                            <span className="text-[11px] text-[#9E9086]">
+                              {new Date(inq.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() => handleOpenChat('inquiry', inq)}
+                            className="bg-[#281C18] hover:bg-[#BA4E25] text-white text-xs font-semibold px-4 py-2 rounded-[3px] transition flex items-center gap-1.5 shadow-xs"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>
+                              {t.chat.openChat} ({messagesCount})
+                            </span>
+                          </button>
                         </div>
                       </div>
                     );
@@ -298,32 +448,66 @@ export default function AccountPage() {
 
               {serviceRequests.length > 0 ? (
                 <div className="space-y-4">
-                  {serviceRequests.map((sr) => (
-                    <div
-                      key={sr.id}
-                      className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[3px] p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs"
-                    >
-                      <div className="space-y-1 max-w-xl">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-bold tracking-wider uppercase text-[#BA4E25]">
-                            {sr.service_type}
-                          </span>
-                          <span className="text-[#A8988E]">·</span>
-                          <span className="text-xs text-[#726861]">
-                            Contact: {sr.guest_contact}
-                          </span>
-                        </div>
-                        <p className="text-sm text-[#281C18]">{sr.description}</p>
-                      </div>
+                  {serviceRequests.map((sr) => {
+                    const messagesCount = sr.messages?.length || 0;
+                    const lastMsg = sr.messages?.[messagesCount - 1];
+                    const hasUnread = sr.unreadCount > 0;
 
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        {getStatusBadge(sr.status)}
-                        <span className="text-[11px] text-[#9E9086] mt-1">
-                          {new Date(sr.created_at).toLocaleDateString()}
-                        </span>
+                    return (
+                      <div
+                        key={sr.id}
+                        className={`bg-[#FDFBF9] border rounded-[3px] p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs transition ${
+                          hasUnread
+                            ? 'border-[#BA4E25] ring-1 ring-[#BA4E25]/20 bg-[#FAF4EC]'
+                            : 'border-[#E7E0D8]'
+                        }`}
+                      >
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[11px] font-bold tracking-wider uppercase text-[#BA4E25]">
+                              {sr.service_type}
+                            </span>
+                            <span className="text-[#A8988E]">·</span>
+                            <span className="text-xs text-[#726861]">
+                              Contact: {sr.guest_contact}
+                            </span>
+                            {hasUnread && (
+                              <span className="bg-[#BA4E25] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                {sr.unreadCount} {t.chat.newInquiryBadge}
+                              </span>
+                            )}
+                          </div>
+                          {lastMsg && (
+                            <p className="text-xs text-[#554740] bg-[#F7F3EE] p-2 rounded-[2px] line-clamp-2 max-w-xl border border-[#EFE8DE]">
+                              <strong className="text-[#281C18]">
+                                {lastMsg.sender === 'ADMIN' ? `${t.chat.curator}: ` : `${t.chat.you}: `}
+                              </strong>
+                              {lastMsg.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-[#EFE8DE]">
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(sr.status)}
+                            <span className="text-[11px] text-[#9E9086]">
+                              {new Date(sr.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() => handleOpenChat('service', sr)}
+                            className="bg-[#281C18] hover:bg-[#BA4E25] text-white text-xs font-semibold px-4 py-2 rounded-[3px] transition flex items-center gap-1.5 shadow-xs"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>
+                              {t.chat.openChat} ({messagesCount})
+                            </span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-xs text-[#726861] bg-[#FDFBF9] p-6 rounded-[3px] border border-[#E7E0D8]">
@@ -422,6 +606,45 @@ export default function AccountPage() {
           </div>
         )}
       </div>
+
+      {/* Interactive Chat Thread Modal */}
+      {activeChat && (
+        <ChatModal
+          isOpen={Boolean(activeChat)}
+          onClose={() => setActiveChat(null)}
+          title={
+            activeChat.type === 'inquiry'
+              ? activeChat.item.painting?.title_en || 'Painting Inquiry'
+              : `${activeChat.item.service_type} Service Request`
+          }
+          subtitle={
+            activeChat.type === 'inquiry'
+              ? `by ${activeChat.item.painting?.artist?.name || 'Art Qala Artist'}`
+              : `Contact: ${activeChat.item.guest_contact}`
+          }
+          status={activeChat.item.status}
+          statusBadge={getStatusBadge(activeChat.item.status)}
+          messages={activeChat.item.messages || []}
+          onSendMessage={handleSendMessage}
+          imageSrc={
+            activeChat.type === 'inquiry'
+              ? (() => {
+                  try {
+                    const parsed = JSON.parse(activeChat.item.painting?.images || '[]');
+                    return parsed[0] || '/assets/p-arch.svg';
+                  } catch {
+                    return '/assets/p-arch.svg';
+                  }
+                })()
+              : undefined
+          }
+          priceText={
+            activeChat.type === 'inquiry'
+              ? formatPrice(activeChat.item.painting?.price || 0)
+              : undefined
+          }
+        />
+      )}
     </div>
   );
 }

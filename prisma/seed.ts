@@ -7,6 +7,8 @@ async function main() {
   console.log('Seeding Art Qala database...');
 
   // 1. Clean existing records
+  await prisma.inquiryMessage.deleteMany();
+  await prisma.serviceRequestMessage.deleteMany();
   await prisma.paintingView.deleteMany();
   await prisma.siteVisit.deleteMany();
   await prisma.wishlistItem.deleteMany();
@@ -366,19 +368,40 @@ async function main() {
     },
   });
 
-  // 7. Inquiries
-  await prisma.inquiry.create({
+  // 7. Inquiries with Message Threads
+  const inq1 = await prisma.inquiry.create({
     data: {
       guest_name: 'Emily Carter',
       guest_email: 'emily.carter@example.com',
       user_id: demoUser.id,
       painting_id: p1.id,
-      status: 'NEW',
+      status: 'ANSWERED',
       message: 'Hi, I saw this painting on your site and I\'m visiting Samarkand next week — is it still available, and could you ship to London if I buy it?',
+      admin_reply: 'Hello Emily! Yes, this artwork is currently available in the gallery. We offer fully insured international shipping to London via DHL Express with a certificate of authenticity.',
     },
   });
 
-  await prisma.inquiry.create({
+  await prisma.inquiryMessage.create({
+    data: {
+      inquiry_id: inq1.id,
+      sender: 'CUSTOMER',
+      message: 'Hi, I saw this painting on your site and I\'m visiting Samarkand next week — is it still available, and could you ship to London if I buy it?',
+      created_at: new Date(Date.now() - 2 * 24 * 3600 * 1000),
+      is_read: true,
+    },
+  });
+
+  await prisma.inquiryMessage.create({
+    data: {
+      inquiry_id: inq1.id,
+      sender: 'ADMIN',
+      message: 'Hello Emily! Yes, this artwork is currently available in the gallery. We offer fully insured international shipping to London via DHL Express with a certificate of authenticity.',
+      created_at: new Date(Date.now() - 1 * 24 * 3600 * 1000),
+      is_read: false, // Unread for Emily to test badge in account!
+    },
+  });
+
+  const inq2 = await prisma.inquiry.create({
     data: {
       guest_name: 'Marco Rossi',
       guest_email: 'marco.rossi@example.it',
@@ -389,7 +412,37 @@ async function main() {
     },
   });
 
-  await prisma.inquiry.create({
+  await prisma.inquiryMessage.create({
+    data: {
+      inquiry_id: inq2.id,
+      sender: 'CUSTOMER',
+      message: 'Buonasera! What would be the packaging and courier fee for delivery to Milan?',
+      created_at: new Date(Date.now() - 4 * 24 * 3600 * 1000),
+      is_read: true,
+    },
+  });
+
+  await prisma.inquiryMessage.create({
+    data: {
+      inquiry_id: inq2.id,
+      sender: 'ADMIN',
+      message: 'Dear Marco, we provide custom wooden crate packaging with DHL Express for approximately $120 to Milan.',
+      created_at: new Date(Date.now() - 3 * 24 * 3600 * 1000),
+      is_read: true,
+    },
+  });
+
+  await prisma.inquiryMessage.create({
+    data: {
+      inquiry_id: inq2.id,
+      sender: 'CUSTOMER',
+      message: 'Grazie mille! Could you also reserve it for 2 days while I confirm the dimensions with my architect?',
+      created_at: new Date(Date.now() - 1 * 24 * 3600 * 1000),
+      is_read: false,
+    },
+  });
+
+  const inq3 = await prisma.inquiry.create({
     data: {
       guest_name: 'Aigerim T.',
       guest_email: 'aigerim.t@almaty.kz',
@@ -400,8 +453,59 @@ async function main() {
     },
   });
 
-  // 8. Service Requests
-  await prisma.serviceRequest.create({
+  await prisma.inquiryMessage.create({
+    data: {
+      inquiry_id: inq3.id,
+      sender: 'CUSTOMER',
+      message: 'Salom! Can this ceramic vase be reserved until Friday?',
+      created_at: new Date(Date.now() - 5 * 24 * 3600 * 1000),
+      is_read: true,
+    },
+  });
+
+  await prisma.inquiryMessage.create({
+    data: {
+      inquiry_id: inq3.id,
+      sender: 'ADMIN',
+      message: 'Assalomu alaykum Aigerim! Yes, we have reserved it for you until Friday.',
+      created_at: new Date(Date.now() - 4 * 24 * 3600 * 1000),
+      is_read: true,
+    },
+  });
+
+  // 8. Service Requests with Message Threads
+  const sr1 = await prisma.serviceRequest.create({
+    data: {
+      guest_name: 'Emily Carter',
+      guest_contact: 'emily.carter@example.com',
+      user_id: demoUser.id,
+      service_type: 'CUSTOM',
+      description: 'Custom painting request: a panoramic sunset view of Shah-i Zinda in deep turquoise and terracotta shades.',
+      status: 'IN_PROGRESS',
+    },
+  });
+
+  await prisma.serviceRequestMessage.create({
+    data: {
+      service_request_id: sr1.id,
+      sender: 'CUSTOMER',
+      message: 'Custom painting request: a panoramic sunset view of Shah-i Zinda in deep turquoise and terracotta shades (approx 100x70cm).',
+      created_at: new Date(Date.now() - 3 * 24 * 3600 * 1000),
+      is_read: true,
+    },
+  });
+
+  await prisma.serviceRequestMessage.create({
+    data: {
+      service_request_id: sr1.id,
+      sender: 'ADMIN',
+      message: 'Dear Emily, our master artist Dilnoza Yusupova would be delighted to take this commission. We will prepare two color moodboards for you by tomorrow.',
+      created_at: new Date(Date.now() - 1 * 24 * 3600 * 1000),
+      is_read: false, // Unread to test badge
+    },
+  });
+
+  const sr2 = await prisma.serviceRequest.create({
     data: {
       guest_name: 'James Wu',
       guest_contact: 'james.wu@restaurant.uz / @jameswu_tg',
@@ -411,13 +515,33 @@ async function main() {
     },
   });
 
-  await prisma.serviceRequest.create({
+  await prisma.serviceRequestMessage.create({
+    data: {
+      service_request_id: sr2.id,
+      sender: 'CUSTOMER',
+      message: 'Mural request — café wall, Tashkent. Approximately 4x3 meters with oriental arches and pomegranate motifs.',
+      created_at: new Date(Date.now() - 4 * 24 * 3600 * 1000),
+      is_read: true,
+    },
+  });
+
+  const sr3 = await prisma.serviceRequest.create({
     data: {
       guest_name: 'Elena Smirnova',
       guest_contact: '+998 90 999 88 77',
       service_type: 'CUSTOM',
       description: 'Commission painting of our family courtyard in Bukhara from old photographs.',
       status: 'NEW',
+    },
+  });
+
+  await prisma.serviceRequestMessage.create({
+    data: {
+      service_request_id: sr3.id,
+      sender: 'CUSTOMER',
+      message: 'Commission painting of our family courtyard in Bukhara from old photographs.',
+      created_at: new Date(Date.now() - 1 * 24 * 3600 * 1000),
+      is_read: false,
     },
   });
 

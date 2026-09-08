@@ -14,6 +14,9 @@ export default async function AdminInquiriesPage() {
           price: true,
         },
       },
+      messages: {
+        orderBy: { created_at: 'asc' },
+      },
     },
     orderBy: { created_at: 'desc' },
   });

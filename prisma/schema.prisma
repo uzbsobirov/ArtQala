@@ -117,9 +117,11 @@ model Inquiry {
   painting_id  String
   painting     Painting  @relation(fields: [painting_id], references: [id], onDelete: Cascade)
 
-  message      String
+  message      String?
   status       String    @default("NEW") // NEW, IN_PROGRESS, ANSWERED, COMPLETED
   admin_reply  String?
+
+  messages     InquiryMessage[]
 
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
@@ -133,9 +135,11 @@ model ServiceRequest {
   guest_name    String
   guest_contact String    // Email or Telegram
   service_type  String    // MURAL, CERAMICS, CUSTOM
-  description   String
+  description   String?
   status        String    @default("NEW") // NEW, IN_PROGRESS, COMPLETED
   admin_notes   String?
+
+  messages      ServiceRequestMessage[]
 
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
@@ -228,4 +232,31 @@ model SiteVisit {
 
   @@index([created_at])
 }
+
+model InquiryMessage {
+  id         String   @id @default(cuid())
+  inquiry_id String
+  inquiry    Inquiry  @relation(fields: [inquiry_id], references: [id], onDelete: Cascade)
+  sender     String   // "CUSTOMER" or "ADMIN"
+  message    String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  @@index([inquiry_id])
+  @@index([created_at])
+}
+
+model ServiceRequestMessage {
+  id                 String         @id @default(cuid())
+  service_request_id String
+  service_request    ServiceRequest @relation(fields: [service_request_id], references: [id], onDelete: Cascade)
+  sender             String         // "CUSTOMER" or "ADMIN"
+  message            String
+  is_read            Boolean        @default(false)
+  created_at         DateTime       @default(now())
+
+  @@index([service_request_id])
+  @@index([created_at])
+}
+
 
