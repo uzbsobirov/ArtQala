@@ -14,6 +14,9 @@ export default function Footer() {
   const aboutText = getAboutText(settings, lang, t.footer.about);
   const addressText = settings?.address || 'Registan Street, 4, Samarkand, Uzbekistan';
   const locationMap = settings?.location_map || 'https://maps.google.com/?q=Registan,Samarkand';
+  const cityCountryText = settings?.address
+    ? settings.address.split(',').slice(-2).map((s) => s.trim()).join(', ')
+    : 'Tashkent, Uzbekistan';
 
   return (
     <footer className="bg-[#281C18] text-[#E8DFD8] pt-14 pb-8 border-t border-[#3D2C26]">
@@ -135,7 +138,7 @@ export default function Footer() {
           <div className="flex items-center gap-4">
             <span>EN · RU · UZ (Lotin)</span>
             <span>•</span>
-            <span>Samarkand, Uzbekistan</span>
+            <span>{cityCountryText}</span>
           </div>
         </div>
       </div>

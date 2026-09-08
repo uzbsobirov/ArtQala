@@ -13,10 +13,13 @@ export async function GET() {
 
     const session = JSON.parse(userCookie.value);
 
-    // Fetch inquiries by user_id OR guest_email
+    // Fetch inquiries by user_id OR guest_email (case-insensitive)
     const rawInquiries = await prisma.inquiry.findMany({
       where: {
-        OR: [{ user_id: session.id }, { guest_email: session.email }],
+        OR: [
+          { user_id: session.id },
+          { guest_email: { equals: session.email, mode: 'insensitive' } },
+        ],
       },
       include: {
         painting: {
@@ -40,7 +43,10 @@ export async function GET() {
     // Fetch service requests
     const rawServiceRequests = await prisma.serviceRequest.findMany({
       where: {
-        OR: [{ user_id: session.id }, { guest_contact: { contains: session.email } }],
+        OR: [
+          { user_id: session.id },
+          { guest_contact: { contains: session.email, mode: 'insensitive' } },
+        ],
       },
       include: {
         messages: {
