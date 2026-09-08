@@ -65,15 +65,17 @@ export default function Header() {
             );
           })}
 
-          {/* Admin link shortcut */}
-          <Link
-            href="/admin"
-            className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded bg-[#1D100B]/5 hover:bg-[#1D100B]/10 text-[#4D3F38] transition-colors"
-            title="Admin Dashboard"
-          >
-            <Shield className="w-3.5 h-3.5 text-[#BA4E25]" />
-            <span className="hidden xl:inline">Admin</span>
-          </Link>
+          {/* Admin link shortcut (only for authenticated admins) */}
+          {user && user.role === 'ADMIN' && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded bg-[#1D100B]/5 hover:bg-[#1D100B]/10 text-[#4D3F38] transition-colors"
+              title="Admin Dashboard"
+            >
+              <Shield className="w-3.5 h-3.5 text-[#BA4E25]" />
+              <span className="hidden xl:inline">Admin</span>
+            </Link>
+          )}
 
           {/* Wishlist Link */}
           <Link
@@ -179,14 +181,16 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
-            <Link
-              href="/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-base font-semibold text-[#429599] flex items-center gap-2 pt-2 border-t border-[#E7E0D8]"
-            >
-              <Shield className="w-4 h-4" />
-              {t.nav.admin}
-            </Link>
+            {user && user.role === 'ADMIN' && (
+              <Link
+                href="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-base font-semibold text-[#429599] flex items-center gap-2 pt-2 border-t border-[#E7E0D8]"
+              >
+                <Shield className="w-4 h-4" />
+                {t.nav.admin}
+              </Link>
+            )}
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t border-[#E7E0D8]">

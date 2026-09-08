@@ -25,13 +25,14 @@ interface AppContextType {
   isInWishlist: (paintingId: string) => boolean;
   t: (typeof translations)['en'];
   user: UserSession | null;
+  authLoading: boolean;
   refreshUser: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
-const EXCHANGE_RATES: Record<Currency, number> = {
+const DEFAULT_RATES: Record<Currency, number> = {
   USD: 1,
-  UZS: 12750,
+  UZS: 12850,
   RUB: 92.5,
   EUR: 0.92,
 };
@@ -42,8 +43,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Language>('en');
   const [currency, setCurrencyState] = useState<Currency>('USD');
   const [user, setUser] = useState<UserSession | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [wishlist, setWishlist] = useState<string[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const [rates, setRates] = useState<Record<Currency, number>>(DEFAULT_RATES);
+  const [, setMounted] = useState(false);
 
   const refreshUser = async () => {
     try {
@@ -56,6 +59,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     } catch {
       setUser(null);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const fetchRates = async () => {
+    try {
+      const res = await fetch('/api/rates');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.rates) {
+          setRates((prev) => ({
+            ...prev,
+            ...data.rates,
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch dynamic exchange rates:', e);
     }
   };
 
@@ -74,6 +96,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMounted(true);
     refreshUser();
+    fetchRates();
+
     const savedLang = localStorage.getItem('artqala_lang') as Language;
     if (savedLang && ['en', 'ru', 'uz'].includes(savedLang)) {
       setLangState(savedLang);
@@ -121,7 +145,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const isInWishlist = (id: string) => wishlist.includes(id);
 
   const formatPrice = (priceUSD: number): string => {
-    const rate = EXCHANGE_RATES[currency] || 1;
+    const rate = rates[currency] || 1;
     const converted = priceUSD * rate;
 
     switch (currency) {
@@ -153,6 +177,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         isInWishlist,
         t,
         user,
+        authLoading,
         refreshUser,
         signOut,
       }}

@@ -2,8 +2,19 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Upload, Check, AlertCircle } from 'lucide-react';
+import {
+  ArrowLeft,
+  Save,
+  Upload,
+  Check,
+  AlertCircle,
+  Plus,
+  X,
+  Loader2,
+  Trash2,
+} from 'lucide-react';
 
 interface PaintingFormProps {
   initialData?: any;
@@ -14,19 +25,58 @@ interface PaintingFormProps {
 
 export default function PaintingForm({
   initialData,
-  artists,
-  categories,
+  artists: initialArtists,
+  categories: initialCategories,
   isNew = false,
 }: PaintingFormProps) {
   const router = useRouter();
 
+  // Lists with dynamic additions
+  const [artistsList, setArtistsList] = useState(initialArtists || []);
+  const [categoriesList, setCategoriesList] = useState(initialCategories || []);
+
+  // Form fields
   const [titleEn, setTitleEn] = useState(initialData?.title_en || '');
+  const [titleUz, setTitleUz] = useState(initialData?.title_uz || '');
   const [descriptionEn, setDescriptionEn] = useState(initialData?.description_en || '');
-  const [size, setSize] = useState(initialData?.size || '60 × 80 cm');
+
+  // Structured size parsing (e.g. "60 × 80 sm" or "60x80")
+  const parseSize = (sizeStr?: string) => {
+    if (!sizeStr) return { width: 60, height: 80, unit: 'sm' };
+    const parts = sizeStr.match(/(\d+)\s*[×x*X]\s*(\d+)(?:\s*(sm|cm|in|dyum))?/i);
+    if (parts) {
+      const u = (parts[3] || 'sm').toLowerCase();
+      return {
+        width: parseInt(parts[1]) || 60,
+        height: parseInt(parts[2]) || 80,
+        unit: u === 'in' || u === 'dyum' ? 'dyum' : 'sm',
+      };
+    }
+    return { width: 60, height: 80, unit: 'sm' };
+  };
+
+  const initialParsedSize = parseSize(initialData?.size);
+  const [sizeWidth, setSizeWidth] = useState<number>(initialParsedSize.width);
+  const [sizeHeight, setSizeHeight] = useState<number>(initialParsedSize.height);
+  const [sizeUnit, setSizeUnit] = useState<string>(initialParsedSize.unit);
+
   const [techniqueEn, setTechniqueEn] = useState(initialData?.technique_en || 'Oil on canvas');
   const [year, setYear] = useState(initialData?.year || 2024);
-  const [artistId, setArtistId] = useState(initialData?.artist_id || artists[0]?.id || '');
-  const [categoryId, setCategoryId] = useState(initialData?.category_id || categories[0]?.id || '');
+  const [artistId, setArtistId] = useState(initialData?.artist_id || initialArtists[0]?.id || '');
+  const [categoryId, setCategoryId] = useState(initialData?.category_id || initialCategories[0]?.id || '');
+
+  // Images array
+  const initialImages: string[] = (() => {
+    try {
+      if (initialData?.images) {
+        const parsed = typeof initialData.images === 'string' ? JSON.parse(initialData.images) : initialData.images;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return ['/assets/p-arch.svg'];
+  })();
+  const [images, setImages] = useState<string[]>(initialImages);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Pricing
   const [price, setPrice] = useState(initialData?.price || 420);
@@ -50,31 +100,134 @@ export default function PaintingForm({
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
+  // Modals for adding inline Artist or Category
+  const [showAddArtistModal, setShowAddArtistModal] = useState(false);
+  const [newArtistName, setNewArtistName] = useState('');
+  const [newArtistSpecialty, setNewArtistSpecialty] = useState('');
+  const [newArtistBio, setNewArtistBio] = useState('');
+  const [addingArtist, setAddingArtist] = useState(false);
+
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [newCategoryNameEn, setNewCategoryNameEn] = useState('');
+  const [newCategoryNameUz, setNewCategoryNameUz] = useState('');
+  const [addingCategory, setAddingCategory] = useState(false);
+
   // Calculate live preview
   const numPercent = parseFloat(discountPercent.replace('%', '')) || 0;
   const calculatedDiscountPrice =
     numPercent > 0 ? Math.round(price * (1 - numPercent / 100)) : null;
+
+  // Handle local file upload
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success && data.url) {
+        setImages((prev) => [data.url, ...prev]);
+      } else {
+        alert(data.error || 'Rasm yuklashda xatolik yuz berdi');
+      }
+    } catch {
+      alert('Rasm yuklashda xatolik yuz berdi');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleCreateArtist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newArtistName.trim()) return;
+    setAddingArtist(true);
+    try {
+      const res = await fetch('/api/admin/artists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newArtistName,
+          specialty_en: newArtistSpecialty || 'Artist',
+          specialty_uz: newArtistSpecialty || 'Rassom',
+          bio_en: newArtistBio,
+          bio_uz: newArtistBio,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.artist) {
+        setArtistsList((prev) => [data.artist, ...prev]);
+        setArtistId(data.artist.id);
+        setShowAddArtistModal(false);
+        setNewArtistName('');
+        setNewArtistSpecialty('');
+        setNewArtistBio('');
+      }
+    } catch {
+      alert('Rassom qo\'shishda xatolik yuz berdi');
+    } finally {
+      setAddingArtist(false);
+    }
+  };
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryNameEn.trim() && !newCategoryNameUz.trim()) return;
+    setAddingCategory(true);
+    try {
+      const res = await fetch('/api/admin/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name_en: newCategoryNameEn || newCategoryNameUz,
+          name_uz: newCategoryNameUz || newCategoryNameEn,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.category) {
+        setCategoriesList((prev) => [...prev, data.category]);
+        setCategoryId(data.category.id);
+        setShowAddCategoryModal(false);
+        setNewCategoryNameEn('');
+        setNewCategoryNameUz('');
+      }
+    } catch {
+      alert('Kategoriya qo\'shishda xatolik yuz berdi');
+    } finally {
+      setAddingCategory(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
 
+    const formattedSize = `${sizeWidth} × ${sizeHeight} ${sizeUnit}`;
+
     const payload = {
       title_en: titleEn,
+      title_uz: titleUz || titleEn,
       description_en: descriptionEn,
-      size,
+      size: formattedSize,
       technique_en: techniqueEn,
-      year: parseInt(year),
+      year: parseInt(String(year)),
       artist_id: artistId,
       category_id: categoryId,
-      price: parseFloat(price),
+      price: parseFloat(String(price)),
       discount_price: calculatedDiscountPrice,
       discount_starts_at: discountStarts ? new Date(discountStarts) : null,
       discount_ends_at: discountEnds ? new Date(discountEnds) : null,
       is_sold: isSold,
       is_featured: isFeatured,
-      images: initialData?.images || JSON.stringify(['/assets/p-arch.svg']),
+      images: JSON.stringify(images.length > 0 ? images : ['/assets/p-arch.svg']),
     };
 
     try {
@@ -89,344 +242,598 @@ export default function PaintingForm({
 
       const data = await res.json();
       if (data.success) {
-        setMessage('Painting saved successfully!');
+        setMessage('Kartina muvaffaqiyatli saqlandi!');
         setTimeout(() => {
           router.push('/admin/paintings');
         }, 1000);
       } else {
-        setMessage('Failed to save painting.');
+        setMessage(data.error || 'Kartinani saqlashda xatolik yuz berdi.');
       }
-    } catch (err) {
-      setMessage('Error saving painting.');
+    } catch {
+      setMessage('Serverga bog\'lanishda xatolik yuz berdi.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Top action header matching AdminPaintingForm.png */}
-      <div className="flex items-center justify-between pb-2 border-b border-[#E7E0D8]">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/admin/paintings"
-            className="p-1.5 text-[#726861] hover:text-[#BA4E25] rounded hover:bg-[#FAF4EC]"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <h2 className="font-serif text-2xl font-semibold text-[#281C18]">
-            {isNew ? 'New Painting' : `Edit Painting — ${titleEn || 'Registon at Dusk'}`}
-          </h2>
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Top action header */}
+        <div className="flex items-center justify-between pb-2 border-b border-[#E7E0D8]">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/paintings"
+              className="p-1.5 text-[#726861] hover:text-[#BA4E25] rounded hover:bg-[#FAF4EC]"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <h2 className="font-serif text-2xl font-semibold text-[#281C18]">
+              {isNew ? 'Yangi Kartina Qo\'shish' : `Tahrirlash — ${titleEn || 'Registon at Dusk'}`}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/paintings"
+              className="px-4 py-2 border border-[#E7E0D8] bg-white text-xs font-semibold text-[#554740] rounded-[3px] hover:bg-[#FAF4EC] transition-colors"
+            >
+              Bekor qilish
+            </Link>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-5 py-2 bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold rounded-[3px] transition-all flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{loading ? 'Saqlanmoqda...' : 'Saqlash'}</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/admin/paintings"
-            className="px-4 py-2 border border-[#E7E0D8] bg-white text-xs font-semibold text-[#554740] rounded-[3px] hover:bg-[#FAF4EC] transition-colors"
-          >
-            Cancel
-          </Link>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-5 py-2 bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold rounded-[3px] transition-all flex items-center gap-1.5 shadow-xs"
-          >
-            <Save className="w-4 h-4" />
-            <span>{loading ? 'Saving...' : 'Save Changes'}</span>
-          </button>
-        </div>
-      </div>
+        {message && (
+          <div className="p-3 bg-[#E8F5E9] border border-[#A5D6A7] rounded-[3px] text-xs text-[#1B5E20]">
+            {message}
+          </div>
+        )}
 
-      {message && (
-        <div className="p-3 bg-[#E8F5E9] border border-[#A5D6A7] rounded-[3px] text-xs text-[#1B5E20]">
-          {message}
-        </div>
-      )}
+        {/* 2-Column Form Body */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column (Details + Images) */}
+          <div className="lg:col-span-8 space-y-6">
+            {/* Details Panel */}
+            <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-6 space-y-4">
+              <h3 className="text-xs font-bold tracking-wider text-[#BA4E25] uppercase">
+                ASOSIY MA'LUMOTLAR
+              </h3>
 
-      {/* 2-Column Form Body */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column (Details + Images) */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* Details Panel */}
-          <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-6 space-y-4">
-            <h3 className="text-xs font-bold tracking-wider text-[#BA4E25] uppercase">
-              DETAILS
-            </h3>
-
-            <div>
-              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                TITLE
-              </label>
-              <input
-                type="text"
-                required
-                value={titleEn}
-                onChange={(e) => setTitleEn(e.target.value)}
-                placeholder="Registon at Dusk"
-                className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                DESCRIPTION
-              </label>
-              <textarea
-                rows={3}
-                value={descriptionEn}
-                onChange={(e) => setDescriptionEn(e.target.value)}
-                placeholder="Oil on canvas view of the Registan ensemble at golden hour..."
-                className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                  SIZE (CM)
-                </label>
-                <input
-                  type="text"
-                  value={size}
-                  onChange={(e) => setSize(e.target.value)}
-                  placeholder="60 × 80"
-                  className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    SARLAVHA (EN) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={titleEn}
+                    onChange={(e) => setTitleEn(e.target.value)}
+                    placeholder="Registon at Dusk"
+                    className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    SARLAVHA (UZ)
+                  </label>
+                  <input
+                    type="text"
+                    value={titleUz}
+                    onChange={(e) => setTitleUz(e.target.value)}
+                    placeholder="Registon shafaq paytida"
+                    className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                  TECHNIQUE
+                  TAVSIF (DESCRIPTION)
                 </label>
-                <input
-                  type="text"
-                  value={techniqueEn}
-                  onChange={(e) => setTechniqueEn(e.target.value)}
-                  placeholder="Oil on canvas"
-                  className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                <textarea
+                  rows={3}
+                  value={descriptionEn}
+                  onChange={(e) => setDescriptionEn(e.target.value)}
+                  placeholder="San'at asari haqida batafsil ma'lumot..."
+                  className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
                 />
               </div>
 
+              {/* Structured Size + Technique + Year */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Structured Size Input (TZ Section 8.2) */}
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    O'LCHAMI (ENI × BO'YI) *
+                  </label>
+                  <div className="flex items-center gap-1.5 bg-white border border-[#E7E0D8] rounded-[3px] px-2 py-1">
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      value={sizeWidth}
+                      onChange={(e) => setSizeWidth(parseInt(e.target.value) || 0)}
+                      placeholder="60"
+                      className="w-14 text-xs font-semibold text-center focus:outline-none"
+                    />
+                    <span className="text-[#8F7E73] text-xs font-bold">×</span>
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      value={sizeHeight}
+                      onChange={(e) => setSizeHeight(parseInt(e.target.value) || 0)}
+                      placeholder="80"
+                      className="w-14 text-xs font-semibold text-center focus:outline-none"
+                    />
+                    <select
+                      value={sizeUnit}
+                      onChange={(e) => setSizeUnit(e.target.value)}
+                      className="text-[11px] bg-transparent font-medium text-[#BA4E25] focus:outline-none ml-auto border-l pl-1 border-[#E7E0D8]"
+                    >
+                      <option value="sm">sm</option>
+                      <option value="dyum">dyum</option>
+                    </select>
+                  </div>
+                  <span className="text-[10px] text-[#8F7E73] mt-0.5 block">
+                    Natija: {sizeWidth} × {sizeHeight} {sizeUnit}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    TEXNIKA (TECHNIQUE)
+                  </label>
+                  <input
+                    type="text"
+                    value={techniqueEn}
+                    onChange={(e) => setTechniqueEn(e.target.value)}
+                    placeholder="Moybo'yoq, kanvas"
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    YIL
+                  </label>
+                  <input
+                    type="number"
+                    value={year}
+                    onChange={(e) => setYear(parseInt(e.target.value) || 2024)}
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
+              </div>
+
+              {/* Artist and Category with Inline "+ Yangi qo'shish" Modals */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Artist Selector */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase">
+                      RASSOM (ARTIST) *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddArtistModal(true)}
+                      className="text-[11px] font-semibold text-[#BA4E25] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>+ Yangi qo'shish</span>
+                    </button>
+                  </div>
+                  <select
+                    value={artistId}
+                    onChange={(e) => setArtistId(e.target.value)}
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                  >
+                    {artistsList.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Category Selector */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase">
+                      KATEGORIYA *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddCategoryModal(true)}
+                      className="text-[11px] font-semibold text-[#BA4E25] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>+ Yangi qo'shish</span>
+                    </button>
+                  </div>
+                  <select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                  >
+                    {categoriesList.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name_uz || c.name_en}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Images Upload Box */}
+            <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold tracking-wider text-[#BA4E25] uppercase">
+                  RASMLAR (IMAGES)
+                </h3>
+                <span className="text-[11px] text-[#8F7E73]">
+                  {images.length} ta rasm yuklangan
+                </span>
+              </div>
+
+              {/* Gallery of Uploaded Images */}
+              {images.length > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                  {images.map((img, idx) => (
+                    <div
+                      key={idx}
+                      className="relative aspect-4/3 rounded border border-[#E7E0D8] overflow-hidden bg-white group"
+                    >
+                      <Image
+                        src={img}
+                        alt="Painting asset"
+                        fill
+                        className="object-cover"
+                      />
+                      {idx === 0 && (
+                        <span className="absolute top-1 left-1 bg-[#BA4E25] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                          Asosiy
+                        </span>
+                      )}
+                      {images.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setImages((prev) => prev.filter((_, i) => i !== idx))}
+                          className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Upload Dropzone */}
+              <label className="border-2 border-dashed border-[#D2C5BA] rounded-[4px] p-6 text-center bg-[#FAF4EC]/40 hover:bg-[#FAF4EC] transition-colors cursor-pointer flex flex-col items-center justify-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  disabled={uploadingImage}
+                />
+                {uploadingImage ? (
+                  <div className="flex items-center gap-2 text-xs text-[#BA4E25]">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Rasm yuklanmoqda...</span>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="w-7 h-7 text-[#8F8178] mb-1.5" />
+                    <p className="text-xs font-semibold text-[#554740]">
+                      Kompyuterdan rasm tanlash yoki sudrab tashlash
+                    </p>
+                    <span className="text-[10px] text-[#A8988E] mt-0.5">
+                      JPG, PNG, WEBP formatlar (birinchi rasm muqova sifatida qo'llanadi)
+                    </span>
+                  </>
+                )}
+              </label>
+            </div>
+          </div>
+
+          {/* Right Column (Pricing & Toggles) */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Pricing Panel */}
+            <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-6 space-y-4">
+              <h3 className="text-xs font-bold tracking-wider text-[#BA4E25] uppercase">
+                NARX VA CHEGIRMA
+              </h3>
+
               <div>
                 <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                  YEAR
+                  ASOSIY NARX (USD) *
                 </label>
                 <input
                   type="number"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                  required
+                  value={price}
+                  onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
+                  placeholder="420"
+                  className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
+              {/* Scope selection pills */}
               <div>
-                <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                  ARTIST
+                <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
+                  CHEGIRMA DARAJASI (HIERARCHY)
                 </label>
-                <select
-                  value={artistId}
-                  onChange={(e) => setArtistId(e.target.value)}
-                  className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-                >
-                  {artists.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}
-                    </option>
+                <div className="grid grid-cols-3 gap-1 bg-[#FAF4EC] p-1 rounded-[3px] border border-[#E7E0D8]">
+                  {(
+                    [
+                      { id: 'PAINTING', label: 'Ushbu kartina' },
+                      { id: 'ARTIST', label: 'Rassom' },
+                      { id: 'CATEGORY', label: 'Kategoriya' },
+                    ] as const
+                  ).map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setDiscountScope(s.id)}
+                      className={`text-[10px] font-semibold py-1.5 rounded-[2px] transition-all cursor-pointer ${
+                        discountScope === s.id
+                          ? 'bg-white text-[#BA4E25] shadow-xs'
+                          : 'text-[#8F8178] hover:text-[#281C18]'
+                      }`}
+                    >
+                      {s.label}
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                  CATEGORY
-                </label>
-                <select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-                >
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name_en}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    CHEGIRMA %
+                  </label>
+                  <input
+                    type="text"
+                    value={discountPercent}
+                    onChange={(e) => setDiscountPercent(e.target.value)}
+                    placeholder="15%"
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    YAKUNIY NARX
+                  </label>
+                  <div className="text-sm font-bold text-[#BA4E25] py-2">
+                    ${calculatedDiscountPrice || price}
+                  </div>
+                </div>
+              </div>
+
+              {/* Dates */}
+              <div className="space-y-3 pt-2 border-t border-[#E7E0D8]">
+                <div>
+                  <label className="block text-[10px] font-bold tracking-wider text-[#8F8178] uppercase mb-1">
+                    BOSHLANISH SANASI
+                  </label>
+                  <input
+                    type="date"
+                    value={discountStarts}
+                    onChange={(e) => setDiscountStarts(e.target.value)}
+                    className="w-full text-xs px-3 py-1.5 bg-white border border-[#E7E0D8] rounded-[3px]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold tracking-wider text-[#8F8178] uppercase mb-1">
+                    TUGASH SANASI
+                  </label>
+                  <input
+                    type="date"
+                    value={discountEnds}
+                    onChange={(e) => setDiscountEnds(e.target.value)}
+                    className="w-full text-xs px-3 py-1.5 bg-white border border-[#E7E0D8] rounded-[3px]"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Images Upload Box */}
-          <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-6 space-y-3">
-            <h3 className="text-xs font-bold tracking-wider text-[#BA4E25] uppercase">
-              IMAGES
-            </h3>
-            <div className="border-2 border-dashed border-[#D2C5BA] rounded-[4px] p-8 text-center bg-[#FAF4EC]/40 hover:bg-[#FAF4EC] transition-colors cursor-pointer">
-              <Upload className="w-8 h-8 text-[#8F8178] mx-auto mb-2" />
-              <p className="text-xs text-[#554740]">
-                Drag images here or click to upload — first image is used as the cover
-              </p>
-              <span className="text-[10px] text-[#A8988E] mt-1 block">
-                Supports JPG, PNG, WEBP up to 10MB
-              </span>
+            {/* Toggles Panel */}
+            <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-6 space-y-4">
+              <h3 className="text-xs font-bold tracking-wider text-[#BA4E25] uppercase">
+                HOLATI VA KO'RINIShI
+              </h3>
+
+              <label className="flex items-center justify-between cursor-pointer">
+                <div>
+                  <div className="text-xs font-semibold text-[#281C18]">Sotilgan (Sold)</div>
+                  <div className="text-[10px] text-[#8F8178]">
+                    Kartina saytda "Sotildi" belgisi bilan ko'rinadi
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isSold}
+                  onChange={(e) => setIsSold(e.target.checked)}
+                  className="w-4 h-4 accent-[#BA4E25]"
+                />
+              </label>
+
+              <label className="flex items-center justify-between cursor-pointer pt-3 border-t border-[#E7E0D8]">
+                <div>
+                  <div className="text-xs font-semibold text-[#281C18]">Bosh sahifada (Featured)</div>
+                  <div className="text-[10px] text-[#8F8178]">
+                    Bosh sahifadagi tanlangan asarlar qatorida ko'rsatish
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isFeatured}
+                  onChange={(e) => setIsFeatured(e.target.checked)}
+                  className="w-4 h-4 accent-[#BA4E25]"
+                />
+              </label>
             </div>
           </div>
         </div>
+      </form>
 
-        {/* Right Column (Pricing & Toggles) */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* Pricing Panel */}
-          <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-6 space-y-4">
-            <h3 className="text-xs font-bold tracking-wider text-[#BA4E25] uppercase">
-              PRICING
-            </h3>
-
-            <div>
-              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                ORIGINAL PRICE (USD)
-              </label>
-              <input
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
-                placeholder="420"
-                className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-              />
-            </div>
-
-            {/* Scope selection pills matching AdminPaintingForm.png */}
-            <div>
-              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
-                DISCOUNT INHERITANCE
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setDiscountScope('PAINTING')}
-                  className={`text-[11px] px-3 py-1.5 rounded-full border transition-all ${
-                    discountScope === 'PAINTING'
-                      ? 'bg-[#281C18] text-white border-[#281C18]'
-                      : 'bg-white text-[#554740] border-[#E7E0D8]'
-                  }`}
-                >
-                  This painting
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDiscountScope('ARTIST')}
-                  className={`text-[11px] px-3 py-1.5 rounded-full border transition-all ${
-                    discountScope === 'ARTIST'
-                      ? 'bg-[#281C18] text-white border-[#281C18]'
-                      : 'bg-white text-[#554740] border-[#E7E0D8]'
-                  }`}
-                >
-                  Inherit from artist
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDiscountScope('CATEGORY')}
-                  className={`text-[11px] px-3 py-1.5 rounded-full border transition-all ${
-                    discountScope === 'CATEGORY'
-                      ? 'bg-[#281C18] text-white border-[#281C18]'
-                      : 'bg-white text-[#554740] border-[#E7E0D8]'
-                  }`}
-                >
-                  Inherit from category
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                DISCOUNT
-              </label>
-              <input
-                type="text"
-                value={discountPercent}
-                onChange={(e) => setDiscountPercent(e.target.value)}
-                placeholder="15%"
-                className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                  STARTS
-                </label>
-                <input
-                  type="date"
-                  value={discountStarts}
-                  onChange={(e) => setDiscountStarts(e.target.value)}
-                  className="w-full text-[11px] px-2.5 py-1.5 bg-white border border-[#E7E0D8] rounded-[3px]"
-                />
-              </div>
-              <div>
-                <label className="block text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                  ENDS
-                </label>
-                <input
-                  type="date"
-                  value={discountEnds}
-                  onChange={(e) => setDiscountEnds(e.target.value)}
-                  className="w-full text-[11px] px-2.5 py-1.5 bg-white border border-[#E7E0D8] rounded-[3px]"
-                />
-              </div>
-            </div>
-
-            {/* Live price preview matching AdminPaintingForm.png */}
-            <div className="pt-2 border-t border-[#F0EAE1]">
-              <span className="block text-[10.5px] font-bold tracking-wider text-[#8F8178] uppercase mb-1">
-                PREVIEW
-              </span>
-              <div className="flex items-baseline gap-2">
-                <span className="line-through text-[#9E9086] text-sm">${price}</span>
-                <span className="font-bold text-[#BA4E25] text-lg">
-                  ${calculatedDiscountPrice || price}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Toggles Panel matching AdminPaintingForm.png */}
-          <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#281C18]">Mark as Sold</span>
+      {/* Modal: Inline Add Artist */}
+      {showAddArtistModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#E7E0D8]">
+            <div className="flex items-center justify-between border-b pb-3 border-[#E7E0D8]">
+              <h3 className="font-serif text-lg font-bold text-[#281C18]">
+                Yangi Rassom Qo'shish
+              </h3>
               <button
                 type="button"
-                onClick={() => setIsSold(!isSold)}
-                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                  isSold ? 'bg-[#BA4E25]' : 'bg-[#E7E0D8]'
-                }`}
+                onClick={() => setShowAddArtistModal(false)}
+                className="text-[#8F8178] hover:text-[#281C18]"
               >
-                <div
-                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                    isSold ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-[#F0EAE1]">
-              <span className="text-xs font-semibold text-[#281C18]">Featured on homepage</span>
-              <button
-                type="button"
-                onClick={() => setIsFeatured(!isFeatured)}
-                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
-                  isFeatured ? 'bg-[#BA4E25]' : 'bg-[#E7E0D8]'
-                }`}
-              >
-                <div
-                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                    isFeatured ? 'translate-x-5' : 'translate-x-0'
-                  }`}
+            <form onSubmit={handleCreateArtist} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                  Rassom Ism-Sharifi *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newArtistName}
+                  onChange={(e) => setNewArtistName(e.target.value)}
+                  placeholder="Kamoliddin Behzod"
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                 />
-              </button>
-            </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                  Mutaxassisligi (Specialty)
+                </label>
+                <input
+                  type="text"
+                  value={newArtistSpecialty}
+                  onChange={(e) => setNewArtistSpecialty(e.target.value)}
+                  placeholder="Minyatura va Sharq manzaralari"
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                  Qisqacha Tarjimai Hol (Bio)
+                </label>
+                <textarea
+                  rows={2}
+                  value={newArtistBio}
+                  onChange={(e) => setNewArtistBio(e.target.value)}
+                  placeholder="Rassom ijodi haqida..."
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] resize-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddArtistModal(false)}
+                  className="px-4 py-2 border border-[#E7E0D8] text-xs font-semibold text-[#554740] rounded hover:bg-gray-50"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingArtist}
+                  className="px-4 py-2 bg-[#BA4E25] text-white text-xs font-semibold rounded hover:bg-[#9C3E1B] disabled:opacity-50"
+                >
+                  {addingArtist ? 'Qo\'shilmoqda...' : 'Qo\'shish'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </div>
-    </form>
+      )}
+
+      {/* Modal: Inline Add Category */}
+      {showAddCategoryModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#E7E0D8]">
+            <div className="flex items-center justify-between border-b pb-3 border-[#E7E0D8]">
+              <h3 className="font-serif text-lg font-bold text-[#281C18]">
+                Yangi Kategoriya Qo'shish
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddCategoryModal(false)}
+                className="text-[#8F8178] hover:text-[#281C18]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCategory} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                  Kategoriya Nomi (O'zbekcha) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newCategoryNameUz}
+                  onChange={(e) => setNewCategoryNameUz(e.target.value)}
+                  placeholder="Ipak yo'li manzaralari"
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                  Kategoriya Nomi (Inglizcha - EN)
+                </label>
+                <input
+                  type="text"
+                  value={newCategoryNameEn}
+                  onChange={(e) => setNewCategoryNameEn(e.target.value)}
+                  placeholder="Silk Road Landscapes"
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddCategoryModal(false)}
+                  className="px-4 py-2 border border-[#E7E0D8] text-xs font-semibold text-[#554740] rounded hover:bg-gray-50"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingCategory}
+                  className="px-4 py-2 bg-[#BA4E25] text-white text-xs font-semibold rounded hover:bg-[#9C3E1B] disabled:opacity-50"
+                >
+                  {addingCategory ? 'Qo\'shilmoqda...' : 'Qo\'shish'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -39,6 +39,18 @@ Har bosqichdan keyin to'xtab, natijani (screenshot/browser preview orqali) teksh
 ## 5. Tillar
 Butun sayt EN/RU/UZ (lotin) tillarida bo'lishi kerak. UZ matnlarda faqat lotin alifbosi ishlatiladi, kirill emas.
 
+## 6. Qo'shimcha talablar (TZ bo'lim 8 ga qarang, to'liq tafsilotlar shu yerda)
+Bular hammasi TZ hujjatining "8. Qo'shimcha talablar va tuzatishlar" bo'limida batafsil yozilgan — quyida faqat qisqa ro'yxat, implementatsiyadan oldin TZ dagi to'liq matnni o'qi:
+
+- **Admin panelni himoyalash**: `/admin` yo'li faqat role="admin" bo'lgan, tizimga kirgan foydalanuvchiga ochiq bo'lsin (NextAuth session + middleware tekshiruvi). To'g'ridan-to'g'ri link orqali ham begona kirolmasin.
+- **Paintings formasi**: rassom/kategoriya tanlov ro'yxatlaridan turib yangisini qo'shish imkoniyati ("+ Yangi qo'shish" modal). O'lcham (size) maydoni tuzilgan input bo'lsin (eni × bo'yi + birlik), erkin matn emas.
+- **Rasm yuklash, Artist/Category qo'shish** — bular real backend (DB + Cloudinary/Vercel Blob) ulanganidan keyin ishlaydi; buni birinchi bosqichda ishlaydigan qilib qurish kerak (statik maketda ishlamasligi normal edi, lekin haqiqiy saytda albatta ishlashi shart).
+- **Inquiries vs Service Requests**: Inquiries — mavjud kartina haqidagi so'rov; Service Requests — yangi xizmat (mural/keramika/custom) so'rovi. Alohida jadval va admin bo'lim.
+- **Valyuta kurslari**: USD/EUR/RUB O'zbekiston Markaziy banki (cbu.uz) API'sidan avtomatik yangilanadi + Settings'da qo'lda tuzatish imkoniyati ham bo'lsin.
+- **Settings**: galereya nomi, telefon, manzil, joylashuv/xarita, ish vaqti, ijtimoiy tarmoqlar, "Biz haqimizda" matni (3 tilda) — hammasi shu yerdan tahrirlanadigan bo'lsin.
+- **Sign up**: davlat tanlovida to'liq davlatlar ro'yxati; parol — ikki marta kiritish (tasdiqlash), kamida 8 belgi, kamida 1 ta katta harf va 1 ta raqam.
+- **Bosh sahifa hero rasmi**: bitta statik rasm emas, bir nechta rasm orasida avtomatik almashinadigan carousel.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

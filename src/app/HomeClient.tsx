@@ -1,19 +1,65 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
 import { Palette, Users, Brush, ArrowRight } from 'lucide-react';
 
+const HERO_SLIDES = [
+  {
+    image: '/assets/p-arch.svg',
+    title_en: 'Registon at Dusk',
+    title_uz: 'Registon shafaq paytida',
+    artist: 'Dilnoza Yusupova',
+    year: '2024',
+  },
+  {
+    image: '/assets/p-dome.svg',
+    title_en: 'Bibi-Khanym Turquoise Dome',
+    title_uz: 'Bibixonim feruza gumbazi',
+    artist: 'Bekzod Rahimov',
+    year: '2024',
+  },
+  {
+    image: '/assets/p-courtyard.svg',
+    title_en: 'Old Bukhara Hovli',
+    title_uz: 'Eski Buxoro hovlisi',
+    artist: 'Rustam Ismoilov',
+    year: '2023',
+  },
+  {
+    image: '/assets/p-portrait.svg',
+    title_en: 'The Weaver',
+    title_uz: "To'quvchi ayol",
+    artist: 'Gulnora Karimova',
+    year: '2023',
+  },
+  {
+    image: '/assets/p-diamond.svg',
+    title_en: 'Suzani Rhythm',
+    title_uz: 'So\'zana ohangi',
+    artist: 'Dilnoza Yusupova',
+    year: '2024',
+  },
+];
+
 interface HomeClientProps {
   featuredPaintings: any[];
 }
 
 export default function HomeClient({ featuredPaintings }: HomeClientProps) {
-  const { t } = useApp();
+  const { t, lang } = useApp();
   const dividerRef = useRef<SVGSVGElement>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -79,7 +125,7 @@ export default function HomeClient({ featuredPaintings }: HomeClientProps) {
             </div>
           </div>
 
-          {/* Right Floating Art with Spotlight */}
+          {/* Right Floating Art Carousel with Spotlight (TZ Section 8.9) */}
           <div className="relative flex-1 w-full max-w-[440px] lg:max-w-[480px] aspect-square flex items-center justify-center">
             {/* Glowing spotlight pulse */}
             <div
@@ -90,27 +136,56 @@ export default function HomeClient({ featuredPaintings }: HomeClientProps) {
               }}
             />
 
-            {/* Floating Art Frame */}
-            <div className="relative w-full h-full rounded-[4px] overflow-hidden border border-[#52443E] shadow-[0_35px_70px_-25px_rgba(0,0,0,0.85)] animate-float bg-[#281C18]">
-              <Image
-                src="/assets/p-arch.svg"
-                alt="Registon at Dusk artwork preview"
-                fill
-                priority
-                className="object-cover"
-              />
-              <div className="absolute bottom-4 left-4 right-4 bg-[#1D100B]/80 backdrop-blur-xs p-3 rounded-[3px] border border-[#FAF4EC]/10 text-xs flex items-center justify-between">
+            {/* Floating Art Frame Carousel */}
+            <div className="relative w-full h-full rounded-[4px] overflow-hidden border border-[#52443E] shadow-[0_35px_70px_-25px_rgba(0,0,0,0.85)] animate-float bg-[#281C18] group">
+              {HERO_SLIDES.map((slide, idx) => (
+                <div
+                  key={idx}
+                  className={`absolute inset-0 transition-opacity duration-1000 ${
+                    currentSlide === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                  }`}
+                >
+                  <Image
+                    src={slide.image}
+                    alt={slide.title_en}
+                    fill
+                    priority={idx === 0}
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+
+              {/* Slide Counter & Dots */}
+              <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-[#1D100B]/70 backdrop-blur-xs px-2.5 py-1 rounded-full border border-white/10">
+                {HERO_SLIDES.map((_, dotIdx) => (
+                  <button
+                    key={dotIdx}
+                    onClick={() => setCurrentSlide(dotIdx)}
+                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                      currentSlide === dotIdx
+                        ? 'w-5 bg-[#DAA932]'
+                        : 'w-1.5 bg-white/40 hover:bg-white/70'
+                    }`}
+                    aria-label={`Slide ${dotIdx + 1}`}
+                  />
+                ))}
+              </div>
+
+              {/* Slide Details Overlay */}
+              <div className="absolute bottom-4 left-4 right-4 z-20 bg-[#1D100B]/85 backdrop-blur-xs p-3.5 rounded-[3px] border border-[#FAF4EC]/10 text-xs flex items-center justify-between">
                 <div>
                   <div className="font-serif font-semibold text-sm text-[#FAF4EC]">
-                    Registon at Dusk
+                    {lang === 'uz' ? HERO_SLIDES[currentSlide].title_uz : HERO_SLIDES[currentSlide].title_en}
                   </div>
-                  <div className="text-[11px] text-[#A6988E]">Dilnoza Yusupova · 2024</div>
+                  <div className="text-[11px] text-[#A6988E]">
+                    {HERO_SLIDES[currentSlide].artist} · {HERO_SLIDES[currentSlide].year}
+                  </div>
                 </div>
                 <Link
                   href="/gallery"
-                  className="text-xs font-semibold text-[#5AB3B7] hover:underline"
+                  className="text-xs font-semibold text-[#5AB3B7] hover:text-[#DAA932] transition-colors"
                 >
-                  View →
+                  Ko'rish →
                 </Link>
               </div>
             </div>

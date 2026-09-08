@@ -417,6 +417,30 @@ async function main() {
     },
   });
 
+  // 9. Site Settings
+  await prisma.siteSettings.upsert({
+    where: { id: 'default' },
+    update: {},
+    create: {
+      id: 'default',
+      gallery_name: 'Art Qala',
+      phone: '+998 66 233 44 55',
+      email: 'info@artqala.uz',
+      address: 'Registan Street, 4, Samarkand, Uzbekistan',
+      location_map: 'https://maps.google.com/?q=Registan,Samarkand',
+      working_hours: 'Mon - Sun: 09:00 - 19:00',
+      telegram: 'https://t.me/artqala',
+      instagram: 'https://instagram.com/artqala',
+      about_en: 'Art Qala is a premier art gallery and studio located in the historic heart of Samarkand, Uzbekistan, celebrating Central Asian heritage.',
+      about_ru: 'Art Qala — ведущая художественная галерея и студия в историческом центре Самарканда, прославляющая наследие Центральной Азии.',
+      about_uz: "Art Qala — Samarqand shahrining tarixiy markazida joylashgan yetakchi san'at galereyasi va studiyasi bo'lib, Markaziy Osiyo merosini targ'ib qiladi.",
+      rate_usd: 12850,
+      rate_eur: 13900,
+      rate_rub: 140,
+      manual_rates: false,
+    },
+  });
+
   console.log('Database seeded successfully!');
 }
 

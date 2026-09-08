@@ -8,7 +8,18 @@ export async function POST(request: Request) {
 
     if (!name || !email || !password) {
       return NextResponse.json(
-        { success: false, error: 'Name, email and password are required' },
+        { success: false, error: 'Barcha maydonlar to\'ldirilishi shart' },
+        { status: 400 }
+      );
+    }
+
+    // Password requirements: min 8 chars, 1 uppercase, 1 number
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Parol kamida 8 ta belgi, 1 ta katta harf va 1 ta raqamdan iborat bo\'lishi shart',
+        },
         { status: 400 }
       );
     }

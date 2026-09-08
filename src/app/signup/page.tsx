@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { UserPlus, Mail, Lock, User, Globe, AlertCircle } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, Globe, AlertCircle, Check, X, ShieldCheck } from 'lucide-react';
+import { COUNTRIES } from '@/lib/countries';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -13,13 +14,34 @@ export default function SignUpPage() {
   const [country, setCountry] = useState('Uzbekistan');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Password real-time criteria (TZ Section 8.8)
+  const hasMinLength = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const passwordsMatch = password.length > 0 && password === confirmPassword;
+
+  const isPasswordValid = hasMinLength && hasUppercase && hasNumber && passwordsMatch;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    if (!isPasswordValid) {
+      if (!hasMinLength || !hasUppercase || !hasNumber) {
+        setError('Parol talablarga to\'liq javob bermaydi (kamida 8 belgi, 1 ta katta harf va 1 ta raqam).');
+        return;
+      }
+      if (!passwordsMatch) {
+        setError('Kiritilgan parollar bir-biriga mos kelmadi.');
+        return;
+      }
+    }
+
+    setLoading(true);
 
     try {
       const res = await fetch('/api/auth/signup', {
@@ -30,21 +52,21 @@ export default function SignUpPage() {
 
       const data = await res.json();
       if (!data.success) {
-        setError(data.error || 'Failed to create account');
+        setError(data.error || 'Ro\'yxatdan o\'tishda xatolik yuz berdi');
+        setLoading(false);
         return;
       }
 
-      // If OTP was returned in dev mode, show it or pass via query
+      // Route to OTP verification
       router.push(`/verify-otp?email=${encodeURIComponent(email)}&devOtp=${data.otpPreview || ''}`);
-    } catch (err) {
-      setError('An error occurred during registration. Please try again.');
-    } finally {
+    } catch {
+      setError('Serverga bog\'lanishda xatolik yuz berdi. Iltimos qaytadan urinib ko\'ring.');
       setLoading(false);
     }
   };
 
   return (
-    <div className="py-16 sm:py-20 px-6 flex items-center justify-center min-h-[80vh]">
+    <div className="py-12 sm:py-16 px-6 flex items-center justify-center min-h-[85vh]">
       <div className="w-full max-w-md bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-8 sm:p-10 shadow-md">
         {/* Brand header */}
         <div className="text-center space-y-2 mb-8">
@@ -58,10 +80,10 @@ export default function SignUpPage() {
             />
           </Link>
           <h1 className="font-serif text-3xl font-semibold text-[#281C18]">
-            Create Account
+            Ro'yxatdan o'tish
           </h1>
           <p className="text-xs text-[#726861]">
-            Join Art Qala to save your favorite paintings, request commissions, and receive official authenticity certificates
+            Art Qala galereyasiga a'zo bo'ling: sevimli kartinalaringizni saqlang, xizmatlarga buyurtma bering va rasmiy asillik sertifikatlarini oling
           </p>
         </div>
 
@@ -75,7 +97,7 @@ export default function SignUpPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-              Full Name *
+              Ism va Familiya *
             </label>
             <div className="relative">
               <User className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -84,41 +106,36 @@ export default function SignUpPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. David Sterling"
+                placeholder="masalan: Alisher Navoiy"
                 className="w-full pl-9 pr-3 py-2.5 bg-white border border-[#E7E0D8] rounded-[3px] text-sm text-[#281C18] focus:outline-none focus:border-[#BA4E25]"
               />
             </div>
           </div>
 
+          {/* Full Country Select (TZ Section 8.7) */}
           <div>
             <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-              Country *
+              Davlat (Country) *
             </label>
             <div className="relative">
-              <Globe className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Globe className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <select
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 bg-white border border-[#E7E0D8] rounded-[3px] text-sm text-[#281C18] focus:outline-none focus:border-[#BA4E25]"
+                className="w-full pl-9 pr-8 py-2.5 bg-white border border-[#E7E0D8] rounded-[3px] text-sm text-[#281C18] focus:outline-none focus:border-[#BA4E25] appearance-none"
               >
-                <option value="Uzbekistan">Uzbekistan</option>
-                <option value="United States">United States</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="Germany">Germany</option>
-                <option value="France">France</option>
-                <option value="Italy">Italy</option>
-                <option value="Russia">Russia</option>
-                <option value="Kazakhstan">Kazakhstan</option>
-                <option value="Turkey">Turkey</option>
-                <option value="Japan">Japan</option>
-                <option value="Other">Other</option>
+                {COUNTRIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
           <div>
             <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-              Email Address *
+              Email Manzil *
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -127,49 +144,100 @@ export default function SignUpPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="david@example.com"
+                placeholder="sizning.email@example.com"
                 className="w-full pl-9 pr-3 py-2.5 bg-white border border-[#E7E0D8] rounded-[3px] text-sm text-[#281C18] focus:outline-none focus:border-[#BA4E25]"
               />
             </div>
           </div>
 
+          {/* Password (TZ Section 8.8) */}
           <div>
             <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-              Password *
+              Parol *
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="password"
                 required
-                minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 6 characters"
+                placeholder="••••••••"
                 className="w-full pl-9 pr-3 py-2.5 bg-white border border-[#E7E0D8] rounded-[3px] text-sm text-[#281C18] focus:outline-none focus:border-[#BA4E25]"
               />
             </div>
           </div>
 
+          {/* Confirm Password (TZ Section 8.8) */}
+          <div>
+            <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+              Parolni Tasdiqlash *
+            </label>
+            <div className="relative">
+              <Lock className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                className={`w-full pl-9 pr-3 py-2.5 bg-white border rounded-[3px] text-sm text-[#281C18] focus:outline-none ${
+                  confirmPassword.length > 0 && !passwordsMatch
+                    ? 'border-red-400 focus:border-red-500'
+                    : 'border-[#E7E0D8] focus:border-[#BA4E25]'
+                }`}
+              />
+            </div>
+          </div>
+
+          {/* Real-time Password Requirements Card */}
+          <div className="bg-[#FAF4EC] border border-[#E7E0D8] rounded-[3px] p-3 space-y-1.5 text-[11px]">
+            <div className="font-semibold text-[#6B5E55] mb-1 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#BA4E25]" />
+              <span>Xavfsiz parol talablari:</span>
+            </div>
+
+            <div className={`flex items-center gap-1.5 ${hasMinLength ? 'text-green-700 font-medium' : 'text-[#8F7E73]'}`}>
+              {hasMinLength ? <Check className="w-3.5 h-3.5 text-green-600 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-[#D2C5BA] shrink-0" />}
+              <span>Kamida 8 ta belgi</span>
+            </div>
+
+            <div className={`flex items-center gap-1.5 ${hasUppercase ? 'text-green-700 font-medium' : 'text-[#8F7E73]'}`}>
+              {hasUppercase ? <Check className="w-3.5 h-3.5 text-green-600 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-[#D2C5BA] shrink-0" />}
+              <span>Kamida 1 ta katta harf (A-Z)</span>
+            </div>
+
+            <div className={`flex items-center gap-1.5 ${hasNumber ? 'text-green-700 font-medium' : 'text-[#8F7E73]'}`}>
+              {hasNumber ? <Check className="w-3.5 h-3.5 text-green-600 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-[#D2C5BA] shrink-0" />}
+              <span>Kamida 1 ta raqam (0-9)</span>
+            </div>
+
+            {confirmPassword.length > 0 && (
+              <div className={`flex items-center gap-1.5 ${passwordsMatch ? 'text-green-700 font-medium' : 'text-red-600 font-medium'}`}>
+                {passwordsMatch ? <Check className="w-3.5 h-3.5 text-green-600 shrink-0" /> : <X className="w-3.5 h-3.5 text-red-500 shrink-0" />}
+                <span>{passwordsMatch ? 'Parollar bir-biriga mos keldi' : 'Parollar mos kelmadi'}</span>
+              </div>
+            )}
+          </div>
+
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-sm py-3 rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-sm mt-4"
+            disabled={loading || (password.length > 0 && !isPasswordValid)}
+            className="w-full mt-2 py-3 px-4 bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold uppercase tracking-wider rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
           >
             <UserPlus className="w-4 h-4" />
-            <span>{loading ? 'Creating Account...' : 'Continue to Verification'}</span>
+            <span>{loading ? 'Yaratilmoqda...' : 'Hisob Yaratish (Sign Up)'}</span>
           </button>
         </form>
 
-        <p className="text-center text-xs text-[#726861] mt-8">
-          Already have an account?{' '}
-          <Link
-            href="/signin"
-            className="font-bold text-[#BA4E25] hover:underline"
-          >
-            Sign in
-          </Link>
-        </p>
+        <div className="mt-6 pt-5 border-t border-[#E7E0D8] text-center">
+          <p className="text-xs text-[#726861]">
+            Allaqachon hisobingiz bormi?{' '}
+            <Link href="/signin" className="font-semibold text-[#BA4E25] hover:underline">
+              Kirish (Sign In)
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
