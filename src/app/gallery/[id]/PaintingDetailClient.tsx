@@ -319,7 +319,7 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
                       rows={3}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="I would like to inquire about reservation, delivery to my hotel in Samarkand, or international shipping..."
+                      placeholder="I would like to inquire about reservation, delivery to my hotel in Tashkent, or international shipping..."
                       className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[2px] focus:outline-none focus:border-[#BA4E25] resize-none"
                     />
                   </div>

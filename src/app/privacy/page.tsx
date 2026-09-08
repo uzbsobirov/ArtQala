@@ -12,7 +12,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="text-xs text-[#8F8178]">
-            Effective Date: September 2026 · Art Qala Gallery, Samarkand
+            Effective Date: September 2026 · Art Qala Gallery, Tashkent
           </p>
         </div>
 
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
             4. Contact Us
           </h2>
           <p>
-            If you have questions regarding your data or wish to request deletion of your account, contact our data curator at: <strong className="text-[#BA4E25]">privacy@artqala.uz</strong> or visit our gallery at 4 Registon Street, Samarkand.
+            If you have questions regarding your data or wish to request deletion of your account, contact our data curator at: <strong className="text-[#BA4E25]">privacy@artqala.uz</strong> or visit our gallery at Barakhon Madrasah, Tashkent.
           </p>
         </div>
       </div>

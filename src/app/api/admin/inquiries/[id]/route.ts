@@ -62,7 +62,7 @@ export async function PUT(request: Request, context: RouteContext) {
       const emailHtml = `
         <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #E7E0D8; background-color: #FAF4EC; color: #281C18;">
           <h2 style="color: #BA4E25; margin-bottom: 8px;">Art Qala Gallery</h2>
-          <p style="font-size: 12px; color: #726861; text-transform: uppercase; letter-spacing: 2px; margin-top: 0;">Samarkand, Uzbekistan</p>
+          <p style="font-size: 12px; color: #726861; text-transform: uppercase; letter-spacing: 2px; margin-top: 0;">Tashkent, Uzbekistan</p>
           <hr style="border: 0; border-top: 1px solid #E7E0D8; margin: 20px 0;" />
           <p style="font-size: 15px;">Dear ${recipientName},</p>
           <p style="font-size: 14px; line-height: 1.6; color: #554740;">
@@ -76,7 +76,7 @@ export async function PUT(request: Request, context: RouteContext) {
           </p>
           <hr style="border: 0; border-top: 1px solid #E7E0D8; margin: 20px 0;" />
           <p style="font-size: 12px; color: #8F8178; margin-bottom: 0;">
-            Art Qala Gallery · 4 Registan Street, Samarkand · Tel: +998 66 233 44 55
+            Art Qala Gallery · Barakhon Madrasah, Tashkent · info@artqala.uz
           </p>
         </div>
       `;

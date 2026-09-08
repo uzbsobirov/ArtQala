@@ -15,8 +15,8 @@ export default function AdminSettingsPage() {
   const [galleryName, setGalleryName] = useState('Art Qala');
   const [phones, setPhones] = useState<string[]>(['+998 66 233 44 55']);
   const [email, setEmail] = useState('info@artqala.uz');
-  const [address, setAddress] = useState('Registan Street, 4, Samarkand, Uzbekistan');
-  const [locationMap, setLocationMap] = useState('https://maps.google.com/?q=Registan,Samarkand');
+  const [address, setAddress] = useState('Barakhon Madrasah, Tashkent, Uzbekistan');
+  const [locationMap, setLocationMap] = useState('https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8');
   
   // Weekly working hours schedule
   interface DaySchedule {
@@ -117,8 +117,8 @@ export default function AdminSettingsPage() {
           }
 
           setEmail(s.email || 'info@artqala.uz');
-          setAddress(s.address || 'Registan Street, 4, Samarkand, Uzbekistan');
-          setLocationMap(s.location_map || 'https://maps.google.com/?q=Registan,Samarkand');
+          setAddress(s.address || 'Barakhon Madrasah, Tashkent, Uzbekistan');
+          setLocationMap(s.location_map || 'https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8');
 
           // Parse schedule
           if (s.working_hours) {

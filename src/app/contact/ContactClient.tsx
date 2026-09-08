@@ -11,7 +11,7 @@ export default function ContactClient() {
   const phones = parsePhones(settings?.phone);
   const workingHoursText = formatWorkingHours(settings?.working_hours, lang);
   const addressText = settings?.address || t.contact.address;
-  const locationMap = settings?.location_map || 'https://maps.google.com/?q=Registan,Samarkand';
+  const locationMap = settings?.location_map || 'https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8';
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

@@ -21,15 +21,15 @@ const workSans = Work_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Art Qala — Gallery & Studio | Samarkand, Uzbekistan',
+  title: 'Art Qala — Gallery & Studio | Tashkent, Uzbekistan',
   description:
-    'Art Qala is a premier art gallery in Samarkand, Uzbekistan, showcasing original paintings of historical monuments, portraits, and traditional crafts, alongside custom murals and ceramics.',
+    'Art Qala is a premier art gallery in Tashkent, Uzbekistan, showcasing original paintings of historical monuments, portraits, and traditional crafts, alongside custom murals and ceramics.',
   keywords: [
-    'Samarkand art gallery',
+    'Tashkent art gallery',
     'Uzbekistan paintings',
-    'Registan art',
+    'Tashkent art',
     'Ikat ceramics',
-    'Custom murals Samarkand',
+    'Custom murals Tashkent',
   ],
 };
 

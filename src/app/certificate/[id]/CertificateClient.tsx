@@ -60,7 +60,7 @@ export default function CertificateClient({ painting }: CertificateClientProps) 
                 className="h-12 w-auto mx-auto object-contain mb-2"
               />
               <span className="text-[10px] tracking-[4px] text-[#BA4E25] font-bold uppercase block">
-                SAMARKAND · REPUBLIC OF UZBEKISTAN
+                TASHKENT · REPUBLIC OF UZBEKISTAN
               </span>
               <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-wider text-[#281C18] pt-2">
                 Certificate of Authenticity
@@ -164,7 +164,7 @@ export default function CertificateClient({ painting }: CertificateClientProps) 
 
             {/* Footer verification note */}
             <div className="text-center pt-8 text-[9px] text-[#A8988E]">
-              Art Qala Gallery · 4 Registon Street, Samarkand, Uzbekistan · Registered Cultural Property Document
+              Art Qala Gallery · Barakhon Madrasah, Tashkent, Uzbekistan · Registered Cultural Property Document
             </div>
           </div>
         </div>

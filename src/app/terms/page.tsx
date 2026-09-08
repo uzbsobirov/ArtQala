@@ -12,7 +12,7 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="text-xs text-[#8F8178]">
-            Effective Date: September 2026 · Art Qala Gallery, Samarkand
+            Effective Date: September 2026 · Art Qala Gallery, Tashkent
           </p>
         </div>
 
@@ -28,7 +28,7 @@ export default function TermsPage() {
             2. Inquiries and Reservation
           </h2>
           <p>
-            Submission of an inquiry on this platform does not constitute a binding financial charge. Our curators will review availability, calculate international insured freight or arrange personal collection at our Samarkand location, and provide a formal invoice.
+            Submission of an inquiry on this platform does not constitute a binding financial charge. Our curators will review availability, calculate international insured freight or arrange personal collection at our Tashkent location, and provide a formal invoice.
           </p>
 
           <h2 className="font-serif text-xl font-semibold text-[#281C18]">

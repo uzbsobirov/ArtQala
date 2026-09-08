@@ -12,8 +12,8 @@ export default function Footer() {
   const phones = parsePhones(settings?.phone);
   const workingHoursText = formatWorkingHours(settings?.working_hours, lang);
   const aboutText = getAboutText(settings, lang, t.footer.about);
-  const addressText = settings?.address || 'Registan Street, 4, Samarkand, Uzbekistan';
-  const locationMap = settings?.location_map || 'https://maps.google.com/?q=Registan,Samarkand';
+  const addressText = settings?.address || 'Barakhon Madrasah, Tashkent, Uzbekistan';
+  const locationMap = settings?.location_map || 'https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8';
   const cityCountryText = settings?.address
     ? settings.address.split(',').slice(-2).map((s) => s.trim()).join(', ')
     : 'Tashkent, Uzbekistan';

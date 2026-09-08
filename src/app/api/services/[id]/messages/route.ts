@@ -90,7 +90,7 @@ export async function POST(request: Request, context: RouteContext) {
           <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 28px; border: 1px solid #E7E0D8; background-color: #FAF4EC; color: #281C18; border-radius: 4px;">
             <div style="text-align: center; margin-bottom: 24px;">
               <h2 style="color: #BA4E25; margin: 0; font-size: 26px; letter-spacing: 1px;">Art Qala Gallery</h2>
-              <p style="font-size: 11px; color: #726861; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px;">Studio & Commissions · Samarkand</p>
+              <p style="font-size: 11px; color: #726861; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px;">Studio & Commissions · Tashkent</p>
             </div>
             <hr style="border: 0; border-top: 1px solid #E7E0D8; margin: 20px 0;" />
             <p style="font-size: 15px; margin-bottom: 12px;">Assalomu alaykum, ${recipientName},</p>
@@ -107,7 +107,7 @@ export async function POST(request: Request, context: RouteContext) {
             </div>
             <hr style="border: 0; border-top: 1px solid #E7E0D8; margin: 24px 0 16px 0;" />
             <p style="font-size: 11px; color: #8F8178; text-align: center; margin: 0;">
-              Art Qala Gallery & Studio · 4 Registan Street, Samarkand · Tel: +998 66 233 44 55
+              Art Qala Gallery & Studio · Barakhon Madrasah, Tashkent · info@artqala.uz
             </p>
           </div>
         `;

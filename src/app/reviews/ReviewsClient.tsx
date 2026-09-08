@@ -110,7 +110,7 @@ export default function ReviewsClient({ initialReviews }: ReviewsClientProps) {
                 Share Your Experience
               </h2>
               <p className="text-xs text-[#726861]">
-                Have you acquired an original painting or visited us in Samarkand?
+                Have you acquired an original painting or visited us in Tashkent?
               </p>
             </div>
 
@@ -166,7 +166,7 @@ export default function ReviewsClient({ initialReviews }: ReviewsClientProps) {
                     rows={4}
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    placeholder="Describe the artwork, packaging, delivery, or your gallery visit in Samarkand..."
+                    placeholder="Describe the artwork, packaging, delivery, or your gallery visit in Tashkent..."
                     className="w-full text-xs px-3.5 py-2.5 bg-white border border-[#E7E0D8] rounded-[2px] focus:outline-none focus:border-[#BA4E25] resize-none"
                   />
                 </div>
