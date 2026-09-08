@@ -198,3 +198,13 @@ model SiteSettings {
 
   updated_at    DateTime @updatedAt
 }
+
+model ContactMessage {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  subject    String?
+  message    String
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+}

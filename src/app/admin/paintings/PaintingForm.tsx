@@ -35,10 +35,14 @@ export default function PaintingForm({
   const [artistsList, setArtistsList] = useState(initialArtists || []);
   const [categoriesList, setCategoriesList] = useState(initialCategories || []);
 
-  // Form fields
-  const [titleEn, setTitleEn] = useState(initialData?.title_en || '');
+  // Form fields (EN / RU / UZ)
   const [titleUz, setTitleUz] = useState(initialData?.title_uz || '');
+  const [titleEn, setTitleEn] = useState(initialData?.title_en || '');
+  const [titleRu, setTitleRu] = useState(initialData?.title_ru || '');
+
+  const [descriptionUz, setDescriptionUz] = useState(initialData?.description_uz || '');
   const [descriptionEn, setDescriptionEn] = useState(initialData?.description_en || '');
+  const [descriptionRu, setDescriptionRu] = useState(initialData?.description_ru || '');
 
   // Structured size parsing (e.g. "60 × 80 sm" or "60x80")
   const parseSize = (sizeStr?: string) => {
@@ -60,7 +64,9 @@ export default function PaintingForm({
   const [sizeHeight, setSizeHeight] = useState<number>(initialParsedSize.height);
   const [sizeUnit, setSizeUnit] = useState<string>(initialParsedSize.unit);
 
+  const [techniqueUz, setTechniqueUz] = useState(initialData?.technique_uz || "Moybo'yoq, polotno");
   const [techniqueEn, setTechniqueEn] = useState(initialData?.technique_en || 'Oil on canvas');
+  const [techniqueRu, setTechniqueRu] = useState(initialData?.technique_ru || 'Холст, масло');
   const [year, setYear] = useState(initialData?.year || 2024);
   const [artistId, setArtistId] = useState(initialData?.artist_id || initialArtists[0]?.id || '');
   const [categoryId, setCategoryId] = useState(initialData?.category_id || initialCategories[0]?.id || '');
@@ -103,14 +109,31 @@ export default function PaintingForm({
   // Modals for adding inline Artist or Category
   const [showAddArtistModal, setShowAddArtistModal] = useState(false);
   const [newArtistName, setNewArtistName] = useState('');
-  const [newArtistSpecialty, setNewArtistSpecialty] = useState('');
-  const [newArtistBio, setNewArtistBio] = useState('');
+  const [newArtistSpecialtyUz, setNewArtistSpecialtyUz] = useState('');
+  const [newArtistSpecialtyEn, setNewArtistSpecialtyEn] = useState('');
+  const [newArtistSpecialtyRu, setNewArtistSpecialtyRu] = useState('');
+  const [newArtistBioUz, setNewArtistBioUz] = useState('');
+  const [newArtistBioEn, setNewArtistBioEn] = useState('');
+  const [newArtistBioRu, setNewArtistBioRu] = useState('');
   const [addingArtist, setAddingArtist] = useState(false);
 
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
-  const [newCategoryNameEn, setNewCategoryNameEn] = useState('');
   const [newCategoryNameUz, setNewCategoryNameUz] = useState('');
+  const [newCategoryNameEn, setNewCategoryNameEn] = useState('');
+  const [newCategoryNameRu, setNewCategoryNameRu] = useState('');
+  const [newCategorySlug, setNewCategorySlug] = useState('');
+  const [newCategorySlugManual, setNewCategorySlugManual] = useState(false);
   const [addingCategory, setAddingCategory] = useState(false);
+
+  const slugify = (text: string): string => {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[ʻʼ'`]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+  };
 
   // Calculate live preview
   const numPercent = parseFloat(discountPercent.replace('%', '')) || 0;
@@ -155,10 +178,12 @@ export default function PaintingForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newArtistName,
-          specialty_en: newArtistSpecialty || 'Artist',
-          specialty_uz: newArtistSpecialty || 'Rassom',
-          bio_en: newArtistBio,
-          bio_uz: newArtistBio,
+          specialty_uz: newArtistSpecialtyUz || 'Rassom',
+          specialty_en: newArtistSpecialtyEn || newArtistSpecialtyUz || 'Artist',
+          specialty_ru: newArtistSpecialtyRu || newArtistSpecialtyUz || 'Художник',
+          bio_uz: newArtistBioUz,
+          bio_en: newArtistBioEn || newArtistBioUz,
+          bio_ru: newArtistBioRu || newArtistBioUz,
         }),
       });
       const data = await res.json();
@@ -167,8 +192,12 @@ export default function PaintingForm({
         setArtistId(data.artist.id);
         setShowAddArtistModal(false);
         setNewArtistName('');
-        setNewArtistSpecialty('');
-        setNewArtistBio('');
+        setNewArtistSpecialtyUz('');
+        setNewArtistSpecialtyEn('');
+        setNewArtistSpecialtyRu('');
+        setNewArtistBioUz('');
+        setNewArtistBioEn('');
+        setNewArtistBioRu('');
       }
     } catch {
       alert('Rassom qo\'shishda xatolik yuz berdi');
@@ -179,15 +208,17 @@ export default function PaintingForm({
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCategoryNameEn.trim() && !newCategoryNameUz.trim()) return;
+    if (!newCategoryNameUz.trim() && !newCategoryNameEn.trim()) return;
     setAddingCategory(true);
     try {
       const res = await fetch('/api/admin/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name_en: newCategoryNameEn || newCategoryNameUz,
           name_uz: newCategoryNameUz || newCategoryNameEn,
+          name_en: newCategoryNameEn || newCategoryNameUz,
+          name_ru: newCategoryNameRu || newCategoryNameUz,
+          slug: newCategorySlug.trim() || slugify(newCategoryNameUz || newCategoryNameEn),
         }),
       });
       const data = await res.json();
@@ -195,8 +226,11 @@ export default function PaintingForm({
         setCategoriesList((prev) => [...prev, data.category]);
         setCategoryId(data.category.id);
         setShowAddCategoryModal(false);
-        setNewCategoryNameEn('');
         setNewCategoryNameUz('');
+        setNewCategoryNameEn('');
+        setNewCategoryNameRu('');
+        setNewCategorySlug('');
+        setNewCategorySlugManual(false);
       }
     } catch {
       alert('Kategoriya qo\'shishda xatolik yuz berdi');
@@ -213,11 +247,16 @@ export default function PaintingForm({
     const formattedSize = `${sizeWidth} × ${sizeHeight} ${sizeUnit}`;
 
     const payload = {
-      title_en: titleEn,
       title_uz: titleUz || titleEn,
-      description_en: descriptionEn,
+      title_en: titleEn || titleUz,
+      title_ru: titleRu || titleUz || titleEn,
+      description_uz: descriptionUz,
+      description_en: descriptionEn || descriptionUz,
+      description_ru: descriptionRu || descriptionUz,
       size: formattedSize,
+      technique_uz: techniqueUz,
       technique_en: techniqueEn,
+      technique_ru: techniqueRu,
       year: parseInt(String(year)),
       artist_id: artistId,
       category_id: categoryId,
@@ -336,7 +375,21 @@ export default function PaintingForm({
                 ASOSIY MA'LUMOTLAR
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Sarlavhalar (3 tilda) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    SARLAVHA (UZ) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={titleUz}
+                    onChange={(e) => setTitleUz(e.target.value)}
+                    placeholder="Registon shafaq paytida"
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
                 <div>
                   <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
                     SARLAVHA (EN) *
@@ -347,38 +400,105 @@ export default function PaintingForm({
                     value={titleEn}
                     onChange={(e) => setTitleEn(e.target.value)}
                     placeholder="Registon at Dusk"
-                    className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
                   />
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                    SARLAVHA (UZ)
+                    SARLAVHA (RU)
                   </label>
                   <input
                     type="text"
-                    value={titleUz}
-                    onChange={(e) => setTitleUz(e.target.value)}
-                    placeholder="Registon shafaq paytida"
-                    className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                    value={titleRu}
+                    onChange={(e) => setTitleRu(e.target.value)}
+                    placeholder="Регистан на закате"
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                  TAVSIF (DESCRIPTION)
-                </label>
-                <textarea
-                  rows={3}
-                  value={descriptionEn}
-                  onChange={(e) => setDescriptionEn(e.target.value)}
-                  placeholder="San'at asari haqida batafsil ma'lumot..."
-                  className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
-                />
+              {/* Tavsiflar (3 tilda) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    TAVSIF (UZ)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={descriptionUz}
+                    onChange={(e) => setDescriptionUz(e.target.value)}
+                    placeholder="San'at asari haqida ma'lumot (O'zbekcha)..."
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    TAVSIF (EN)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={descriptionEn}
+                    onChange={(e) => setDescriptionEn(e.target.value)}
+                    placeholder="Artwork description in English..."
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    TAVSIF (RU)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={descriptionRu}
+                    onChange={(e) => setDescriptionRu(e.target.value)}
+                    placeholder="Описание картины на русском..."
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
+                  />
+                </div>
               </div>
 
-              {/* Structured Size + Technique + Year */}
+              {/* Texnikalar (3 tilda) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    TEXNIKA (UZ)
+                  </label>
+                  <input
+                    type="text"
+                    value={techniqueUz}
+                    onChange={(e) => setTechniqueUz(e.target.value)}
+                    placeholder="Moybo'yoq, polotno"
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    TEXNIKA (EN)
+                  </label>
+                  <input
+                    type="text"
+                    value={techniqueEn}
+                    onChange={(e) => setTechniqueEn(e.target.value)}
+                    placeholder="Oil on canvas"
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    TEXNIKA (RU)
+                  </label>
+                  <input
+                    type="text"
+                    value={techniqueRu}
+                    onChange={(e) => setTechniqueRu(e.target.value)}
+                    placeholder="Холст, масло"
+                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
+              </div>
+
+              {/* Structured Size + Year */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Structured Size Input (TZ Section 8.2) */}
                 <div>
                   <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
@@ -416,19 +536,6 @@ export default function PaintingForm({
                   <span className="text-[10px] text-[#8F7E73] mt-0.5 block">
                     Natija: {sizeWidth} × {sizeHeight} {sizeUnit}
                   </span>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                    TEXNIKA (TECHNIQUE)
-                  </label>
-                  <input
-                    type="text"
-                    value={techniqueEn}
-                    onChange={(e) => setTechniqueEn(e.target.value)}
-                    placeholder="Moybo'yoq, kanvas"
-                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-                  />
                 </div>
 
                 <div>
@@ -751,30 +858,82 @@ export default function PaintingForm({
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
-                  Mutaxassisligi (Specialty)
-                </label>
-                <input
-                  type="text"
-                  value={newArtistSpecialty}
-                  onChange={(e) => setNewArtistSpecialty(e.target.value)}
-                  placeholder="Minyatura va Sharq manzaralari"
-                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                    Mutaxassisligi (UZ)
+                  </label>
+                  <input
+                    type="text"
+                    value={newArtistSpecialtyUz}
+                    onChange={(e) => setNewArtistSpecialtyUz(e.target.value)}
+                    placeholder="Miniatyura ustasi"
+                    className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                    Mutaxassisligi (EN)
+                  </label>
+                  <input
+                    type="text"
+                    value={newArtistSpecialtyEn}
+                    onChange={(e) => setNewArtistSpecialtyEn(e.target.value)}
+                    placeholder="Miniature Artist"
+                    className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                    Mutaxassisligi (RU)
+                  </label>
+                  <input
+                    type="text"
+                    value={newArtistSpecialtyRu}
+                    onChange={(e) => setNewArtistSpecialtyRu(e.target.value)}
+                    placeholder="Мастер миниатюры"
+                    className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
-                  Qisqacha Tarjimai Hol (Bio)
-                </label>
-                <textarea
-                  rows={2}
-                  value={newArtistBio}
-                  onChange={(e) => setNewArtistBio(e.target.value)}
-                  placeholder="Rassom ijodi haqida..."
-                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] resize-none"
-                />
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                    Tarjimai Hol (Bio - UZ)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={newArtistBioUz}
+                    onChange={(e) => setNewArtistBioUz(e.target.value)}
+                    placeholder="Rassom ijodi haqida o'zbekcha..."
+                    className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                    Tarjimai Hol (Bio - EN)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={newArtistBioEn}
+                    onChange={(e) => setNewArtistBioEn(e.target.value)}
+                    placeholder="Artist bio in English..."
+                    className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                    Tarjimai Hol (Bio - RU)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={newArtistBioRu}
+                    onChange={(e) => setNewArtistBioRu(e.target.value)}
+                    placeholder="Биография на русском..."
+                    className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] resize-none"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
@@ -824,7 +983,13 @@ export default function PaintingForm({
                   type="text"
                   required
                   value={newCategoryNameUz}
-                  onChange={(e) => setNewCategoryNameUz(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewCategoryNameUz(val);
+                    if (!newCategorySlugManual) {
+                      setNewCategorySlug(slugify(val));
+                    }
+                  }}
                   placeholder="Ipak yo'li manzaralari"
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                 />
@@ -840,6 +1005,46 @@ export default function PaintingForm({
                   onChange={(e) => setNewCategoryNameEn(e.target.value)}
                   placeholder="Silk Road Landscapes"
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                  Kategoriya Nomi (Ruscha - RU)
+                </label>
+                <input
+                  type="text"
+                  value={newCategoryNameRu}
+                  onChange={(e) => setNewCategoryNameRu(e.target.value)}
+                  placeholder="Пейзажи Шелкового пути"
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-[#6B5E55]">
+                    Slug (URL identifikatori)
+                  </label>
+                  {!newCategorySlugManual ? (
+                    <span className="text-[10px] text-[#429599] font-medium">
+                      (Avtomatik)
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-[#BA4E25] font-medium">
+                      (Qo'lda)
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={newCategorySlug}
+                  onChange={(e) => {
+                    setNewCategorySlugManual(true);
+                    setNewCategorySlug(e.target.value);
+                  }}
+                  placeholder="ipak-yoli-manzaralari"
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] font-mono"
                 />
               </div>
 

@@ -414,6 +414,46 @@ qurayotganda amalga oshiriladi.
     avtomatik almashinib turadigan (carousel/slideshow) qilib qo'yiladi
     — statik bitta rasm o'rniga.
 
+8.10. Sotuvlar va to'lov jarayoni
+
+-   Saytda to'g'ridan-to'g'ri onlayn checkout (kartadan avtomatik pul
+    yechish) BO'LMAYDI — bu original, yagona nusxadagi san'at asarlari
+    sotiladigan galereyalar uchun odatiy amaliyot: har bir buyurtma
+    alohida kelishuv talab qiladi (yetkazib berish, sug'urta, asillik
+    tekshiruvi).
+
+-   Jarayon: mijoz "Inquire" tugmasi orqali so'rov yuboradi → admin
+    panelda so'rov ko'rinadi → galereya xodimi mijoz bilan email/telefon
+    orqali bog'lanadi, narx va yetkazib berish shartlarini kelishadi →
+    to'lov bank o'tkazmasi (SWIFT — xorijiy mijozlar uchun), naqd yoki
+    galereyada kartadan o'qitish orqali amalga oshiriladi → admin so'rov
+    holatini "To'landi / Yuborildi / Yakunlandi" qilib belgilaydi.
+
+-   Mahalliy mijozlar uchun keyinchalik Click yoki Payme integratsiyasi
+    qo'shilishi mumkin (UZS kartalar uchun). Xorijiy mijozlarning
+    xalqaro kartalari uchun esa Stripe kabi xizmatlar O'zbekistondan
+    ro'yxatdan o'tgan tashkilotga to'g'ridan-to'g'ri ulanmaydi (tashqi
+    kompaniya yoki Payoneer kabi oraliq yechim talab qiladi) — shu sabab
+    hozirgi bosqichda onlayn xalqaro to'lov qo'shilmaydi, kelishuv
+    asosidagi to'lov davom etadi.
+
+8.11. Statistika va grafiklar (Dashboard)
+
+-   Admin panelning Dashboard bo'limida kunlik / haftalik / oylik
+    tushum, tashriflar (visits) va ko'rishlar (views) sonini grafik
+    (chart) ko'rinishida ko'rsatish kerak — vaqt oralig'ini almashtirish
+    imkoniyati bilan.
+
+-   Qaysi kategoriya (masalan Tarixiy obidalar, Portretlar va h.k.)
+    ko'proq qiziqish uyg'otayotgani — kategoriyalar bo'yicha
+    ko'rishlar/so'rovlar sonini solishtiruvchi grafik.
+
+-   Qaysi rassomning ishlariga ko'proq qiziqish borligi — rassomlar
+    bo'yicha ko'rishlar/so'rovlar/sotuvlar sonini solishtiruvchi grafik.
+
+-   Grafiklar uchun tavsiya etilgan kutubxona: Recharts (React bilan
+    mos, sodda va yengil).
+
 9. Ishga tushirish tartibi (tavsiya)
 
 -   1-bosqich: Kartinalar, rassomlar, kategoriyalar, galereya va kontakt
@@ -426,3 +466,80 @@ qurayotganda amalga oshiriladi.
 -   3-bosqich: Wishlist, sharhlar, asillik sertifikati, statistika,
     Google/Apple kirish, valyuta kurslari avtomatizatsiyasi, Settings
     kengaytmasi, bosh sahifa rasm carousel'i.
+
+10. Ishga tushirishdan oldingi tekshiruv ro'yxati
+
+Sayt jamoatchilikka ochilishidan oldin quyidagilar
+bajarilgan/tekshirilgan bo'lishi kerak.
+
+Huquqiy va xavfsizlik
+
+-   Privacy Policy va Terms & Conditions sahifalari nashr etilgan (TZ
+    bo'lim 2'da bor).
+
+-   Barcha maxfiy ma'lumotlar (DB parol, API kalitlar, OAuth secret'lar)
+    faqat server tomonida (.env orqali) saqlanadi — frontend kodida yoki
+    brauzerga yuboriladigan javoblarda umuman ko'rinmaydi.
+
+-   HTTPS majburiy — Vercel'ga deploy qilinganda avtomatik ta'minlanadi,
+    alohida sozlash shart emas.
+
+-   Agar EU/xorijiy tashrifchilar uchun cookie/wishlist local storage
+    ishlatilsa — kichik cookie/maxfiylik bildirishnomasi (banner)
+    qo'yiladi.
+
+SEO va ijtimoiy tarmoqlar
+
+-   Har bir sahifa uchun mos meta title va description (uch tilda).
+
+-   Ijtimoiy tarmoqda havola tashlanganda chiroyli ko'rinishi uchun Open
+    Graph rasm (social preview image) sozlangan.
+
+-   Sayt favicon'i — mavjud logotip asosida.
+
+-   sitemap.xml va robots.txt avtomatik generatsiya qilingan (Next.js
+    buni o'zi qo'llab-quvvatlaydi).
+
+-   Barcha kartina/rassom rasmlariga tavsiflovchi alt-matn (uch tilda)
+    qo'yilgan — SEO va Google Images orqali topilish uchun.
+
+Tezlik va ko'rinish
+
+-   Barcha rasmlar siqilgan (compress) va zamonaviy formatda (masalan
+    WebP) xizmat qiladi — kartina rasmlari og'ir bo'lib, sahifa sekin
+    ochilib qolmasligi uchun.
+
+-   Sahifa yuklanish tezligi tekshirilgan (Lighthouse yoki shunga
+    o'xshash vosita bilan).
+
+-   Rang kontrasti (matn/fon) o'qish uchun yetarli — ayniqsa tungi hero
+    bo'limida.
+
+-   Sayt to'liq mobil-moslashgan (responsive) — asosiy auditoriya
+    (sayyohlar) telefondan kirishi ehtimoli yuqori.
+
+-   Maxsus 404 (topilmadi) sahifasi — sayt uslubiga mos dizaynda.
+
+-   Barcha ichki havolalar tekshirilgan, buzilgan (404 beruvchi) havola
+    qolmagan.
+
+Formalar va xavfsizlik
+
+-   Barcha formalar (signup, contact, inquiry, service request) to'liq
+    validatsiya qilinadi (majburiy maydonlar, email formati, telefon
+    formati va h.k.).
+
+-   Ommaviy formalarda (Contact, Inquiry, Service Request) spam-himoya
+    (masalan reCAPTCHA yoki oddiy rate-limiting) o'rnatilgan — bot
+    orqali keladigan keraksiz xabarlarning oldini olish uchun.
+
+Foydalanuvchi tajribasi
+
+-   Google Analytics (yoki shunga o'xshash tashqi analitika) ulangan —
+    admin paneldagi ichki statistikaga qo'shimcha, tashqi manbalardan
+    (Google, ijtimoiy tarmoqlar) qancha tashrif kelayotganini ko'rish
+    uchun.
+
+-   Har bir sahifada bitta aniq maqsadli harakat (call-to-action) bor —
+    masalan bosh sahifada "Galereyani ko'rish", kartina sahifasida
+    "So'rov yuborish".

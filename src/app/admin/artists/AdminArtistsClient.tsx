@@ -11,8 +11,10 @@ interface ArtistItem {
   initials?: string | null;
   photo?: string | null;
   specialty_en: string;
+  specialty_ru?: string;
   specialty_uz?: string;
   bio_en: string;
+  bio_ru?: string;
   bio_uz?: string;
   _count?: { paintings: number };
 }
@@ -31,8 +33,10 @@ export default function AdminArtistsClient({
   const [name, setName] = useState('');
   const [specialtyUz, setSpecialtyUz] = useState('');
   const [specialtyEn, setSpecialtyEn] = useState('');
+  const [specialtyRu, setSpecialtyRu] = useState('');
   const [bioUz, setBioUz] = useState('');
   const [bioEn, setBioEn] = useState('');
+  const [bioRu, setBioRu] = useState('');
   const [photo, setPhoto] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -42,8 +46,10 @@ export default function AdminArtistsClient({
     setName('');
     setSpecialtyUz('');
     setSpecialtyEn('');
+    setSpecialtyRu('');
     setBioUz('');
     setBioEn('');
+    setBioRu('');
     setPhoto('');
     setIsModalOpen(true);
   };
@@ -53,8 +59,10 @@ export default function AdminArtistsClient({
     setName(artist.name);
     setSpecialtyUz(artist.specialty_uz || artist.specialty_en || '');
     setSpecialtyEn(artist.specialty_en || '');
+    setSpecialtyRu(artist.specialty_ru || '');
     setBioUz(artist.bio_uz || artist.bio_en || '');
     setBioEn(artist.bio_en || '');
+    setBioRu(artist.bio_ru || '');
     setPhoto(artist.photo || '');
     setIsModalOpen(true);
   };
@@ -96,8 +104,10 @@ export default function AdminArtistsClient({
         name,
         specialty_uz: specialtyUz || 'Rassom',
         specialty_en: specialtyEn || specialtyUz || 'Painter',
+        specialty_ru: specialtyRu || specialtyUz || 'Художник',
         bio_uz: bioUz,
         bio_en: bioEn || bioUz,
+        bio_ru: bioRu || bioUz,
         photo: photo || null,
       };
 
@@ -276,44 +286,84 @@ export default function AdminArtistsClient({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* Mutaxassislik (3 tilda) */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-xs font-bold text-[#6B5E55] mb-1">
-                    Mutaxassisligi (UZ)
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                    MUTAXASSISLIGI (UZ)
                   </label>
                   <input
                     type="text"
                     value={specialtyUz}
                     onChange={(e) => setSpecialtyUz(e.target.value)}
                     placeholder="Minyatura ustasi"
-                    className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                    className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-[#6B5E55] mb-1">
-                    Mutaxassisligi (EN)
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                    MUTAXASSISLIGI (EN)
                   </label>
                   <input
                     type="text"
                     value={specialtyEn}
                     onChange={(e) => setSpecialtyEn(e.target.value)}
                     placeholder="Miniature master"
-                    className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                    className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                    MUTAXASSISLIGI (RU)
+                  </label>
+                  <input
+                    type="text"
+                    value={specialtyRu}
+                    onChange={(e) => setSpecialtyRu(e.target.value)}
+                    placeholder="Мастер миниатюры"
+                    className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
-                  Tarjimai Hol (UZ)
-                </label>
-                <textarea
-                  rows={2}
-                  value={bioUz}
-                  onChange={(e) => setBioUz(e.target.value)}
-                  placeholder="Rassom hayoti va ijodiy yo'li..."
-                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] resize-none"
-                />
+              {/* Bio (3 tilda) */}
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                    TARJIMAI HOL (UZ)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={bioUz}
+                    onChange={(e) => setBioUz(e.target.value)}
+                    placeholder="Rassom hayoti va ijodiy yo'li (O'zbekcha)..."
+                    className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                    TARJIMAI HOL (EN)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={bioEn}
+                    onChange={(e) => setBioEn(e.target.value)}
+                    placeholder="Artist biography (English)..."
+                    className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                    TARJIMAI HOL (RU)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={bioRu}
+                    onChange={(e) => setBioRu(e.target.value)}
+                    placeholder="Биография художника (Русский)..."
+                    className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] resize-none"
+                  />
+                </div>
               </div>
 
               {/* Photo Upload */}

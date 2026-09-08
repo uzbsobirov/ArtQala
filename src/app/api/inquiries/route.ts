@@ -13,14 +13,24 @@ export async function POST(request: Request) {
       );
     }
 
+    let effectiveUserId = user_id;
+    if (!effectiveUserId) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email: guest_email.trim().toLowerCase() },
+      });
+      if (existingUser) {
+        effectiveUserId = existingUser.id;
+      }
+    }
+
     const inquiry = await prisma.inquiry.create({
       data: {
         painting_id,
-        guest_name,
-        guest_email,
+        guest_name: guest_name.trim(),
+        guest_email: guest_email.trim().toLowerCase(),
         guest_phone: guest_phone || null,
-        message,
-        user_id: user_id || null,
+        message: message.trim(),
+        user_id: effectiveUserId || null,
         status: 'NEW',
       },
     });

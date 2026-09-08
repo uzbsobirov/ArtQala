@@ -29,30 +29,37 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
   const handleSendReply = async () => {
     if (!selected) return;
     setSaving(true);
+    const targetStatus = replyText.trim() && (selectedStatus === 'NEW' || selectedStatus === 'IN_PROGRESS')
+      ? 'ANSWERED'
+      : selectedStatus;
+
     try {
       const res = await fetch(`/api/admin/inquiries/${selected.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          status: selectedStatus,
+          status: targetStatus,
           admin_reply: replyText,
         }),
       });
 
       const data = await res.json();
       if (data.success) {
+        setSelectedStatus(targetStatus);
         setInquiries((prev) =>
           prev.map((item) =>
             item.id === selected.id
-              ? { ...item, status: selectedStatus, admin_reply: replyText }
+              ? { ...item, status: targetStatus, admin_reply: replyText }
               : item
           )
         );
         setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
+        setTimeout(() => setSuccess(false), 4000);
+      } else {
+        alert(data.error || 'Javobni saqlashda xatolik yuz berdi');
       }
-    } catch (e) {
-      alert('Failed to update inquiry');
+    } catch {
+      alert('Serverga bog\'lanishda xatolik yuz berdi');
     } finally {
       setSaving(false);
     }

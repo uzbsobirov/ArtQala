@@ -42,6 +42,8 @@ export async function PUT(request: Request, context: RouteContext) {
         description_uz: body.description_uz,
         size: body.size,
         technique_en: body.technique_en,
+        technique_ru: body.technique_ru,
+        technique_uz: body.technique_uz,
         year: body.year ? parseInt(body.year) : undefined,
         price: body.price ? parseFloat(body.price) : undefined,
         discount_price: body.discount_price ? parseFloat(body.discount_price) : null,

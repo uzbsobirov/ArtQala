@@ -43,9 +43,18 @@ export async function GET() {
 export async function PUT(req: Request) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('artqala_session')?.value;
+    const userCookie = cookieStore.get('artqala_user')?.value;
 
-    if (!token) {
+    if (!userCookie) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    try {
+      const user = JSON.parse(userCookie);
+      if (!user || user.role !== 'ADMIN') {
+        return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
+      }
+    } catch {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -55,11 +64,11 @@ export async function PUT(req: Request) {
       where: { id: 'default' },
       update: {
         gallery_name: body.gallery_name,
-        phone: body.phone,
+        phone: typeof body.phone === 'string' ? body.phone : JSON.stringify(body.phone || []),
         email: body.email,
         address: body.address,
         location_map: body.location_map,
-        working_hours: body.working_hours,
+        working_hours: typeof body.working_hours === 'string' ? body.working_hours : JSON.stringify(body.working_hours || ''),
         telegram: body.telegram,
         instagram: body.instagram,
         about_en: body.about_en,

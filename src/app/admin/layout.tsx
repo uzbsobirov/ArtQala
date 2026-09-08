@@ -18,6 +18,7 @@ import {
   ArrowUpRight,
   LogOut,
   Loader2,
+  Mail,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 
@@ -28,7 +29,7 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, authLoading, signOut } = useApp();
+  const { user, authLoading, signOut, t, lang, setLang } = useApp();
 
   const isLoginPage = pathname === '/admin/login';
 
@@ -68,29 +69,31 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   const navItems = [
-    { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/paintings', label: 'Paintings', icon: Palette },
-    { href: '/admin/artists', label: 'Artists', icon: Users },
-    { href: '/admin/categories', label: 'Categories', icon: Layers },
-    { href: '/admin/discounts', label: 'Discounts', icon: Percent },
-    { href: '/admin/inquiries', label: 'Inquiries', icon: MessageSquare },
-    { href: '/admin/services', label: 'Service Requests', icon: Wrench },
-    { href: '/admin/customers', label: 'Customers', icon: Users2 },
-    { href: '/admin/reviews', label: 'Reviews', icon: Star },
-    { href: '/admin/settings', label: 'Settings', icon: Settings },
+    { href: '/admin', label: t.admin.dashboard, icon: LayoutDashboard },
+    { href: '/admin/paintings', label: t.admin.paintings, icon: Palette },
+    { href: '/admin/artists', label: t.admin.artists, icon: Users },
+    { href: '/admin/categories', label: t.admin.categories, icon: Layers },
+    { href: '/admin/discounts', label: t.admin.discounts, icon: Percent },
+    { href: '/admin/inquiries', label: t.admin.inquiries, icon: MessageSquare },
+    { href: '/admin/services', label: t.admin.services, icon: Wrench },
+    { href: '/admin/messages', label: t.admin.messages, icon: Mail },
+    { href: '/admin/customers', label: t.admin.customers, icon: Users2 },
+    { href: '/admin/reviews', label: t.admin.reviews, icon: Star },
+    { href: '/admin/settings', label: t.admin.settings, icon: Settings },
   ];
 
   const getActiveTitle = () => {
-    if (pathname === '/admin') return 'Dashboard';
-    if (pathname.startsWith('/admin/paintings')) return 'Paintings';
-    if (pathname.startsWith('/admin/artists')) return 'Artists';
-    if (pathname.startsWith('/admin/categories')) return 'Categories';
-    if (pathname.startsWith('/admin/discounts')) return 'Discounts';
-    if (pathname.startsWith('/admin/inquiries')) return 'Inquiries';
-    if (pathname.startsWith('/admin/services')) return 'Service Requests';
-    if (pathname.startsWith('/admin/customers')) return 'Customers';
-    if (pathname.startsWith('/admin/reviews')) return 'Reviews';
-    if (pathname.startsWith('/admin/settings')) return 'Settings';
+    if (pathname === '/admin') return t.admin.dashboard;
+    if (pathname.startsWith('/admin/paintings')) return t.admin.paintings;
+    if (pathname.startsWith('/admin/artists')) return t.admin.artists;
+    if (pathname.startsWith('/admin/categories')) return t.admin.categories;
+    if (pathname.startsWith('/admin/discounts')) return t.admin.discounts;
+    if (pathname.startsWith('/admin/inquiries')) return t.admin.inquiries;
+    if (pathname.startsWith('/admin/services')) return t.admin.services;
+    if (pathname.startsWith('/admin/messages')) return t.admin.messages;
+    if (pathname.startsWith('/admin/customers')) return t.admin.customers;
+    if (pathname.startsWith('/admin/reviews')) return t.admin.reviews;
+    if (pathname.startsWith('/admin/settings')) return t.admin.settings;
     return 'Admin';
   };
 
@@ -155,7 +158,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             href="/"
             className="flex items-center justify-between text-xs text-[#5AB3B7] hover:underline p-2 rounded hover:bg-[#281C18]"
           >
-            <span>Visit Gallery Site</span>
+            <span>{t.admin.visitSite}</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </Link>
 
@@ -163,7 +166,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             onClick={handleAdminSignOut}
             className="w-full flex items-center justify-between text-xs text-[#B5A599] hover:text-[#E86D48] p-2 rounded hover:bg-[#281C18] transition-colors cursor-pointer"
           >
-            <span>Chiqish</span>
+            <span>{t.admin.signOut}</span>
             <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -178,11 +181,48 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </h1>
 
           <div className="flex items-center gap-4">
+            {/* Language Switcher for Admin */}
+            <div className="flex items-center bg-[#FAF4EC] border border-[#E7E0D8] rounded-[3px] p-0.5 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setLang('uz')}
+                className={`px-2.5 py-1 rounded-[2px] transition-all cursor-pointer ${
+                  lang === 'uz'
+                    ? 'bg-[#BA4E25] text-white shadow-xs'
+                    : 'text-[#6B5E55] hover:text-[#281C18]'
+                }`}
+              >
+                UZ
+              </button>
+              <button
+                type="button"
+                onClick={() => setLang('ru')}
+                className={`px-2.5 py-1 rounded-[2px] transition-all cursor-pointer ${
+                  lang === 'ru'
+                    ? 'bg-[#BA4E25] text-white shadow-xs'
+                    : 'text-[#6B5E55] hover:text-[#281C18]'
+                }`}
+              >
+                RU
+              </button>
+              <button
+                type="button"
+                onClick={() => setLang('en')}
+                className={`px-2.5 py-1 rounded-[2px] transition-all cursor-pointer ${
+                  lang === 'en'
+                    ? 'bg-[#BA4E25] text-white shadow-xs'
+                    : 'text-[#6B5E55] hover:text-[#281C18]'
+                }`}
+              >
+                EN
+              </button>
+            </div>
+
             <Link
               href="/"
               className="text-xs font-medium text-[#726861] hover:text-[#BA4E25] hidden sm:inline"
             >
-              Live Site
+              {t.admin.liveSite}
             </Link>
 
             {/* Admin User Profile */}
@@ -192,7 +232,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </div>
               <div className="hidden sm:block leading-tight text-left">
                 <div className="text-xs font-bold text-[#281C18]">{user.name}</div>
-                <div className="text-[10px] text-[#8F8178]">Head Curator</div>
+                <div className="text-[10px] text-[#8F8178]">{t.admin.role}</div>
               </div>
             </div>
           </div>

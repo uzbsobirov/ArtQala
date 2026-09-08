@@ -12,15 +12,37 @@ export default function ContactClient() {
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setName('');
-    setEmail('');
-    setSubject('');
-    setMessage('');
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, subject, message }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSubmitted(true);
+        setName('');
+        setEmail('');
+        setSubject('');
+        setMessage('');
+      } else {
+        setError(data.error || 'Xabar yuborishda xatolik yuz berdi.');
+      }
+    } catch {
+      setError('Serverga ulanishda xatolik. Iltimos qaytadan urinib ko\'ring.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -117,12 +139,25 @@ export default function ContactClient() {
                   />
                 </div>
 
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded">
+                    {error}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-sm py-3 rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-sm"
+                  disabled={submitting}
+                  className="w-full bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-sm py-3 rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
                 >
-                  <Send className="w-4 h-4" />
-                  <span>{t.contact.formBtn}</span>
+                  {submitting ? (
+                    <span>Yuborilmoqda...</span>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>{t.contact.formBtn}</span>
+                    </>
+                  )}
                 </button>
               </form>
             )}

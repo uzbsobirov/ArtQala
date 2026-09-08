@@ -28,7 +28,25 @@ export default function AdminCategoriesClient({
   const [nameEn, setNameEn] = useState('');
   const [nameRu, setNameRu] = useState('');
   const [slug, setSlug] = useState('');
+  const [slugManualEdited, setSlugManualEdited] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const slugify = (text: string): string => {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[ʻʼ'`]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+  };
+
+  const handleNameUzChange = (val: string) => {
+    setNameUz(val);
+    if (!slugManualEdited) {
+      setSlug(slugify(val));
+    }
+  };
 
   const openCreateModal = () => {
     setEditingCategory(null);
@@ -36,6 +54,7 @@ export default function AdminCategoriesClient({
     setNameEn('');
     setNameRu('');
     setSlug('');
+    setSlugManualEdited(false);
     setIsModalOpen(true);
   };
 
@@ -45,6 +64,7 @@ export default function AdminCategoriesClient({
     setNameEn(cat.name_en || '');
     setNameRu(cat.name_ru || '');
     setSlug(cat.slug || '');
+    setSlugManualEdited(true);
     setIsModalOpen(true);
   };
 
@@ -213,7 +233,7 @@ export default function AdminCategoriesClient({
                   type="text"
                   required
                   value={nameUz}
-                  onChange={(e) => setNameUz(e.target.value)}
+                  onChange={(e) => handleNameUzChange(e.target.value)}
                   placeholder="Ipak yo'li manzaralari"
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                 />
@@ -246,16 +266,33 @@ export default function AdminCategoriesClient({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
-                  Slug (URL identifikatori)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-[#6B5E55]">
+                    Slug (URL identifikatori)
+                  </label>
+                  {!slugManualEdited ? (
+                    <span className="text-[10px] text-[#429599] font-medium">
+                      (Avtomatik yaratilmoqda)
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-[#BA4E25] font-medium">
+                      (Qo'lda tahrirlangan)
+                    </span>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  placeholder="silk-road-landscapes (bo'sh qoldirilsa avtomatik tuziladi)"
-                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                  onChange={(e) => {
+                    setSlugManualEdited(true);
+                    setSlug(e.target.value);
+                  }}
+                  placeholder="ipak-yoli-manzaralari"
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] font-mono text-[#281C18]"
                 />
+                <p className="text-[10.5px] text-[#8F7E73] mt-1">
+                  Default holatda O'zbekcha nomidan avtomatik generatsiya qilinadi. Xohlasangiz qo'lda o'zgartirishingiz mumkin.
+                </p>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
