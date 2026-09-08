@@ -33,6 +33,8 @@ export const metadata: Metadata = {
   ],
 };
 
+import VisitTracker from '@/components/analytics/VisitTracker';
+
 export default function RootLayout({
   children,
 }: {
@@ -45,6 +47,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[#FAF4EC] text-[#281C18] selection:bg-[#BA4E25] selection:text-white">
         <AppProvider>
+          <VisitTracker />
           <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow">{children}</main>

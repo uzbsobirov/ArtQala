@@ -7,6 +7,8 @@ async function main() {
   console.log('Seeding Art Qala database...');
 
   // 1. Clean existing records
+  await prisma.paintingView.deleteMany();
+  await prisma.siteVisit.deleteMany();
   await prisma.wishlistItem.deleteMany();
   await prisma.review.deleteMany();
   await prisma.inquiry.deleteMany();
@@ -213,6 +215,7 @@ async function main() {
       year: 2023,
       price: 260,
       is_sold: true,
+      sold_at: new Date(Date.now() - 4 * 24 * 3600 * 1000),
       is_featured: true,
       images: JSON.stringify(['/assets/p-portrait.svg']),
       views_count: 185,
@@ -281,7 +284,8 @@ async function main() {
       technique_uz: 'Moybo\'yoq, polotno',
       year: 2023,
       price: 275,
-      is_sold: false,
+      is_sold: true,
+      sold_at: new Date(Date.now() - 14 * 24 * 3600 * 1000),
       is_featured: false,
       images: JSON.stringify(['/assets/p-courtyard.svg']),
       views_count: 118,
@@ -417,7 +421,84 @@ async function main() {
     },
   });
 
-  // 9. Site Settings
+  // 10. Seed Painting Views & Site Visits across the last 30 days
+  console.log('Seeding views, visits, and activity timeline...');
+  const paintingsList = [p1, p2, p3, p4, p5, p6, p7, p8];
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  // Generate views distributed across past 30 days
+  const viewsData: { painting_id: string; created_at: Date }[] = [];
+  const visitsData: { path: string; created_at: Date }[] = [];
+
+  for (let day = 29; day >= 0; day--) {
+    const dayDate = new Date(now - day * dayMs);
+    // 5 - 20 visits per day
+    const dailyVisits = Math.floor(8 + Math.sin(day * 0.7) * 5 + (30 - day) * 0.4);
+    for (let v = 0; v < dailyVisits; v++) {
+      const hourOffset = Math.floor(Math.random() * 86400 * 1000);
+      visitsData.push({
+        path: Math.random() > 0.5 ? '/gallery' : Math.random() > 0.5 ? '/' : '/artists',
+        created_at: new Date(dayDate.getTime() + hourOffset),
+      });
+    }
+
+    // 4 - 15 painting views per day
+    const dailyViews = Math.floor(6 + Math.cos(day * 0.5) * 4 + (30 - day) * 0.3);
+    for (let pv = 0; pv < dailyViews; pv++) {
+      const randomPainting = paintingsList[Math.floor(Math.random() * paintingsList.length)];
+      const hourOffset = Math.floor(Math.random() * 86400 * 1000);
+      viewsData.push({
+        painting_id: randomPainting.id,
+        created_at: new Date(dayDate.getTime() + hourOffset),
+      });
+    }
+  }
+
+  await prisma.siteVisit.createMany({ data: visitsData });
+  await prisma.paintingView.createMany({ data: viewsData });
+
+  // Additional historical inquiries
+  const extraInquiries = [
+    {
+      guest_name: 'Sophia Laurent',
+      guest_email: 'sophia.l@paris.fr',
+      painting_id: p1.id,
+      status: 'COMPLETED',
+      message: 'Interested in the Registan Arch painting for our collection.',
+      created_at: new Date(now - 18 * dayMs),
+    },
+    {
+      guest_name: 'Dmitry Volkov',
+      guest_email: 'volkov@artmail.ru',
+      painting_id: p2.id,
+      status: 'ANSWERED',
+      message: 'Looking for a Samarkand turquoise dome painting.',
+      created_at: new Date(now - 11 * dayMs),
+    },
+    {
+      guest_name: 'Alisher Qodirov',
+      guest_email: 'alisher@tashkent.uz',
+      painting_id: p4.id,
+      status: 'NEW',
+      message: 'Portret bo\'yicha batafsil ma\'lumot olmoqchiman.',
+      created_at: new Date(now - 3 * dayMs),
+    },
+    {
+      guest_name: 'Elena Rostova',
+      guest_email: 'rostova@spb.ru',
+      painting_id: p7.id,
+      status: 'COMPLETED',
+      message: 'Buying the ceramic vase for interior styling.',
+      created_at: new Date(now - 8 * dayMs),
+    },
+  ];
+
+  for (const inq of extraInquiries) {
+    await prisma.inquiry.create({ data: inq });
+  }
+
+  // 11. Site Settings
   await prisma.siteSettings.upsert({
     where: { id: 'default' },
     update: {},

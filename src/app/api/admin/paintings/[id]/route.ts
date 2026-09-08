@@ -50,6 +50,7 @@ export async function PUT(request: Request, context: RouteContext) {
         discount_starts_at: body.discount_starts_at ? new Date(body.discount_starts_at) : null,
         discount_ends_at: body.discount_ends_at ? new Date(body.discount_ends_at) : null,
         is_sold: Boolean(body.is_sold),
+        sold_at: body.is_sold ? new Date() : null,
         is_featured: Boolean(body.is_featured),
         images: body.images || undefined,
         artist_id: body.artist_id,

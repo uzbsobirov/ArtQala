@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
@@ -19,6 +19,13 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  // Track painting view once when client mounts
+  useEffect(() => {
+    if (painting?.id) {
+      fetch(`/api/paintings/${painting.id}/view`, { method: 'POST' }).catch(() => {});
+    }
+  }, [painting?.id]);
 
   const title =
     lang === 'ru'

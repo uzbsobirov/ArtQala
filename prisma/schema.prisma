@@ -25,6 +25,7 @@ model Painting {
   discount_starts_at DateTime?
   discount_ends_at   DateTime?
   is_sold          Boolean     @default(false)
+  sold_at          DateTime?
   is_featured      Boolean     @default(false)
   images           String      // JSON array of image URLs/paths
   views_count      Int         @default(0)
@@ -38,6 +39,7 @@ model Painting {
   inquiries        Inquiry[]
   reviews          Review[]
   wishlist_items   WishlistItem[]
+  views            PaintingView[]
 
   created_at       DateTime    @default(now())
   updated_at       DateTime    @updatedAt
@@ -208,3 +210,22 @@ model ContactMessage {
   is_read    Boolean  @default(false)
   created_at DateTime @default(now())
 }
+
+model PaintingView {
+  id          String   @id @default(cuid())
+  painting_id String
+  painting    Painting @relation(fields: [painting_id], references: [id], onDelete: Cascade)
+  created_at  DateTime @default(now())
+
+  @@index([painting_id])
+  @@index([created_at])
+}
+
+model SiteVisit {
+  id         String   @id @default(cuid())
+  path       String   @default("/")
+  created_at DateTime @default(now())
+
+  @@index([created_at])
+}
+

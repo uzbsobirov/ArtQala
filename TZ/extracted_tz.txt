@@ -110,8 +110,15 @@ Ro'yxatdan o'tish / Kirish (Sign up / Sign in)
 
 Mijozning shaxsiy kabineti (Account)
 
--   Yuborilgan so'rovlar/buyurtmalar holati ("ko'rib chiqilmoqda / javob
-    berildi / yakunlandi").
+-   "Mening so'rovlarim" bo'limi — yuborilgan har bir so'rov
+    (inquiry/service request) alohida karta/sahifa sifatida, holati
+    ("ko'rib chiqilmoqda / javob berildi / yakunlandi") va TO'LIQ
+    YOZISHMA (o'zi yozgan xabar + admin javoblari, chat ko'rinishida,
+    xronologik tartibda) bilan.
+
+-   Mijoz shu yerdan turib admin javobiga qo'shimcha savol/xabar yozib,
+    suhbatni davom ettirishi ham mumkin (bir martalik javob emas,
+    ketma-ket yozishma).
 
 -   Sevimlilar ro'yxati (agar hisobga kirgan bo'lsa, saqlanadi).
 
@@ -222,36 +229,47 @@ so'rovning to'liq matni va javob yozish oynasi.
 
 5. Ma'lumotlar bazasi tuzilishi (asosiy jadvallar)
 
-  -----------------------------------------------------------------------
-  Jadval              Asosiy maydonlar
-  ------------------- ---------------------------------------------------
-  paintings           id, title, description, size, technique, year,
-                      artist_id, category_id, price, discount_price,
-                      discount_starts_at, discount_ends_at, is_sold,
-                      images[]
+  ------------------------------------------------------------------------------
+  Jadval                     Asosiy maydonlar
+  -------------------------- ---------------------------------------------------
+  paintings                  id, title, description, size, technique, year,
+                             artist_id, category_id, price, discount_price,
+                             discount_starts_at, discount_ends_at, is_sold,
+                             images[]
 
-  artists             id, name, photo, bio, specialty
+  artists                    id, name, photo, bio, specialty
 
-  categories          id, name (EN/RU/UZ)
+  categories                 id, name (EN/RU/UZ)
 
-  discounts           id, scope (site/category/artist/painting),
-                      target_id, percent_or_amount, starts_at, ends_at
+  discounts                  id, scope (site/category/artist/painting),
+                             target_id, percent_or_amount, starts_at, ends_at
 
-  users               id, name, country, email, password_hash,
-                      email_verified, auth_provider (email/google/apple)
+  users                      id, name, country, email, password_hash,
+                             email_verified, auth_provider (email/google/apple)
 
-  inquiries           id, user_id, painting_id, status, message,
-                      created_at
+  inquiries                  id, user_id, painting_id, status, created_at
 
-  service_requests    id, user_id, service_type (mural/ceramics/custom),
-                      description, status, created_at
+  inquiry_messages           id, inquiry_id, sender (customer/admin), message,
+                             created_at, is_read
 
-  reviews             id, user_id, painting_id (nullable), rating, text,
-                      created_at
+  service_requests           id, user_id, service_type (mural/ceramics/custom),
+                             description, status, created_at
 
-  wishlist            user_id (nullable — local storage if no account),
-                      painting_id
-  -----------------------------------------------------------------------
+  service_request_messages   id, service_request_id, sender (customer/admin),
+                             message, created_at, is_read
+
+  reviews                    id, user_id, painting_id (nullable), rating, text,
+                             created_at
+
+  wishlist                   user_id (nullable — local storage if no account),
+                             painting_id
+  ------------------------------------------------------------------------------
+
+Eslatma: inquiries va service_requests endi bitta "message" maydoni
+emas, balki alohida xabarlar jadvali (inquiry_messages /
+service_request_messages) orqali ishlaydi — bu mijoz va admin orasidagi
+to'liq yozishmani (chat kabi) saqlash imkonini beradi, faqat bitta
+savol-javob emas.
 
 6. Sayt dizayni (mijozlar qismi)
 
@@ -436,6 +454,31 @@ qurayotganda amalga oshiriladi.
     kompaniya yoki Payoneer kabi oraliq yechim talab qiladi) — shu sabab
     hozirgi bosqichda onlayn xalqaro to'lov qo'shilmaydi, kelishuv
     asosidagi to'lov davom etadi.
+
+8.11a. Inquiry/Service Request javoblari mijozga qanday yetib boradi
+
+Bu — "admin javob yozdi, lekin mijozga yetib bormayapti" muammosining
+aniq yechimi:
+
+-   Har bir inquiry/service request — bitta savol-javob emas, balki
+    xronologik YOZISHMA (thread): mijoz yozadi → admin javob beradi →
+    mijoz yana yozishi mumkin → va h.k. (inquiry_messages /
+    service_request_messages jadvali orqali).
+
+-   Admin panelda javob yozilgan zahoti, ikkita narsa sodir bo'lishi
+    kerak: (1) xabar bazaga saqlanadi va mijozning shaxsiy kabinetidagi
+    "Mening so'rovlarim" bo'limida darrov ko'rinadi; (2) mijozning
+    ro'yxatdan o'tishda bergan emailiga "Sizga Art Qala'dan javob keldi"
+    mazmunidagi xat yuboriladi (Resend orqali), xatda tizimga kirib
+    to'liq javobni o'qish uchun havola bo'ladi.
+
+-   Mijoz o'zi tizimga kirib "Mening so'rovlarim" sahifasini ochganda —
+    aynan shu joyda, o'zi yozgan xabari ostida adminning javobini chat
+    ko'rinishida ko'radi.
+
+-   Agar mijoz email orqali darhol bildirishnoma olishni xohlamasa ham,
+    keyingi safar tizimga kirganda "Mening so'rovlarim" bo'limida
+    o'qilmagan javoblar soni (badge) ko'rsatilishi kerak.
 
 8.11. Statistika va grafiklar (Dashboard)
 
