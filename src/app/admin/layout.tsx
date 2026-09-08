@@ -30,19 +30,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const { user, authLoading, signOut } = useApp();
 
-  // 1. If we are on /admin/login, bypass the sidebar layout completely
-  if (pathname === '/admin/login') {
-    return <>{children}</>;
-  }
+  const isLoginPage = pathname === '/admin/login';
 
-  // 2. Guard: redirect non-admin users to /admin/login
+  // 1. Guard: redirect non-admin users to /admin/login (called unconditionally)
   useEffect(() => {
-    if (!authLoading) {
+    if (!isLoginPage && !authLoading) {
       if (!user || user.role !== 'ADMIN') {
         router.push('/admin/login');
       }
     }
-  }, [user, authLoading, router]);
+  }, [isLoginPage, user, authLoading, router]);
+
+  // 2. If on /admin/login, bypass the sidebar layout completely
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   // Loading state
   if (authLoading) {
