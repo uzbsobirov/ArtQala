@@ -4,9 +4,16 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
+import { parsePhones, formatWorkingHours, getAboutText } from '@/lib/settingsUtils';
 
 export default function Footer() {
-  const { t } = useApp();
+  const { t, lang, settings } = useApp();
+
+  const phones = parsePhones(settings?.phone);
+  const workingHoursText = formatWorkingHours(settings?.working_hours, lang);
+  const aboutText = getAboutText(settings, lang, t.footer.about);
+  const addressText = settings?.address || 'Registan Street, 4, Samarkand, Uzbekistan';
+  const locationMap = settings?.location_map || 'https://maps.google.com/?q=Registan,Samarkand';
 
   return (
     <footer className="bg-[#281C18] text-[#E8DFD8] pt-14 pb-8 border-t border-[#3D2C26]">
@@ -27,7 +34,7 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-[13.5px] leading-relaxed text-[#B3A49B] max-w-sm">
-              {t.footer.about}
+              {aboutText}
             </p>
           </div>
 
@@ -37,11 +44,16 @@ export default function Footer() {
               {t.footer.visit}
             </h4>
             <div className="flex flex-col space-y-2 text-[13.5px] text-[#D8CDC5]">
-              <span>4 Registon Street, Samarkand</span>
-              <span className="text-[#A89990]">Open daily, 10:00 – 19:00</span>
-              <Link href="/contact" className="text-[#429599] hover:underline text-xs pt-1">
-                View on map →
-              </Link>
+              <span>{addressText}</span>
+              <span className="text-[#A89990]">{workingHoursText}</span>
+              <a
+                href={locationMap}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#429599] hover:underline text-xs pt-1 inline-flex items-center gap-1"
+              >
+                <span>{lang === 'uz' ? "Xaritada ko'rish" : lang === 'ru' ? 'На карте' : 'View on map'} →</span>
+              </a>
             </div>
           </div>
 
@@ -51,25 +63,35 @@ export default function Footer() {
               {t.footer.contact}
             </h4>
             <div className="flex flex-col space-y-2 text-[13.5px] text-[#D8CDC5]">
-              <a href="tel:+998901234567" className="hover:text-[#429599] transition-colors">
-                +998 90 123 45 67
-              </a>
-              <a
-                href="https://t.me/artqala"
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-[#429599] transition-colors"
-              >
-                Telegram · @artqala
-              </a>
-              <a
-                href="https://instagram.com/artqala.gallery"
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-[#429599] transition-colors"
-              >
-                Instagram · @artqala.gallery
-              </a>
+              {phones.map((p, idx) => (
+                <a
+                  key={idx}
+                  href={`tel:${p.replace(/[^\d+]/g, '')}`}
+                  className="hover:text-[#429599] transition-colors"
+                >
+                  {p}
+                </a>
+              ))}
+              {settings?.telegram && (
+                <a
+                  href={settings.telegram.startsWith('http') ? settings.telegram : `https://t.me/${settings.telegram.replace('@', '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-[#429599] transition-colors"
+                >
+                  Telegram · @{settings.telegram.split('/').pop()?.replace('@', '') || 'artqala'}
+                </a>
+              )}
+              {settings?.instagram && (
+                <a
+                  href={settings.instagram.startsWith('http') ? settings.instagram : `https://instagram.com/${settings.instagram.replace('@', '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-[#429599] transition-colors"
+                >
+                  Instagram · @{settings.instagram.split('/').pop()?.replace('@', '') || 'artqala'}
+                </a>
+              )}
             </div>
           </div>
 

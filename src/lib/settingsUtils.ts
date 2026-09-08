@@ -1,0 +1,97 @@
+import { Language } from '@/lib/i18n/translations';
+
+export interface DaySchedule {
+  dayKey: string;
+  dayLabelUz: string;
+  dayLabelRu: string;
+  dayLabelEn: string;
+  open: string;
+  close: string;
+  isDayOff: boolean;
+}
+
+export function parsePhones(raw: string | null | undefined): string[] {
+  if (!raw) return ['+998 66 233 44 55'];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map((p) => String(p).trim()).filter(Boolean);
+    }
+  } catch {}
+  const parts = String(raw).split(',').map((p) => p.trim()).filter(Boolean);
+  return parts.length > 0 ? parts : ['+998 66 233 44 55'];
+}
+
+export function getAboutText(
+  settings: { about_uz?: string | null; about_ru?: string | null; about_en?: string | null } | null | undefined,
+  lang: Language,
+  fallback: string
+): string {
+  if (!settings) return fallback;
+  if (lang === 'uz' && settings.about_uz?.trim()) return settings.about_uz.trim();
+  if (lang === 'ru' && settings.about_ru?.trim()) return settings.about_ru.trim();
+  if (lang === 'en' && settings.about_en?.trim()) return settings.about_en.trim();
+  return fallback;
+}
+
+export function formatWorkingHours(
+  rawWorkingHours: string | null | undefined,
+  lang: Language
+): string {
+  if (!rawWorkingHours) {
+    return lang === 'uz' ? 'Har kuni: 09:00 - 19:00' : lang === 'ru' ? 'Ежедневно: 09:00 - 19:00' : 'Daily: 09:00 - 19:00';
+  }
+
+  try {
+    const schedule: DaySchedule[] = JSON.parse(rawWorkingHours);
+    if (Array.isArray(schedule) && schedule.length === 7) {
+      const activeDays = schedule.filter((d) => !d.isDayOff);
+      if (activeDays.length === 0) {
+        return lang === 'uz' ? 'Vaqtinchalik yopiq' : lang === 'ru' ? 'Временно закрыто' : 'Temporarily Closed';
+      }
+
+      const allSameHours = activeDays.every(
+        (d) => d.open === activeDays[0].open && d.close === activeDays[0].close
+      );
+
+      if (allSameHours && activeDays.length === 7) {
+        return lang === 'uz'
+          ? `Har kuni: ${activeDays[0].open} – ${activeDays[0].close}`
+          : lang === 'ru'
+          ? `Ежедневно: ${activeDays[0].open} – ${activeDays[0].close}`
+          : `Daily: ${activeDays[0].open} – ${activeDays[0].close}`;
+      }
+
+      if (allSameHours && activeDays.length === 6 && schedule[6].isDayOff) {
+        return lang === 'uz'
+          ? `Dsh - Sh: ${activeDays[0].open} – ${activeDays[0].close} (Yak: Dam olish)`
+          : lang === 'ru'
+          ? `Пн - Сб: ${activeDays[0].open} – ${activeDays[0].close} (Вс: Выходной)`
+          : `Mon - Sat: ${activeDays[0].open} – ${activeDays[0].close} (Sun: Closed)`;
+      }
+
+      // Format Mon-Fri and Sat-Sun
+      const monFri = schedule.slice(0, 5);
+      const sat = schedule[5];
+      const sun = schedule[6];
+
+      const monFriSame = monFri.every(
+        (d) => !d.isDayOff && d.open === monFri[0].open && d.close === monFri[0].close
+      );
+
+      if (monFriSame) {
+        const mfPrefix = lang === 'uz' ? 'Dsh - Jum' : lang === 'ru' ? 'Пн - Пт' : 'Mon - Fri';
+        const satLabel = lang === 'uz' ? 'Shanba' : lang === 'ru' ? 'Сб' : 'Sat';
+        const sunLabel = lang === 'uz' ? 'Yakshanba' : lang === 'ru' ? 'Вс' : 'Sun';
+        const offLabel = lang === 'uz' ? 'Dam olish' : lang === 'ru' ? 'Выходной' : 'Closed';
+
+        const satStr = sat.isDayOff ? `${satLabel}: ${offLabel}` : `${satLabel}: ${sat.open}–${sat.close}`;
+        const sunStr = sun.isDayOff ? `${sunLabel}: ${offLabel}` : `${sunLabel}: ${sun.open}–${sun.close}`;
+
+        return `${mfPrefix}: ${monFri[0].open}–${monFri[0].close} | ${satStr} | ${sunStr}`;
+      }
+    }
+  } catch {}
+
+  return String(rawWorkingHours);
+}

@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useApp } from '@/context/AppContext';
 import { Settings, Save, CheckCircle2, Loader2, Globe, MapPin, Phone, Mail, Clock, Send, Plus, Trash2, AlertCircle } from 'lucide-react';
 
 export default function AdminSettingsPage() {
+  const { refreshSettings } = useApp();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -183,6 +185,7 @@ export default function AdminSettingsPage() {
 
       if (res.ok) {
         setSaved(true);
+        await refreshSettings();
         setTimeout(() => setSaved(false), 3000);
       } else {
         const d = await res.json().catch(() => ({}));

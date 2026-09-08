@@ -3,10 +3,15 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
-import { MapPin, Phone, MessageSquare, Clock, CheckCircle2, Send } from 'lucide-react';
+import { parsePhones, formatWorkingHours } from '@/lib/settingsUtils';
+import { MapPin, Phone, MessageSquare, Clock, CheckCircle2, Send, ExternalLink } from 'lucide-react';
 
 export default function ContactClient() {
-  const { t } = useApp();
+  const { t, lang, settings } = useApp();
+  const phones = parsePhones(settings?.phone);
+  const workingHoursText = formatWorkingHours(settings?.working_hours, lang);
+  const addressText = settings?.address || t.contact.address;
+  const locationMap = settings?.location_map || 'https://maps.google.com/?q=Registan,Samarkand';
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -171,11 +176,19 @@ export default function ContactClient() {
                 <MapPin className="w-4 h-4" />
                 <span>{t.contact.visitTitle}</span>
               </div>
-              <p className="text-sm font-medium">{t.contact.address}</p>
-              <div className="flex items-center gap-2 text-xs text-[#C8B9AF]">
-                <Clock className="w-3.5 h-3.5 text-[#5AB3B7]" />
-                <span>{t.contact.hours}</span>
+              <p className="text-sm font-medium">{addressText}</p>
+              <div className="flex items-start gap-2 text-xs text-[#C8B9AF]">
+                <Clock className="w-3.5 h-3.5 text-[#5AB3B7] mt-0.5 shrink-0" />
+                <span>{workingHoursText}</span>
               </div>
+              <a
+                href={locationMap}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#5AB3B7] hover:underline text-xs pt-1 inline-flex items-center gap-1"
+              >
+                <span>{lang === 'uz' ? "Xaritada ko'rish" : lang === 'ru' ? 'На карте' : 'View on map'} →</span>
+              </a>
             </div>
 
             {/* Direct Contact Card */}
@@ -184,44 +197,55 @@ export default function ContactClient() {
                 {t.contact.directTitle}
               </div>
               <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2.5">
-                  <Phone className="w-4 h-4 text-[#BA4E25]" />
-                  <a href="tel:+998901234567" className="hover:text-[#5AB3B7] transition-colors">
-                    {t.contact.phone}
-                  </a>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <MessageSquare className="w-4 h-4 text-[#BA4E25]" />
-                  <a
-                    href="https://t.me/artqala"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-[#5AB3B7] transition-colors"
-                  >
-                    {t.contact.telegram}
-                  </a>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <svg className="w-4 h-4 text-[#BA4E25]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-                  <a
-                    href="https://instagram.com/artqala.gallery"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-[#5AB3B7] transition-colors"
-                  >
-                    {t.contact.instagram}
-                  </a>
-                </div>
+                {phones.map((p, idx) => (
+                  <div key={idx} className="flex items-center gap-2.5">
+                    <Phone className="w-4 h-4 text-[#BA4E25] shrink-0" />
+                    <a href={`tel:${p.replace(/[^\d+]/g, '')}`} className="hover:text-[#5AB3B7] transition-colors">
+                      {p}
+                    </a>
+                  </div>
+                ))}
+                {settings?.telegram && (
+                  <div className="flex items-center gap-2.5">
+                    <MessageSquare className="w-4 h-4 text-[#BA4E25] shrink-0" />
+                    <a
+                      href={settings.telegram.startsWith('http') ? settings.telegram : `https://t.me/${settings.telegram.replace('@', '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-[#5AB3B7] transition-colors"
+                    >
+                      Telegram · @{settings.telegram.split('/').pop()?.replace('@', '') || 'artqala'}
+                    </a>
+                  </div>
+                )}
+                {settings?.instagram && (
+                  <div className="flex items-center gap-2.5">
+                    <svg className="w-4 h-4 text-[#BA4E25] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                    <a
+                      href={settings.instagram.startsWith('http') ? settings.instagram : `https://instagram.com/${settings.instagram.replace('@', '')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-[#5AB3B7] transition-colors"
+                    >
+                      Instagram · @{settings.instagram.split('/').pop()?.replace('@', '') || 'artqala'}
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Interactive Map Pin Illustration */}
-            <div className="relative aspect-[16/10] w-full rounded-[3px] overflow-hidden border border-[#E7E0D8] bg-[#F4ECE1]">
+            {/* Interactive Map Pin Illustration (Clickable link to Google Maps) */}
+            <a
+              href={locationMap}
+              target="_blank"
+              rel="noreferrer"
+              className="relative aspect-[16/10] w-full rounded-[3px] overflow-hidden border border-[#E7E0D8] bg-[#F4ECE1] block group cursor-pointer"
+            >
               <Image
                 src="/assets/p-courtyard.svg"
-                alt="Samarkand Gallery location preview"
+                alt="Gallery location preview"
                 fill
-                className="object-cover brightness-95"
+                className="object-cover brightness-95 group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-[#1D100B]/20 pointer-events-none" />
 
@@ -233,11 +257,12 @@ export default function ContactClient() {
                     <MapPin className="w-5 h-5" />
                   </div>
                 </div>
-                <div className="mt-2 bg-[#FAF4EC]/95 backdrop-blur-xs text-[#281C18] text-[10.5px] font-bold px-2.5 py-1 rounded-sm shadow-sm border border-[#E7E0D8]">
-                  Art Qala · Registon 4
+                <div className="mt-2 bg-[#FAF4EC]/95 backdrop-blur-xs text-[#281C18] text-[10.5px] font-bold px-2.5 py-1 rounded-sm shadow-sm border border-[#E7E0D8] group-hover:bg-white transition-colors flex items-center gap-1">
+                  <span>{settings?.gallery_name || 'Art Qala'}</span>
+                  <ExternalLink className="w-3 h-3 text-[#BA4E25]" />
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
       </div>

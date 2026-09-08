@@ -14,6 +14,25 @@ export interface UserSession {
   email_verified: boolean;
 }
 
+export interface SiteSettingsData {
+  id?: string;
+  gallery_name?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  location_map?: string;
+  working_hours?: string;
+  telegram?: string;
+  instagram?: string;
+  about_en?: string;
+  about_ru?: string;
+  about_uz?: string;
+  rate_usd?: number;
+  rate_eur?: number;
+  rate_rub?: number;
+  manual_rates?: boolean;
+}
+
 interface AppContextType {
   lang: Language;
   setLang: (lang: Language) => void;
@@ -28,6 +47,8 @@ interface AppContextType {
   authLoading: boolean;
   refreshUser: () => Promise<void>;
   signOut: () => Promise<void>;
+  settings: SiteSettingsData | null;
+  refreshSettings: () => Promise<void>;
 }
 
 const DEFAULT_RATES: Record<Currency, number> = {
@@ -46,7 +67,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [authLoading, setAuthLoading] = useState(true);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [rates, setRates] = useState<Record<Currency, number>>(DEFAULT_RATES);
+  const [settings, setSettings] = useState<SiteSettingsData | null>(null);
   const [, setMounted] = useState(false);
+
+  const refreshSettings = async () => {
+    try {
+      const res = await fetch('/api/settings');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.settings) {
+          setSettings(data.settings);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch site settings:', e);
+    }
+  };
 
   const refreshUser = async () => {
     try {
@@ -97,6 +133,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setMounted(true);
     refreshUser();
     fetchRates();
+    refreshSettings();
 
     const savedLang = localStorage.getItem('artqala_lang') as Language;
     if (savedLang && ['en', 'ru', 'uz'].includes(savedLang)) {
@@ -180,6 +217,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         authLoading,
         refreshUser,
         signOut,
+        settings,
+        refreshSettings,
       }}
     >
       {children}
