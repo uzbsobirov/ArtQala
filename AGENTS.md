@@ -48,6 +48,7 @@ Bular hammasi TZ hujjatining "8. Qo'shimcha talablar va tuzatishlar" bo'limida b
 - **Inquiries vs Service Requests**: Inquiries — mavjud kartina haqidagi so'rov; Service Requests — yangi xizmat (mural/keramika/custom) so'rovi. Alohida jadval va admin bo'lim.
 - **Valyuta kurslari**: USD/EUR/RUB O'zbekiston Markaziy banki (cbu.uz) API'sidan avtomatik yangilanadi + Settings'da qo'lda tuzatish imkoniyati ham bo'lsin.
 - **Settings**: galereya nomi, telefon, manzil, joylashuv/xarita, ish vaqti, ijtimoiy tarmoqlar, "Biz haqimizda" matni (3 tilda) — hammasi shu yerdan tahrirlanadigan bo'lsin.
+- **Galereya manzili va lokatsiyasi — TOSHKENT**: Galereyaning barcha joylaridagi manzili va matnlari (barcha 3 tilda) **Toshkent / Tashkent / Ташкент** (Baroqxon madrasasi / Barakhon Madrasah) bo'lishi shart, Samarqand EMAS. Bu foydalanuvchi tomonidan qat'iy belgilangan.
 - **Sign up**: davlat tanlovida to'liq davlatlar ro'yxati; parol — ikki marta kiritish (tasdiqlash), kamida 8 belgi, kamida 1 ta katta harf va 1 ta raqam.
 - **Bosh sahifa hero rasmi**: bitta statik rasm emas, bir nechta rasm orasida avtomatik almashinadigan carousel.
 
