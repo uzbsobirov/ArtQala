@@ -95,6 +95,7 @@ model User {
   role           String           @default("USER") // USER, ADMIN
   email_verified Boolean          @default(false)
   auth_provider  String           @default("EMAIL") // EMAIL, GOOGLE, APPLE
+  must_change_password Boolean     @default(false)
 
   inquiries        Inquiry[]
   service_requests ServiceRequest[]
@@ -156,10 +157,14 @@ model Review {
 
   rating      Int       @default(5)
   text        String
-  is_approved Boolean   @default(true)
+  is_approved Boolean   @default(false)
 
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
+
+  @@index([painting_id])
+  @@index([user_id])
+  @@index([is_approved])
 }
 
 model WishlistItem {

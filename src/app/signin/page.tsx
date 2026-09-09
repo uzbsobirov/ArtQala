@@ -1,25 +1,51 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { LogIn, Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
+import { validateEmail } from '@/lib/validation';
 
 export default function SignInPage() {
   const router = useRouter();
-  const { refreshUser } = useApp();
+  const { refreshUser, t } = useApp();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [oauthErrorCode, setOauthErrorCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOauthErrorCode(new URLSearchParams(window.location.search).get('error'));
+  }, []);
+
+  // Translated at render time (not inside the effect) so it stays correct
+  // even if the saved language finishes loading after this effect already ran.
+  const oauthErrorMessage =
+    oauthErrorCode === 'oauth_cancelled'
+      ? t.auth.oauthCancelled
+      : oauthErrorCode === 'oauth_not_configured'
+      ? t.auth.oauthNotConfigured
+      : oauthErrorCode === 'oauth_failed'
+      ? t.auth.oauthFailed
+      : null;
+
+  const displayError = error || oauthErrorMessage;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.isValid) {
+      setError(emailCheck.error || t.auth.invalidEmail);
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const res = await fetch('/api/auth/signin', {
@@ -30,7 +56,7 @@ export default function SignInPage() {
 
       const data = await res.json();
       if (!data.success) {
-        setError(data.error || 'Failed to sign in');
+        setError(data.error || t.auth.signInFailed);
         return;
       }
 
@@ -41,7 +67,7 @@ export default function SignInPage() {
         router.push('/account');
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      setError(t.auth.unexpectedError);
     } finally {
       setLoading(false);
     }
@@ -62,24 +88,24 @@ export default function SignInPage() {
             />
           </Link>
           <h1 className="font-serif text-3xl font-semibold text-[#281C18]">
-            Welcome Back
+            {t.auth.signInTitle}
           </h1>
           <p className="text-xs text-[#726861]">
-            Sign in to track your inquiries, orders and manage your saved art
+            {t.auth.signInSubtitle}
           </p>
         </div>
 
-        {error && (
+        {displayError && (
           <div className="mb-6 p-3.5 bg-[#FFEBEE] border border-[#FFCDD2] rounded-[3px] text-xs text-[#C62828] flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+            <span>{displayError}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-              Email Address
+              {t.auth.emailLabel}
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -97,13 +123,13 @@ export default function SignInPage() {
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase">
-                Password
+                {t.auth.passwordLabel}
               </label>
               <Link
                 href="/forgot-password"
                 className="text-xs text-[#BA4E25] hover:underline"
               >
-                Forgot password?
+                {t.auth.forgotPassword}
               </Link>
             </div>
             <div className="relative">
@@ -125,7 +151,7 @@ export default function SignInPage() {
             className="w-full bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-sm py-3 rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-sm mt-2"
           >
             <LogIn className="w-4 h-4" />
-            <span>{loading ? 'Signing in...' : 'Sign In'}</span>
+            <span>{loading ? t.auth.signingIn : t.auth.signInBtn}</span>
           </button>
         </form>
 
@@ -135,16 +161,15 @@ export default function SignInPage() {
             <div className="w-full border-t border-[#E7E0D8]" />
           </div>
           <span className="relative bg-[#FDFBF9] px-3 text-[11px] text-[#9E9086] uppercase font-semibold">
-            Or continue with
+            {t.auth.orContinueWith}
           </span>
         </div>
 
         {/* OAuth Buttons */}
         <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => alert('Google OAuth integration will be connected with client credentials')}
-            className="flex items-center justify-center gap-2 py-2.5 px-3 border border-[#E7E0D8] bg-white rounded-[3px] text-xs font-semibold text-[#4D3F38] hover:bg-[#F9F6F0] transition-colors"
+          <a
+            href="/api/auth/oauth/google"
+            className="flex items-center justify-center gap-2 py-2.5 px-3 border border-[#E7E0D8] bg-white rounded-[3px] text-xs font-semibold text-[#4D3F38] hover:bg-[#F9F6F0] transition-colors shadow-2xs"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
@@ -165,28 +190,27 @@ export default function SignInPage() {
               />
             </svg>
             <span>Google</span>
-          </button>
+          </a>
 
-          <button
-            type="button"
-            onClick={() => alert('Apple OAuth integration will be connected with client credentials')}
-            className="flex items-center justify-center gap-2 py-2.5 px-3 border border-[#E7E0D8] bg-white rounded-[3px] text-xs font-semibold text-[#4D3F38] hover:bg-[#F9F6F0] transition-colors"
+          <a
+            href="/api/auth/oauth/apple"
+            className="flex items-center justify-center gap-2 py-2.5 px-3 border border-[#E7E0D8] bg-white rounded-[3px] text-xs font-semibold text-[#4D3F38] hover:bg-[#F9F6F0] transition-colors shadow-2xs"
           >
             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
               <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.85c.66-.82 1.11-1.96.99-3.1-.96.04-2.12.64-2.79 1.43-.59.68-1.1 1.83-.96 2.95 1.07.08 2.1-.46 2.76-1.28z" />
             </svg>
             <span>Apple</span>
-          </button>
+          </a>
         </div>
 
         {/* Switch to sign up */}
         <p className="text-center text-xs text-[#726861] mt-8">
-          Don't have an account yet?{' '}
+          {t.auth.noAccountYet}{' '}
           <Link
             href="/signup"
             className="font-bold text-[#BA4E25] hover:underline"
           >
-            Create an account
+            {t.auth.createAccount}
           </Link>
         </p>
       </div>

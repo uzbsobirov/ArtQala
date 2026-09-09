@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { cookies } from 'next/headers';
+import { getServerSession } from '@/lib/auth';
 
 export async function DELETE(
   req: Request,
@@ -8,15 +8,13 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
-    const cookieStore = await cookies();
-    const userCookie = cookieStore.get('artqala_user')?.value;
+    const user = await getServerSession();
 
-    if (!userCookie) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = JSON.parse(userCookie);
-    if (!user || user.role !== 'ADMIN') {
+    if (user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

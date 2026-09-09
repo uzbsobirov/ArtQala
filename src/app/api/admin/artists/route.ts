@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  const auth = await requireAdmin();
+  if (auth.errorResponse) return auth.errorResponse;
+
   try {
     const artists = await prisma.artist.findMany({
       include: {
@@ -20,6 +24,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireAdmin();
+  if (auth.errorResponse) return auth.errorResponse;
+
   try {
     const body = await request.json();
     const { name, bio_uz, bio_en, bio_ru, specialty_uz, specialty_en, specialty_ru, photo, initials } = body;

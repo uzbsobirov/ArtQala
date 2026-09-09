@@ -12,6 +12,7 @@ export interface UserSession {
   country?: string | null;
   role: string;
   email_verified: boolean;
+  must_change_password?: boolean;
 }
 
 export interface SiteSettingsData {

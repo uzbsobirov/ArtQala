@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { createSessionToken } from '@/lib/auth';
+import { checkRateLimit, recordFailedAttempt, resetRateLimit, getClientIp } from '@/lib/rateLimit';
+import { validateEmail } from '@/lib/validation';
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const ip = getClientIp(request);
+    const body = await request.json();
+    const { email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -13,11 +18,42 @@ export async function POST(request: Request) {
       );
     }
 
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      return NextResponse.json(
+        { success: false, error: emailValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const rateLimitKey = `signin:${ip}:${normalizedEmail}`;
+
+    // 1. Check rate limit (Max 5 attempts in 15 minutes)
+    const rateCheck = checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
+    if (!rateCheck.allowed) {
+      const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Juda ko'p noto'g'ri urinishlar. Xavfsizlik yuzasidan hisob ${minutesLeft} daqiqaga vaqtincha bloklandi.`,
+          retryAfterSeconds: rateCheck.retryAfterSeconds,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateCheck.retryAfterSeconds),
+          },
+        }
+      );
+    }
+
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email: normalizedEmail },
     });
 
     if (!user || !user.password_hash) {
+      recordFailedAttempt(rateLimitKey);
       return NextResponse.json(
         { success: false, error: 'Invalid email or password' },
         { status: 401 }
@@ -26,11 +62,15 @@ export async function POST(request: Request) {
 
     const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) {
+      recordFailedAttempt(rateLimitKey);
       return NextResponse.json(
         { success: false, error: 'Invalid email or password' },
         { status: 401 }
       );
     }
+
+    // Successful login: reset failed attempts
+    resetRateLimit(rateLimitKey);
 
     const userSession = {
       id: user.id,
@@ -39,7 +79,10 @@ export async function POST(request: Request) {
       country: user.country,
       role: user.role,
       email_verified: user.email_verified,
+      must_change_password: user.must_change_password,
     };
+
+    const sessionToken = createSessionToken(userSession);
 
     const response = NextResponse.json({
       success: true,
@@ -47,9 +90,10 @@ export async function POST(request: Request) {
       user: userSession,
     });
 
-    response.cookies.set('artqala_user', JSON.stringify(userSession), {
-      httpOnly: false,
+    response.cookies.set('artqala_user', sessionToken, {
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60,
       path: '/',
     });

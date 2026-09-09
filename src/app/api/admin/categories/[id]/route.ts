@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,6 +8,9 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdmin();
+  if (auth.errorResponse) return auth.errorResponse;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -32,6 +36,9 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdmin();
+  if (auth.errorResponse) return auth.errorResponse;
+
   try {
     const { id } = await params;
     await prisma.category.delete({ where: { id } });

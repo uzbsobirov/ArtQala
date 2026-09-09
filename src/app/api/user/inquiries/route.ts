@@ -1,17 +1,14 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from '@/lib/auth';
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const userCookie = cookieStore.get('artqala_user');
+    const session = await getServerSession();
 
-    if (!userCookie || !userCookie.value) {
+    if (!session) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
-
-    const session = JSON.parse(userCookie.value);
 
     // Fetch inquiries by user_id OR guest_email (case-insensitive)
     const rawInquiries = await prisma.inquiry.findMany({

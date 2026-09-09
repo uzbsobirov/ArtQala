@@ -136,7 +136,7 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search artwork or artist..."
+              placeholder={t.gallery.searchPlaceholder}
               className="w-full pl-9 pr-3 py-1.5 text-xs bg-[#FDFBF9] border border-[#E7E0D8] rounded-full focus:outline-none focus:border-[#BA4E25] text-[#281C18]"
             />
           </div>
@@ -156,7 +156,7 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
             <SlidersHorizontal className="w-8 h-8 mx-auto text-[#A89990]" />
             <p className="text-base font-serif text-[#554740]">
               {onlyWishlist
-                ? 'Your wishlist is currently empty. Tap the heart on any painting to save it!'
+                ? t.gallery.wishlistEmpty
                 : t.gallery.noPaintingsFound}
             </p>
             {onlyWishlist && (
@@ -164,7 +164,7 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
                 onClick={() => setOnlyWishlist(false)}
                 className="text-xs font-semibold text-[#BA4E25] hover:underline"
               >
-                View all paintings →
+                {t.gallery.viewAllPaintings}
               </button>
             )}
           </div>

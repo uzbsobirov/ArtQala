@@ -1,14 +1,42 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { sendOtpEmail } from '@/lib/email';
+import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
+import { validateEmail } from '@/lib/validation';
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(request);
+    const signupKey = `signup:${ip}`;
+
+    const rateCheck = checkRateLimit(signupKey, 5, 15 * 60 * 1000);
+    if (!rateCheck.allowed) {
+      const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Juda ko'p ro'yxatdan o'tish urinishlari. Iltimos, ${minutesLeft} daqiqadan so'ng qayta urinib ko'ring.`,
+          retryAfterSeconds: rateCheck.retryAfterSeconds,
+        },
+        { status: 429 }
+      );
+    }
+    recordFailedAttempt(signupKey);
+
     const { name, email, password, country } = await request.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
-        { success: false, error: 'Barcha maydonlar to\'ldirilishi shart' },
+        { success: false, error: "Barcha maydonlar to'ldirilishi shart" },
+        { status: 400 }
+      );
+    }
+
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      return NextResponse.json(
+        { success: false, error: emailValidation.error },
         { status: 400 }
       );
     }
@@ -18,14 +46,16 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Parol kamida 8 ta belgi, 1 ta katta harf va 1 ta raqamdan iborat bo\'lishi shart',
+          error: "Parol kamida 8 ta belgi, 1 ta katta harf va 1 ta raqamdan iborat bo'lishi shart",
         },
         { status: 400 }
       );
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -41,7 +71,7 @@ export async function POST(request: Request) {
     const user = await prisma.user.create({
       data: {
         name,
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         password_hash: passwordHash,
         country: country || null,
         role: 'USER',
@@ -56,18 +86,21 @@ export async function POST(request: Request) {
 
     await prisma.otpVerification.create({
       data: {
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         code: otpCode,
         expires_at: expiresAt,
       },
     });
 
-    console.log(`[Art Qala OTP] Verification code for ${email}: ${otpCode}`);
+    // Send real OTP email via Resend
+    const emailResult = await sendOtpEmail(normalizedEmail, otpCode, name);
+    if (!emailResult.success) {
+      console.warn('Could not dispatch Resend email, code saved in DB:', emailResult.error);
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Account created. Please verify with the 6-digit code sent to your email.',
-      otpPreview: process.env.NODE_ENV !== 'production' ? otpCode : undefined,
       email: user.email,
     });
   } catch (error) {

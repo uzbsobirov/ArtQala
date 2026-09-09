@@ -1,8 +1,11 @@
 'use client';
 
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useApp } from '@/context/AppContext';
 import { ShieldCheck, Printer, ArrowLeft, Award } from 'lucide-react';
 
 interface CertificateClientProps {
@@ -10,11 +13,22 @@ interface CertificateClientProps {
 }
 
 export default function CertificateClient({ painting }: CertificateClientProps) {
+  const { lang, t } = useApp();
+
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
       window.print();
     }
   };
+
+  const title =
+    lang === 'ru' ? painting.title_ru : lang === 'uz' ? painting.title_uz : painting.title_en;
+  const technique =
+    lang === 'ru'
+      ? painting.technique_ru || painting.technique_en
+      : lang === 'uz'
+      ? painting.technique_uz || painting.technique_en
+      : painting.technique_en;
 
   const certNumber = `AQ-${new Date(painting.created_at).getFullYear()}-${painting.id.slice(-6).toUpperCase()}`;
 
@@ -28,7 +42,7 @@ export default function CertificateClient({ painting }: CertificateClientProps) 
             className="text-xs font-semibold text-[#BA4E25] hover:underline flex items-center gap-1.5"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to Painting</span>
+            <span>{t.certificate.backToPainting}</span>
           </Link>
 
           <button
@@ -36,7 +50,7 @@ export default function CertificateClient({ painting }: CertificateClientProps) 
             className="bg-[#281C18] hover:bg-[#BA4E25] text-white text-xs font-semibold px-4 py-2 rounded-[3px] transition-all flex items-center gap-2 shadow-xs"
           >
             <Printer className="w-4 h-4" />
-            <span>Print Certificate</span>
+            <span>{t.certificate.printBtn}</span>
           </button>
         </div>
 
@@ -60,14 +74,14 @@ export default function CertificateClient({ painting }: CertificateClientProps) 
                 className="h-12 w-auto mx-auto object-contain mb-2"
               />
               <span className="text-[10px] tracking-[4px] text-[#BA4E25] font-bold uppercase block">
-                TASHKENT · REPUBLIC OF UZBEKISTAN
+                {t.certificate.countryLine}
               </span>
               <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-wider text-[#281C18] pt-2">
-                Certificate of Authenticity
+                {t.certificate.title}
               </h1>
               <div className="w-32 h-[1.5px] bg-[#DAA932] mx-auto my-3" />
               <p className="text-xs text-[#726861] max-w-md mx-auto italic">
-                This document certifies that the artwork detailed below is an authentic, original creation registered in the permanent archives of Art Qala Gallery.
+                {t.certificate.intro}
               </p>
             </div>
 
@@ -75,16 +89,16 @@ export default function CertificateClient({ painting }: CertificateClientProps) 
             <div className="grid grid-cols-2 gap-y-4 gap-x-8 py-6 border-y border-[#E7E0D8] text-xs max-w-lg mx-auto my-6">
               <div>
                 <span className="text-[#8F8178] uppercase font-bold text-[10px] block">
-                  Title of Artwork
+                  {t.certificate.titleOfArtwork}
                 </span>
                 <span className="font-serif text-lg font-bold text-[#281C18]">
-                  {painting.title_en}
+                  {title}
                 </span>
               </div>
 
               <div>
                 <span className="text-[#8F8178] uppercase font-bold text-[10px] block">
-                  Master Artist
+                  {t.certificate.masterArtist}
                 </span>
                 <span className="font-serif text-lg font-bold text-[#281C18]">
                   {painting.artist?.name}
@@ -93,16 +107,16 @@ export default function CertificateClient({ painting }: CertificateClientProps) 
 
               <div>
                 <span className="text-[#8F8178] uppercase font-bold text-[10px] block">
-                  Medium &amp; Technique
+                  {t.certificate.mediumTechnique}
                 </span>
                 <span className="font-semibold text-[#281C18]">
-                  {painting.technique_en}
+                  {technique}
                 </span>
               </div>
 
               <div>
                 <span className="text-[#8F8178] uppercase font-bold text-[10px] block">
-                  Dimensions
+                  {t.certificate.dimensions}
                 </span>
                 <span className="font-semibold text-[#281C18]">
                   {painting.size}
@@ -111,7 +125,7 @@ export default function CertificateClient({ painting }: CertificateClientProps) 
 
               <div>
                 <span className="text-[#8F8178] uppercase font-bold text-[10px] block">
-                  Year of Creation
+                  {t.certificate.yearOfCreation}
                 </span>
                 <span className="font-semibold text-[#281C18]">
                   {painting.year}
@@ -120,7 +134,7 @@ export default function CertificateClient({ painting }: CertificateClientProps) 
 
               <div>
                 <span className="text-[#8F8178] uppercase font-bold text-[10px] block">
-                  Certificate Number
+                  {t.certificate.certificateNumber}
                 </span>
                 <span className="font-mono font-bold text-[#BA4E25]">
                   {certNumber}
@@ -135,7 +149,7 @@ export default function CertificateClient({ painting }: CertificateClientProps) 
                   {painting.artist?.name}
                 </div>
                 <span className="text-[10px] uppercase tracking-wider text-[#8F8178] block font-bold">
-                  Artist Signature
+                  {t.certificate.artistSignature}
                 </span>
               </div>
 
@@ -147,7 +161,7 @@ export default function CertificateClient({ painting }: CertificateClientProps) 
                     ART QALA
                   </span>
                   <span className="text-[6px] text-[#BA4E25] font-semibold">
-                    OFFICIAL SEAL
+                    {t.certificate.officialSeal}
                   </span>
                 </div>
               </div>
@@ -157,14 +171,14 @@ export default function CertificateClient({ painting }: CertificateClientProps) 
                   Anvar K.
                 </div>
                 <span className="text-[10px] uppercase tracking-wider text-[#8F8178] block font-bold">
-                  Head Curator, Art Qala
+                  {t.certificate.headCurator}
                 </span>
               </div>
             </div>
 
             {/* Footer verification note */}
             <div className="text-center pt-8 text-[9px] text-[#A8988E]">
-              Art Qala Gallery · Barakhon Madrasah, Tashkent, Uzbekistan · Registered Cultural Property Document
+              {t.certificate.footerNote}
             </div>
           </div>
         </div>

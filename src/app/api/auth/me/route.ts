@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const userCookie = cookieStore.get('artqala_user');
+    const session = await getServerSession();
 
-    if (!userCookie || !userCookie.value) {
+    if (!session || !session.id) {
       return NextResponse.json({ user: null });
     }
 
-    const session = JSON.parse(userCookie.value);
     const user = await prisma.user.findUnique({
       where: { id: session.id },
       select: {
@@ -21,12 +21,13 @@ export async function GET() {
         country: true,
         role: true,
         email_verified: true,
+        must_change_password: true,
       },
     });
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error('Session error:', error);
+    console.error('Session verification error:', error);
     return NextResponse.json({ user: null });
   }
 }

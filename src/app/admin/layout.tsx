@@ -14,6 +14,7 @@ import {
   Wrench,
   Users2,
   Star,
+  UserCog,
   Settings,
   ArrowUpRight,
   LogOut,
@@ -21,6 +22,7 @@ import {
   Mail,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
+import ChangePasswordModal from './ChangePasswordModal';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -79,6 +81,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: '/admin/messages', label: t.admin.messages, icon: Mail },
     { href: '/admin/customers', label: t.admin.customers, icon: Users2 },
     { href: '/admin/reviews', label: t.admin.reviews, icon: Star },
+    { href: '/admin/staff', label: t.admin.staff, icon: UserCog },
     { href: '/admin/settings', label: t.admin.settings, icon: Settings },
   ];
 
@@ -93,6 +96,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     if (pathname.startsWith('/admin/messages')) return t.admin.messages;
     if (pathname.startsWith('/admin/customers')) return t.admin.customers;
     if (pathname.startsWith('/admin/reviews')) return t.admin.reviews;
+    if (pathname.startsWith('/admin/staff')) return t.admin.staff;
     if (pathname.startsWith('/admin/settings')) return t.admin.settings;
     return 'Admin';
   };
@@ -241,6 +245,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* Content Body */}
         <main className="flex-1 p-6 sm:p-8 overflow-y-auto">{children}</main>
       </div>
+
+      {/* Force Password Change on First Login */}
+      {user?.must_change_password && <ChangePasswordModal />}
     </div>
   );
 }

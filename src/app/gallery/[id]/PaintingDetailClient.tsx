@@ -4,14 +4,25 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
-import { Heart, ShieldCheck, CheckCircle2, ArrowLeft, Send } from 'lucide-react';
+import {
+  Heart,
+  ShieldCheck,
+  CheckCircle2,
+  ArrowLeft,
+  Send,
+  Star,
+  MessageSquarePlus,
+  X,
+  Sparkles,
+  Lock,
+} from 'lucide-react';
 
 interface PaintingDetailClientProps {
   painting: any;
 }
 
 export default function PaintingDetailClient({ painting }: PaintingDetailClientProps) {
-  const { lang, formatPrice, wishlist, toggleWishlist, t } = useApp();
+  const { lang, formatPrice, wishlist, toggleWishlist, t, user } = useApp();
 
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
@@ -20,12 +31,77 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // Reviews state (TZ 8.12)
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+
+  // Review eligibility
+  const [canReview, setCanReview] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+
+  // Review modal form state
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewAuthor, setReviewAuthor] = useState('');
+  const [reviewText, setReviewText] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSuccessMessage, setReviewSuccessMessage] = useState<string | null>(null);
+  const [reviewErrorMessage, setReviewErrorMessage] = useState<string | null>(null);
+
   // Track painting view once when client mounts
   useEffect(() => {
     if (painting?.id) {
       fetch(`/api/paintings/${painting.id}/view`, { method: 'POST' }).catch(() => {});
     }
   }, [painting?.id]);
+
+  // Load reviews for this specific painting
+  const fetchReviews = async () => {
+    try {
+      setLoadingReviews(true);
+      const res = await fetch(`/api/reviews?painting_id=${painting.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setReviews(data.reviews || []);
+          setTotalReviews(data.total_reviews || 0);
+          setAverageRating(data.average_rating || 0);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load painting reviews:', err);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  // Check if current user can review this painting (TZ 8.12: must have inquired/purchased)
+  const checkReviewEligibility = async () => {
+    try {
+      const res = await fetch(`/api/user/can-review?painting_id=${painting.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCanReview(!!data.can_review);
+        setHasReviewed(!!data.has_reviewed);
+      } else {
+        setCanReview(false);
+      }
+    } catch {
+      setCanReview(false);
+    }
+  };
+
+  useEffect(() => {
+    if (painting?.id) {
+      fetchReviews();
+      checkReviewEligibility();
+    }
+    if (user?.name) {
+      setReviewAuthor(user.name);
+    }
+  }, [painting?.id, user]);
 
   const title =
     lang === 'ru'
@@ -92,11 +168,57 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
       if (data.success) {
         setSubmitted(true);
         setMessage('');
+        // Re-check review eligibility now that an inquiry was placed
+        checkReviewEligibility();
       }
     } catch (err) {
       console.error('Failed to submit inquiry', err);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittingReview(true);
+    setReviewErrorMessage(null);
+    setReviewSuccessMessage(null);
+
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          painting_id: painting.id,
+          rating: reviewRating,
+          author_name: reviewAuthor.trim() || user?.name || t.reviews.verifiedCollectorBadge,
+          text: reviewText.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setReviewSuccessMessage(
+          lang === 'uz'
+            ? "Sharhingiz uchun rahmat! Moderatsiyadan so'ng (admin tasdiqlagach) saytda ko'rinadi."
+            : lang === 'ru'
+            ? 'Спасибо за ваш отзыв! Он появится на сайте после проверки модератором.'
+            : 'Thank you! Your review has been submitted and will appear on the site after admin approval.'
+        );
+        setReviewText('');
+        setHasReviewed(true);
+        setTimeout(() => {
+          setShowReviewModal(false);
+          setReviewSuccessMessage(null);
+        }, 2800);
+      } else {
+        setReviewErrorMessage(data.error || t.reviews.submitError);
+      }
+    } catch (err) {
+      console.error('Error submitting review:', err);
+      setReviewErrorMessage(t.reviews.networkError);
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -115,7 +237,7 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
         {/* 2-Column Split Details */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14">
           {/* Left Art View */}
-          <div className="lg:col-span-7 space-y-4">
+          <div className="lg:col-span-7 space-y-6">
             <div className="relative aspect-square w-full rounded-[4px] overflow-hidden border border-[#E7E0D8] bg-[#F4ECE1] shadow-md">
               <Image
                 src={imageSrc}
@@ -161,9 +283,126 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
                   target="_blank"
                   className="inline-block mt-2 text-xs font-bold text-[#BA4E25] hover:underline"
                 >
-                  View official Certificate of Authenticity →
+                  {t.painting.viewCertificateLink}
                 </Link>
               </div>
+            </div>
+
+            {/* TZ 8.12: Reviews and Ratings Section under Artwork Description */}
+            <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-6 sm:p-7 space-y-6 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#EFE8DE]">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold tracking-widest text-[#429599] uppercase">
+                      {t.reviews.collectorReviewsEyebrow}
+                    </span>
+                    <Sparkles className="w-3.5 h-3.5 text-[#DAA932]" />
+                  </div>
+                  <h3 className="font-serif text-2xl font-semibold text-[#281C18] mt-1">
+                    {t.reviews.authenticImpressions}
+                  </h3>
+                </div>
+
+                {/* Rating summary badge */}
+                <div className="flex items-center gap-3">
+                  {totalReviews > 0 ? (
+                    <div className="flex items-center gap-2 bg-[#FAF4EC] px-3.5 py-2 border border-[#E7E0D8] rounded-[3px]">
+                      <span className="text-xl font-serif font-bold text-[#281C18]">
+                        {averageRating.toFixed(1)}
+                      </span>
+                      <div className="flex text-[#DAA932]">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3.5 h-3.5 ${
+                              i < Math.round(averageRating) ? 'fill-current' : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-[#726861] pl-1 font-medium">
+                        ({totalReviews} {totalReviews === 1 ? t.reviews.reviewSingular : t.reviews.reviewPlural})
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-[#8F8178] italic">
+                      {t.reviews.noApprovedReviewsYet}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Review Call-to-Action / Permission Notice */}
+              <div className="bg-[#FAF4EC]/70 border border-[#E7E0D8] rounded-[3px] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="text-xs text-[#6B5E55] leading-relaxed flex items-start gap-2">
+                  <Lock className="w-3.5 h-3.5 text-[#BA4E25] shrink-0 mt-0.5" />
+                  <span>
+                    <strong>{t.reviews.verifiedInquirersOnlyLabel}</strong> {t.reviews.verifiedInquirersOnlyDesc}
+                  </span>
+                </div>
+
+                {canReview ? (
+                  <button
+                    onClick={() => setShowReviewModal(true)}
+                    className="shrink-0 bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold px-4 py-2 rounded-[3px] transition flex items-center gap-1.5 shadow-xs"
+                  >
+                    <MessageSquarePlus className="w-3.5 h-3.5" />
+                    <span>{hasReviewed ? t.reviews.updateReviewBtn : t.reviews.writeReviewBtn}</span>
+                  </button>
+                ) : user ? (
+                  <span className="text-[11px] text-[#8F8178] italic shrink-0">
+                    {t.reviews.unlockReviewsHint}
+                  </span>
+                ) : (
+                  <Link
+                    href="/signin"
+                    className="shrink-0 text-xs font-semibold text-[#BA4E25] hover:underline"
+                  >
+                    {t.reviews.signInToReview}
+                  </Link>
+                )}
+              </div>
+
+              {/* Reviews List */}
+              {loadingReviews ? (
+                <div className="py-6 text-center text-xs text-[#8F8178]">
+                  {t.reviews.loadingReviews}
+                </div>
+              ) : reviews.length > 0 ? (
+                <div className="space-y-4 divide-y divide-[#F0EAE1]">
+                  {reviews.map((rev) => (
+                    <div key={rev.id} className="pt-4 first:pt-0 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-serif font-semibold text-sm text-[#281C18]">
+                            {rev.author_name}
+                          </span>
+                          <span className="bg-[#DCFCE7] text-[#16A34A] text-[10px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider">
+                            {t.account.verifiedBadge}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex text-[#DAA932]">
+                            {[...Array(rev.rating)].map((_, i) => (
+                              <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                            ))}
+                          </div>
+                          <span className="text-[11px] text-[#9E9086]">
+                            {new Date(rev.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-xs sm:text-sm text-[#554740] leading-relaxed italic">
+                        "{rev.text}"
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-6 text-center text-xs text-[#8F8178]">
+                  {t.reviews.beFirstReview.replace('{title}', title)}
+                </div>
+              )}
             </div>
           </div>
 
@@ -176,7 +415,7 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
               </span>
               {hasDiscount && (
                 <span className="bg-[#BA4E25] text-white text-[11px] font-bold px-2 py-0.5 rounded-sm">
-                  -{discountPercent}% PROMOTION
+                  -{discountPercent}% {t.painting.promotionSuffix}
                 </span>
               )}
             </div>
@@ -186,66 +425,55 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
               <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-[#281C18] leading-tight">
                 {title}
               </h1>
-              <p className="text-sm text-[#726861] mt-1">
-                {t.painting.artist}:{' '}
+              <p className="text-sm text-[#726861] mt-1.5">
+                {t.gallery.byArtist}{' '}
                 <Link
                   href="/artists"
-                  className="font-semibold text-[#BA4E25] hover:underline"
+                  className="font-medium text-[#281C18] hover:text-[#BA4E25] underline decoration-[#E7E0D8] underline-offset-4"
                 >
                   {painting.artist.name}
-                </Link>
+                </Link>{' '}
+                · {painting.year}
               </p>
             </div>
 
-            {/* Price Box */}
-            <div className="bg-[#FDFBF9] border border-[#E7E0D8] p-4 rounded-[3px] flex items-baseline justify-between">
-              <span className="text-xs font-semibold text-[#726861] tracking-wider uppercase">
-                {hasDiscount ? 'Special Offer' : 'Gallery Price'}
-              </span>
-              <div className="flex items-baseline gap-2.5">
-                {hasDiscount && (
-                  <span className="text-sm text-[#96877E] line-through">
+            {/* Price section */}
+            <div className="p-4 bg-[#FDFBF9] border border-[#E7E0D8] rounded-[3px] flex items-baseline gap-3">
+              {hasDiscount ? (
+                <>
+                  <span className="font-serif text-3xl font-bold text-[#BA4E25]">
+                    {formatPrice(painting.discount_price)}
+                  </span>
+                  <span className="text-sm text-[#8F8178] line-through">
                     {formatPrice(painting.price)}
                   </span>
-                )}
-                <span className="font-serif text-2xl sm:text-3xl font-bold text-[#BA4E25]">
-                  {formatPrice(
-                    hasDiscount ? (painting.discount_price as number) : painting.price
-                  )}
+                </>
+              ) : (
+                <span className="font-serif text-3xl font-bold text-[#BA4E25]">
+                  {formatPrice(painting.price)}
                 </span>
-              </div>
+              )}
+              <span className="text-xs text-[#8F8178] ml-auto">
+                {painting.is_sold ? t.gallery.soldBadge : t.painting.availableStatus}
+              </span>
             </div>
 
-            {/* Artwork Specifications Table */}
-            <div className="grid grid-cols-2 gap-3 text-xs border-y border-[#E7E0D8] py-4">
-              <div>
-                <span className="text-[#8F8178] uppercase tracking-wider block font-medium text-[10px]">
-                  {t.painting.technique}
-                </span>
-                <span className="font-semibold text-[#281C18]">{technique}</span>
-              </div>
-              <div>
-                <span className="text-[#8F8178] uppercase tracking-wider block font-medium text-[10px]">
+            {/* Specifications */}
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="border border-[#E7E0D8] p-3 rounded-[2px] bg-[#FDFBF9]">
+                <span className="text-[#8F8178] block uppercase text-[10px] tracking-wider">
                   {t.painting.size}
                 </span>
-                <span className="font-semibold text-[#281C18]">{painting.size}</span>
-              </div>
-              <div>
-                <span className="text-[#8F8178] uppercase tracking-wider block font-medium text-[10px]">
-                  {t.painting.year}
+                <span className="font-semibold text-[#281C18] mt-0.5 block">
+                  {painting.size}
                 </span>
-                <span className="font-semibold text-[#281C18]">{painting.year}</span>
               </div>
-              <div>
-                <span className="text-[#8F8178] uppercase tracking-wider block font-medium text-[10px]">
-                  Availability
+              <div className="border border-[#E7E0D8] p-3 rounded-[2px] bg-[#FDFBF9]">
+                <span className="text-[#8F8178] block uppercase text-[10px] tracking-wider">
+                  {t.painting.technique}
                 </span>
-                <span
-                  className={`font-semibold ${
-                    painting.is_sold ? 'text-[#8F8178]' : 'text-[#2E7D32]'
-                  }`}
-                >
-                  {painting.is_sold ? t.gallery.soldBadge : t.gallery.availableBadge}
+                <span className="font-semibold text-[#281C18] mt-0.5 block">
+                  {technique}
                 </span>
               </div>
             </div>
@@ -265,7 +493,12 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
               {submitted ? (
                 <div className="p-4 bg-[#E8F5E9] border border-[#A5D6A7] rounded-[3px] text-xs text-[#1B5E20] flex items-start gap-2.5">
                   <CheckCircle2 className="w-5 h-5 shrink-0 text-[#2E7D32]" />
-                  <span>{t.painting.inquirySuccess}</span>
+                  <div>
+                    <span className="font-semibold block">{t.painting.inquirySuccess}</span>
+                    <span className="text-[11px] text-[#2E7D32] mt-1 block">
+                      {t.reviews.eligibleNote}
+                    </span>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleInquirySubmit} className="space-y-3">
@@ -330,7 +563,7 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
                     className="w-full bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-xs py-2.5 rounded-[3px] transition-all flex items-center justify-center gap-2"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>{submitting ? 'Sending...' : t.painting.sendInquiry}</span>
+                    <span>{submitting ? t.painting.sending : t.painting.sendInquiry}</span>
                   </button>
                 </form>
               )}
@@ -338,6 +571,119 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
           </div>
         </div>
       </div>
+
+      {/* TZ 8.12: Write Review Modal for Verified Inquirers */}
+      {showReviewModal && (
+        <div className="fixed inset-0 z-50 bg-[#281C18]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FAF4EC] border border-[#E7E0D8] rounded-[4px] max-w-lg w-full p-6 sm:p-8 space-y-5 shadow-2xl relative">
+            <button
+              onClick={() => setShowReviewModal(false)}
+              className="absolute top-5 right-5 text-[#8F8178] hover:text-[#281C18] p-1 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <span className="text-[11px] font-bold tracking-widest text-[#429599] uppercase">
+                {t.reviews.modalEyebrow}
+              </span>
+              <h3 className="font-serif text-2xl font-semibold text-[#281C18] mt-1">
+                {t.reviews.modalTitleShare.replace('{title}', title)}
+              </h3>
+              <p className="text-xs text-[#726861] mt-1">
+                {t.reviews.modalDescModerated}
+              </p>
+            </div>
+
+            {reviewSuccessMessage ? (
+              <div className="p-4 bg-[#DCFCE7] border border-[#86EFAC] rounded-[3px] text-xs text-[#16A34A] flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
+                <span>{reviewSuccessMessage}</span>
+              </div>
+            ) : (
+              <form onSubmit={handleReviewSubmit} className="space-y-4">
+                {reviewErrorMessage && (
+                  <div className="p-3 bg-[#FEE2E2] border border-[#FCA5A5] text-[#B91C1C] text-xs rounded-[2px]">
+                    {reviewErrorMessage}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
+                    {t.reviews.ratingLabel}
+                  </label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewRating(star)}
+                        className={`p-2 rounded-[2px] border transition-all ${
+                          reviewRating >= star
+                            ? 'text-[#DAA932] border-[#DAA932] bg-white shadow-xs'
+                            : 'text-gray-300 border-[#E7E0D8] bg-[#FDFBF9]'
+                        }`}
+                      >
+                        <Star
+                          className={`w-6 h-6 ${
+                            reviewRating >= star ? 'fill-current' : ''
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    {t.reviews.yourNameLabel}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={reviewAuthor}
+                    onChange={(e) => setReviewAuthor(e.target.value)}
+                    placeholder="e.g. Jean-Luc Moreau"
+                    className="w-full text-xs px-3.5 py-2.5 bg-white border border-[#E7E0D8] rounded-[2px] focus:outline-none focus:border-[#BA4E25]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    {t.reviews.yourReviewLabel}
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder={t.reviews.reviewPlaceholder}
+                    className="w-full text-xs px-3.5 py-2.5 bg-white border border-[#E7E0D8] rounded-[2px] focus:outline-none focus:border-[#BA4E25] resize-none"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowReviewModal(false)}
+                    className="px-4 py-2.5 text-xs text-[#726861] hover:text-[#281C18] transition"
+                  >
+                    {t.reviews.cancel}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingReview}
+                    className="bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-xs px-6 py-2.5 rounded-[3px] transition flex items-center gap-2 shadow-xs"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{submittingReview ? t.reviews.submitting : t.reviews.submitForApproval}</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

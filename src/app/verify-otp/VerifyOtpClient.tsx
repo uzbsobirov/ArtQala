@@ -10,7 +10,7 @@ import { ShieldCheck, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react
 export default function VerifyOtpClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { refreshUser } = useApp();
+  const { refreshUser, t } = useApp();
 
   const emailParam = searchParams.get('email') || '';
   const devOtpParam = searchParams.get('devOtp') || '';
@@ -40,17 +40,17 @@ export default function VerifyOtpClient() {
 
       const data = await res.json();
       if (!data.success) {
-        setError(data.error || 'Verification failed');
+        setError(data.error || t.auth.verifyFailed);
         return;
       }
 
-      setSuccessMessage('Account verified successfully! Redirecting...');
+      setSuccessMessage(t.auth.verifySuccess);
       await refreshUser();
       setTimeout(() => {
         router.push('/account');
       }, 1200);
     } catch (err) {
-      setError('An error occurred during verification.');
+      setError(t.auth.verifyError);
     } finally {
       setLoading(false);
     }
@@ -74,11 +74,12 @@ export default function VerifyOtpClient() {
         </div>
 
         <h1 className="font-serif text-3xl font-semibold text-[#281C18]">
-          Verify Your Email
+          {t.auth.verifyTitle}
         </h1>
         <p className="text-xs text-[#726861] mt-2 mb-6">
-          We have sent a 6-digit confirmation code to{' '}
-          <strong className="text-[#281C18]">{email || 'your email'}</strong>
+          {t.auth.verifySubtitle.split('{email}')[0]}
+          <strong className="text-[#281C18]">{email || t.auth.yourEmailFallback}</strong>
+          {t.auth.verifySubtitle.split('{email}')[1]}
         </p>
 
         {error && (
@@ -98,7 +99,7 @@ export default function VerifyOtpClient() {
         <form onSubmit={handleVerify} className="space-y-5 text-left">
           <div>
             <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5 text-center">
-              Enter 6-Digit Code
+              {t.auth.codeLabel}
             </label>
             <input
               type="text"
@@ -116,19 +117,19 @@ export default function VerifyOtpClient() {
             disabled={loading || code.length < 6}
             className="w-full bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-sm py-3 rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
           >
-            <span>{loading ? 'Verifying...' : 'Verify & Continue'}</span>
+            <span>{loading ? t.auth.verifying : t.auth.verifyBtn}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
         <p className="text-xs text-[#726861] mt-6">
-          Didn't receive the code?{' '}
+          {t.auth.noCode}{' '}
           <button
             type="button"
-            onClick={() => alert('Code resent to ' + email)}
+            onClick={() => alert(t.auth.resendAlert + ' ' + email)}
             className="text-[#BA4E25] font-semibold hover:underline"
           >
-            Resend
+            {t.auth.resend}
           </button>
         </p>
       </div>

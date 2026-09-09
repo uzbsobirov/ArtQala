@@ -161,7 +161,7 @@ export default function ServicesClient() {
               <CheckCircle2 className="w-6 h-6 text-[#5AB3B7] shrink-0" />
               <div>
                 <h4 className="font-serif text-lg font-semibold text-[#FAF4EC]">
-                  Request Received
+                  {t.services.requestReceived}
                 </h4>
                 <p className="text-xs text-[#D8CCC4] mt-1">
                   {t.services.requestSuccess}
@@ -180,7 +180,7 @@ export default function ServicesClient() {
                     required
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
-                    placeholder="Your name"
+                    placeholder={t.services.namePlaceholder}
                     className="w-full px-3.5 py-2.5 bg-[#362722] border border-[#4D3932] rounded-[3px] text-sm text-[#FAF4EC] focus:outline-none focus:border-[#BA4E25]"
                   />
                 </div>
@@ -194,7 +194,7 @@ export default function ServicesClient() {
                     required
                     value={guestContact}
                     onChange={(e) => setGuestContact(e.target.value)}
-                    placeholder="Email or @telegram"
+                    placeholder={t.services.contactPlaceholder}
                     className="w-full px-3.5 py-2.5 bg-[#362722] border border-[#4D3932] rounded-[3px] text-sm text-[#FAF4EC] focus:outline-none focus:border-[#BA4E25]"
                   />
                 </div>
@@ -209,9 +209,9 @@ export default function ServicesClient() {
                   onChange={(e) => setServiceType(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-[#362722] border border-[#4D3932] rounded-[3px] text-sm text-[#FAF4EC] focus:outline-none focus:border-[#BA4E25]"
                 >
-                  <option value="MURAL">Mural Painting (Devoriy rasm)</option>
-                  <option value="CERAMICS">Ceramics (Mualliflik kulolchiligi)</option>
-                  <option value="CUSTOM">Custom Painting (Buyurtma bo'yicha rasm)</option>
+                  <option value="MURAL">{t.services.optionMural}</option>
+                  <option value="CERAMICS">{t.services.optionCeramics}</option>
+                  <option value="CUSTOM">{t.services.optionCustom}</option>
                 </select>
               </div>
 
@@ -235,7 +235,7 @@ export default function ServicesClient() {
                 className="w-full bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-sm py-3 rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-md"
               >
                 <Send className="w-4 h-4" />
-                <span>{submitting ? 'Submitting...' : t.services.submitRequest}</span>
+                <span>{submitting ? t.services.submitting : t.services.submitRequest}</span>
               </button>
             </form>
           )}

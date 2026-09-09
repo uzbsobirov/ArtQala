@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { cookies } from 'next/headers';
+import { getServerSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,20 +42,14 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
-    const cookieStore = await cookies();
-    const userCookie = cookieStore.get('artqala_user')?.value;
+    const user = await getServerSession();
 
-    if (!userCookie) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    try {
-      const user = JSON.parse(userCookie);
-      if (!user || user.role !== 'ADMIN') {
-        return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
-      }
-    } catch {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
     }
 
     const body = await req.json();

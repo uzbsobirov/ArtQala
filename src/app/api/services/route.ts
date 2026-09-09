@@ -1,8 +1,25 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(request);
+    const rateLimitKey = `service:${ip}`;
+    const rateCheck = checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
+    if (!rateCheck.allowed) {
+      const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Juda ko'p so'rov yuborildi. Iltimos, ${minutesLeft} daqiqadan so'ng qayta urinib ko'ring.`,
+          retryAfterSeconds: rateCheck.retryAfterSeconds,
+        },
+        { status: 429 }
+      );
+    }
+    recordFailedAttempt(rateLimitKey);
+
     const body = await request.json();
     const { guest_name, guest_contact, service_type, description, user_id } = body;
 

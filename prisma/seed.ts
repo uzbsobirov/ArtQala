@@ -23,7 +23,8 @@ async function main() {
   await prisma.otpVerification.deleteMany();
 
   // 2. Admin & Demo Users
-  const adminPassword = await bcrypt.hash('admin123', 10);
+  const initialAdminPass = process.env.ADMIN_PASSWORD || 'admin123';
+  const adminPassword = await bcrypt.hash(initialAdminPass, 10);
   const admin = await prisma.user.create({
     data: {
       name: 'Anvar',
@@ -33,6 +34,7 @@ async function main() {
       role: 'ADMIN',
       email_verified: true,
       auth_provider: 'EMAIL',
+      must_change_password: !process.env.ADMIN_PASSWORD, // Require change if default used
     },
   });
 
@@ -621,6 +623,54 @@ async function main() {
   for (const inq of extraInquiries) {
     await prisma.inquiry.create({ data: inq });
   }
+
+  // 10b. Seed Reviews (Approved and Pending for moderation testing)
+  console.log('Seeding customer reviews (approved & pending)...');
+  await prisma.review.createMany({
+    data: [
+      {
+        author_name: 'Jean-Luc & Marie Moreau',
+        painting_id: p1.id,
+        user_id: demoUser.id,
+        rating: 5,
+        text: 'The colors of the Registan at dusk are breathtaking! Arrived in Paris perfectly packed with Certificate of Authenticity.',
+        is_approved: true,
+        created_at: new Date(now - 14 * dayMs),
+      },
+      {
+        author_name: 'Alisher Qodirov',
+        painting_id: p1.id,
+        rating: 5,
+        text: 'Dilnoza Yusupovaning mahorati juda yuqori. Uydagi mehmonxonamizga ajoyib fayz bag\'ishladi.',
+        is_approved: true,
+        created_at: new Date(now - 8 * dayMs),
+      },
+      {
+        author_name: 'Elena Rostova',
+        painting_id: p2.id,
+        rating: 5,
+        text: 'Прекрасная работа! Бирюзовые купола словно светятся при дневном освещении. Спасибо Art Qala!',
+        is_approved: true,
+        created_at: new Date(now - 5 * dayMs),
+      },
+      {
+        author_name: 'David Miller',
+        painting_id: p1.id,
+        rating: 4,
+        text: 'Outstanding artwork! Delivery took 4 days longer than expected, but the painting itself is magnificent.',
+        is_approved: false, // PENDING MODERATION
+        created_at: new Date(now - 1 * dayMs),
+      },
+      {
+        author_name: 'Gulnora Karimova',
+        painting_id: p3.id,
+        rating: 5,
+        text: 'Hovli manzarasi bolaligimni eslatdi. Rassomga katta rahmat, galereya xizmati ham a\'lo darajada.',
+        is_approved: false, // PENDING MODERATION
+        created_at: new Date(now - 6 * 3600 * 1000),
+      },
+    ],
+  });
 
   // 11. Site Settings
   await prisma.siteSettings.upsert({

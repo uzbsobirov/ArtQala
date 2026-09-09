@@ -12,6 +12,7 @@ const HERO_SLIDES = [
     image: '/assets/p-arch.svg',
     title_en: 'Registon at Dusk',
     title_uz: 'Registon shafaq paytida',
+    title_ru: 'Регистан на закате',
     artist: 'Dilnoza Yusupova',
     year: '2024',
   },
@@ -19,6 +20,7 @@ const HERO_SLIDES = [
     image: '/assets/p-dome.svg',
     title_en: 'Bibi-Khanym Turquoise Dome',
     title_uz: 'Bibixonim feruza gumbazi',
+    title_ru: 'Бирюзовый купол Биби-Ханым',
     artist: 'Bekzod Rahimov',
     year: '2024',
   },
@@ -26,6 +28,7 @@ const HERO_SLIDES = [
     image: '/assets/p-courtyard.svg',
     title_en: 'Old Bukhara Hovli',
     title_uz: 'Eski Buxoro hovlisi',
+    title_ru: 'Двор старой Бухары',
     artist: 'Rustam Ismoilov',
     year: '2023',
   },
@@ -33,13 +36,15 @@ const HERO_SLIDES = [
     image: '/assets/p-portrait.svg',
     title_en: 'The Weaver',
     title_uz: "To'quvchi ayol",
+    title_ru: 'Ткачиха',
     artist: 'Gulnora Karimova',
     year: '2023',
   },
   {
     image: '/assets/p-diamond.svg',
     title_en: 'Suzani Rhythm',
-    title_uz: 'So\'zana ohangi',
+    title_uz: "So'zana ohangi",
+    title_ru: 'Ритм сюзане',
     artist: 'Dilnoza Yusupova',
     year: '2024',
   },
@@ -147,7 +152,9 @@ export default function HomeClient({ featuredPaintings }: HomeClientProps) {
                 >
                   <Image
                     src={slide.image}
-                    alt={slide.title_en}
+                    alt={
+                      lang === 'uz' ? slide.title_uz : lang === 'ru' ? slide.title_ru : slide.title_en
+                    }
                     fill
                     priority={idx === 0}
                     className="object-cover"
@@ -175,7 +182,11 @@ export default function HomeClient({ featuredPaintings }: HomeClientProps) {
               <div className="absolute bottom-4 left-4 right-4 z-20 bg-[#1D100B]/85 backdrop-blur-xs p-3.5 rounded-[3px] border border-[#FAF4EC]/10 text-xs flex items-center justify-between">
                 <div>
                   <div className="font-serif font-semibold text-sm text-[#FAF4EC]">
-                    {lang === 'uz' ? HERO_SLIDES[currentSlide].title_uz : HERO_SLIDES[currentSlide].title_en}
+                    {lang === 'uz'
+                      ? HERO_SLIDES[currentSlide].title_uz
+                      : lang === 'ru'
+                      ? HERO_SLIDES[currentSlide].title_ru
+                      : HERO_SLIDES[currentSlide].title_en}
                   </div>
                   <div className="text-[11px] text-[#A6988E]">
                     {HERO_SLIDES[currentSlide].artist} · {HERO_SLIDES[currentSlide].year}
@@ -185,7 +196,7 @@ export default function HomeClient({ featuredPaintings }: HomeClientProps) {
                   href="/gallery"
                   className="text-xs font-semibold text-[#5AB3B7] hover:text-[#DAA932] transition-colors"
                 >
-                  Ko'rish →
+                  {lang === 'uz' ? "Ko'rish →" : lang === 'ru' ? 'Смотреть →' : 'View →'}
                 </Link>
               </div>
             </div>

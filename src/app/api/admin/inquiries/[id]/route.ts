@@ -1,20 +1,19 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { cookies } from 'next/headers';
+import { requireAdmin } from '@/lib/auth';
+import { sendCuratorReplyNotification } from '@/lib/email';
+
+export const dynamic = 'force-dynamic';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
 export async function PUT(request: Request, context: RouteContext) {
+  const auth = await requireAdmin();
+  if (auth.errorResponse) return auth.errorResponse;
+
   try {
-    const cookieStore = await cookies();
-    const userCookie = cookieStore.get('artqala_user')?.value;
-
-    if (!userCookie) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { id } = await context.params;
     const body = await request.json();
 
@@ -53,55 +52,31 @@ export async function PUT(request: Request, context: RouteContext) {
       },
     });
 
-    // Send email notification to customer if admin provided a reply
-    if (body.admin_reply && existingInquiry.guest_email) {
-      const recipientEmail = existingInquiry.guest_email;
-      const recipientName = existingInquiry.guest_name || 'Valued Customer';
-      const paintingTitle = existingInquiry.painting?.title_en || 'Artwork';
+    // Also record message in inquiryMessage thread if new admin_reply is sent
+    if (body.admin_reply && body.admin_reply.trim()) {
+      await prisma.inquiryMessage.create({
+        data: {
+          inquiry_id: id,
+          sender: 'ADMIN',
+          message: body.admin_reply.trim(),
+          is_read: false,
+        },
+      });
 
-      const emailHtml = `
-        <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #E7E0D8; background-color: #FAF4EC; color: #281C18;">
-          <h2 style="color: #BA4E25; margin-bottom: 8px;">Art Qala Gallery</h2>
-          <p style="font-size: 12px; color: #726861; text-transform: uppercase; letter-spacing: 2px; margin-top: 0;">Tashkent, Uzbekistan</p>
-          <hr style="border: 0; border-top: 1px solid #E7E0D8; margin: 20px 0;" />
-          <p style="font-size: 15px;">Dear ${recipientName},</p>
-          <p style="font-size: 14px; line-height: 1.6; color: #554740;">
-            Thank you for reaching out regarding <strong>"${paintingTitle}"</strong>. Our curator has reviewed your message and replied:
-          </p>
-          <div style="background-color: #FFFFFF; border-left: 4px solid #BA4E25; padding: 16px; margin: 20px 0; font-style: italic; font-size: 14px; color: #281C18;">
-            "${body.admin_reply}"
-          </div>
-          <p style="font-size: 13px; color: #726861;">
-            You can view this inquiry and track its status anytime in your personal account at <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/account" style="color: #BA4E25;">Art Qala Account</a>.
-          </p>
-          <hr style="border: 0; border-top: 1px solid #E7E0D8; margin: 20px 0;" />
-          <p style="font-size: 12px; color: #8F8178; margin-bottom: 0;">
-            Art Qala Gallery · Barakhon Madrasah, Tashkent · info@artqala.uz
-          </p>
-        </div>
-      `;
+      // Send email notification to customer (TZ 8.11a)
+      const recipientEmail = existingInquiry.guest_email || existingInquiry.user?.email;
+      if (recipientEmail) {
+        const recipientName = existingInquiry.guest_name || existingInquiry.user?.name || 'Valued Collector';
+        const paintingTitle = existingInquiry.painting?.title_en || 'Artwork';
+        const threadUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/account`;
 
-      if (process.env.RESEND_API_KEY) {
-        try {
-          await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-            },
-            body: JSON.stringify({
-              from: 'Art Qala Gallery <onboarding@resend.dev>',
-              to: [recipientEmail],
-              subject: `Art Qala Gallery — Reply regarding "${paintingTitle}"`,
-              html: emailHtml,
-            }),
-          });
-          console.log(`[Resend] Reply email dispatched to ${recipientEmail}`);
-        } catch (mailErr) {
-          console.error('[Resend Error]', mailErr);
-        }
-      } else {
-        console.log(`[Resend Mock - No RESEND_API_KEY configured] Reply notification simulated for ${recipientEmail}: "${body.admin_reply}"`);
+        sendCuratorReplyNotification(
+          recipientEmail,
+          recipientName,
+          paintingTitle,
+          body.admin_reply,
+          threadUrl
+        ).catch((err) => console.error('Failed to send curator reply email:', err));
       }
     }
 

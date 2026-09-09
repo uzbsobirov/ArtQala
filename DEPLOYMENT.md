@@ -81,8 +81,10 @@ Agar hali GitHub repozitoriy ochilmagan bo'lsa:
 2. **"Add New Project"** tugmasini bosing va `ArtQala` repozitoriyasini tanlang.
 3. **Environment Variables** bo'limiga quyidagi o'zgaruvchilarni kiriting:
    - `DATABASE_URL`: PostgreSQL connection string (1-bosqichda olingan)
-   - `NEXTAUTH_SECRET`: Istalgan xavfsiz kalit (masalan: `openssl rand -base64 32`)
+   - `NEXTAUTH_SECRET`: **MAJBURIY.** Istalgan xavfsiz kalit (masalan: `openssl rand -base64 32`). ⚠️ Bu o'zgaruvchisiz build butunlay to'xtaydi (qasddan shunday qilingan — aks holda kodda ochiq turgan zaxira kalit orqali admin sessiyasini qalbakilashtirish mumkin bo'lardi). Repozitoriyadagi `.env` faylida turgan kalitni **productionda ishlatmang**, yangisini generatsiya qiling.
    - `NEXTAUTH_URL`: Saytingiz Vercel domeni (masalan: `https://artqala.vercel.app`)
+   - `ADMIN_PASSWORD`: (tavsiya etiladi) Birinchi seed paytida admin hisobiga qo'yiladigan parol. Qo'yilmasa, standart `admin123` ishlatiladi va birinchi kirishda parolni almashtirish talab qilinadi.
+   - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `APPLE_CLIENT_ID`: (ixtiyoriy) Google/Apple orqali kirish uchun — sozlash bo'yicha `.env.example` ga qarang. Qo'yilmasa, bu tugmalar productionda xatolik ko'rsatadi (demo-login rejimi faqat local development uchun ishlaydi).
 4. **"Deploy"** tugmasini bosing!
 5. 1-2 daqiqa ichida saytingiz butun dunyoga jonli efirga chiqadi.
 
@@ -105,7 +107,16 @@ vercel
 
 ---
 
-## 7. Qo'shimcha jonli xizmatlar (ixtiyoriy)
+## 7. Qo'shimcha jonli xizmatlar (Production)
 
-- **Email OTP yuborish**: [Resend.com](https://resend.com) dan bepul API kalit olib, Vercel-ga `RESEND_API_KEY` o'zgaruvchisini qo'shing.
-- **Rasm saqlash**: Vercel Blob yoki Cloudinary (`CLOUDINARY_URL`).
+- **Email OTP va Kurator bildirishnomalari (Resend)**:
+  - [Resend.com](https://resend.com) dan API kalit olib, Vercel-ga `RESEND_API_KEY` o'zgaruvchisini qo'shing.
+  - Hozirgi `.env` dagi kalit orqali barcha OTP va javob xatlari avtomatik yuboriladi.
+
+- **Bulutli Rasm Saqlash (Cloudinary yoki Vercel Blob)**:
+  - **Variant 1 (Cloudinary)**: [Cloudinary.com](https://cloudinary.com) dan bepul hisob oching va Vercel Environment Variables-ga quyidagilarni qo'shing:
+    - `CLOUDINARY_CLOUD_NAME`: Cloudinary nomingiz
+    - `CLOUDINARY_API_KEY`: API kalit
+    - `CLOUDINARY_API_SECRET`: API maxfiy kalit
+    *(yoki barchasini o'z ichiga olgan bitta `CLOUDINARY_URL`)*
+  - **Variant 2 (Vercel Blob Storage)**: Vercel Dashboard -> Storage bo'limidan "Blob" ochib, loyihaga ulang (`BLOB_READ_WRITE_TOKEN` avtomatik ulanadi).

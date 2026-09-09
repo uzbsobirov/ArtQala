@@ -32,10 +32,11 @@ export async function GET() {
       });
     }
 
-    // 2. Fetch official Central Bank of Uzbekistan (cbu.uz) rates
+    // 2. Fetch official Central Bank of Uzbekistan (cbu.uz) rates with fast timeout
     try {
       const cbuRes = await fetch('https://cbu.uz/oz/arkhiv-kursov-valyut/json/', {
         next: { revalidate: 3600 }, // Cache 1 hour
+        signal: AbortSignal.timeout(1500),
       });
 
       if (cbuRes.ok) {

@@ -41,10 +41,10 @@ export default function ContactClient() {
         setSubject('');
         setMessage('');
       } else {
-        setError(data.error || 'Xabar yuborishda xatolik yuz berdi.');
+        setError(data.error || t.contact.genericError);
       }
     } catch {
-      setError('Serverga ulanishda xatolik. Iltimos qaytadan urinib ko\'ring.');
+      setError(t.contact.networkError);
     } finally {
       setSubmitting(false);
     }
@@ -74,7 +74,7 @@ export default function ContactClient() {
               <div className="p-8 text-center space-y-3">
                 <CheckCircle2 className="w-12 h-12 text-[#2E7D32] mx-auto" />
                 <h3 className="font-serif text-2xl font-semibold text-[#281C18]">
-                  Message Received
+                  {t.contact.messageReceivedTitle}
                 </h3>
                 <p className="text-sm text-[#6E6057] max-w-md mx-auto">
                   {t.contact.messageSuccess}
@@ -83,7 +83,7 @@ export default function ContactClient() {
                   onClick={() => setSubmitted(false)}
                   className="mt-4 text-xs font-bold text-[#BA4E25] hover:underline"
                 >
-                  Send another message →
+                  {t.contact.sendAnother}
                 </button>
               </div>
             ) : (
@@ -97,7 +97,7 @@ export default function ContactClient() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Michael Davies"
+                    placeholder={t.contact.namePlaceholder}
                     className="w-full text-sm px-3.5 py-2.5 bg-white border border-[#E7E0D8] rounded-[2px] focus:outline-none focus:border-[#BA4E25] text-[#281C18]"
                   />
                 </div>
@@ -125,7 +125,7 @@ export default function ContactClient() {
                     required
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    placeholder="Question about painting / Visit / Custom order"
+                    placeholder={t.contact.subjectPlaceholder}
                     className="w-full text-sm px-3.5 py-2.5 bg-white border border-[#E7E0D8] rounded-[2px] focus:outline-none focus:border-[#BA4E25] text-[#281C18]"
                   />
                 </div>
@@ -139,7 +139,7 @@ export default function ContactClient() {
                     rows={5}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="How can we assist you with our collection or visiting the gallery?"
+                    placeholder={t.contact.messagePlaceholder}
                     className="w-full text-sm px-3.5 py-2.5 bg-white border border-[#E7E0D8] rounded-[2px] focus:outline-none focus:border-[#BA4E25] text-[#281C18] resize-none"
                   />
                 </div>
@@ -156,7 +156,7 @@ export default function ContactClient() {
                   className="w-full bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-sm py-3 rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {submitting ? (
-                    <span>Yuborilmoqda...</span>
+                    <span>{t.contact.submitting}</span>
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
@@ -187,7 +187,7 @@ export default function ContactClient() {
                 rel="noreferrer"
                 className="text-[#5AB3B7] hover:underline text-xs pt-1 inline-flex items-center gap-1"
               >
-                <span>{lang === 'uz' ? "Xaritada ko'rish" : lang === 'ru' ? 'На карте' : 'View on map'} →</span>
+                <span>{t.contact.viewOnMap} →</span>
               </a>
             </div>
 

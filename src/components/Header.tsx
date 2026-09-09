@@ -58,6 +58,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 className={`nav-link ${active ? 'active text-[#BA4E25]' : 'text-[#3E332E]'}`}
               >
                 {item.label}
@@ -70,10 +71,10 @@ export default function Header() {
             <Link
               href="/admin"
               className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded bg-[#1D100B]/5 hover:bg-[#1D100B]/10 text-[#4D3F38] transition-colors"
-              title="Admin Dashboard"
+              title={t.nav.admin}
             >
               <Shield className="w-3.5 h-3.5 text-[#BA4E25]" />
-              <span className="hidden xl:inline">Admin</span>
+              <span className="hidden xl:inline">{t.nav.admin}</span>
             </Link>
           )}
 
@@ -93,15 +94,26 @@ export default function Header() {
 
           {/* User Account / Sign In */}
           {user ? (
-            <Link
-              href="/account"
-              className="text-xs font-semibold px-2.5 py-1 rounded-full border border-[#BA4E25] text-[#BA4E25] hover:bg-[#BA4E25] hover:text-white transition-all flex items-center gap-1.5"
-            >
-              <span className="w-4 h-4 rounded-full bg-[#BA4E25] text-white text-[9px] flex items-center justify-center font-bold">
-                {user.name.slice(0, 1).toUpperCase()}
-              </span>
-              <span>{user.name.split(' ')[0]}</span>
-            </Link>
+            <div className="flex items-center gap-2">
+              {user.role === 'ADMIN' && (
+                <Link
+                  href="/admin"
+                  className="text-[10px] font-bold px-2 py-1 rounded-[3px] bg-[#281C18] hover:bg-[#BA4E25] text-[#DAA932] hover:text-white transition-all uppercase tracking-wider border border-[#DAA932]/40"
+                  title={t.nav.admin}
+                >
+                  {t.nav.admin}
+                </Link>
+              )}
+              <Link
+                href="/account"
+                className="text-xs font-semibold px-2.5 py-1 rounded-full border border-[#BA4E25] text-[#BA4E25] hover:bg-[#BA4E25] hover:text-white transition-all flex items-center gap-1.5"
+              >
+                <span className="w-4 h-4 rounded-full bg-[#BA4E25] text-white text-[9px] flex items-center justify-center font-bold">
+                  {user.name.slice(0, 1).toUpperCase()}
+                </span>
+                <span>{user.name.split(' ')[0]}</span>
+              </Link>
+            </div>
           ) : (
             <Link
               href="/signin"
@@ -173,6 +185,7 @@ export default function Header() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={true}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`text-base font-medium py-1 transition-colors ${
                   isActive(item.href) ? 'text-[#BA4E25] font-semibold' : 'text-[#3E332E]'

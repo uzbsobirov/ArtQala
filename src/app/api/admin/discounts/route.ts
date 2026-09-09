@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  const auth = await requireAdmin();
+  if (auth.errorResponse) return auth.errorResponse;
+
   try {
     const discounts = await prisma.discount.findMany({
       orderBy: { created_at: 'desc' },
@@ -13,6 +19,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireAdmin();
+  if (auth.errorResponse) return auth.errorResponse;
+
   try {
     const body = await request.json();
     const { scope, target_id, percent, starts_at, ends_at, is_active } = body;
@@ -52,6 +61,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const auth = await requireAdmin();
+  if (auth.errorResponse) return auth.errorResponse;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

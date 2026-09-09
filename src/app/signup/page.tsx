@@ -6,9 +6,12 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { UserPlus, Mail, Lock, User, Globe, AlertCircle, Check, X, ShieldCheck } from 'lucide-react';
 import { COUNTRIES } from '@/lib/countries';
+import { validateEmail, isValidEmail } from '@/lib/validation';
+import { useApp } from '@/context/AppContext';
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { t } = useApp();
 
   const [name, setName] = useState('');
   const [country, setCountry] = useState('Uzbekistan');
@@ -17,6 +20,9 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Email validation criteria
+  const isEmailValid = isValidEmail(email);
 
   // Password real-time criteria (TZ Section 8.8)
   const hasMinLength = password.length >= 8;
@@ -30,13 +36,19 @@ export default function SignUpPage() {
     e.preventDefault();
     setError('');
 
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.isValid) {
+      setError(emailCheck.error || t.auth.invalidEmailSignup);
+      return;
+    }
+
     if (!isPasswordValid) {
       if (!hasMinLength || !hasUppercase || !hasNumber) {
-        setError('Parol talablarga to\'liq javob bermaydi (kamida 8 belgi, 1 ta katta harf va 1 ta raqam).');
+        setError(t.auth.passwordRequirementsError);
         return;
       }
       if (!passwordsMatch) {
-        setError('Kiritilgan parollar bir-biriga mos kelmadi.');
+        setError(t.auth.passwordsMismatchError);
         return;
       }
     }
@@ -52,7 +64,7 @@ export default function SignUpPage() {
 
       const data = await res.json();
       if (!data.success) {
-        setError(data.error || 'Ro\'yxatdan o\'tishda xatolik yuz berdi');
+        setError(data.error || t.auth.signupFailed);
         setLoading(false);
         return;
       }
@@ -60,7 +72,7 @@ export default function SignUpPage() {
       // Route to OTP verification
       router.push(`/verify-otp?email=${encodeURIComponent(email)}&devOtp=${data.otpPreview || ''}`);
     } catch {
-      setError('Serverga bog\'lanishda xatolik yuz berdi. Iltimos qaytadan urinib ko\'ring.');
+      setError(t.auth.networkError);
       setLoading(false);
     }
   };
@@ -80,10 +92,10 @@ export default function SignUpPage() {
             />
           </Link>
           <h1 className="font-serif text-3xl font-semibold text-[#281C18]">
-            Ro'yxatdan o'tish
+            {t.auth.signUpTitle}
           </h1>
           <p className="text-xs text-[#726861]">
-            Art Qala galereyasiga a'zo bo'ling: sevimli kartinalaringizni saqlang, xizmatlarga buyurtma bering va rasmiy asillik sertifikatlarini oling
+            {t.auth.signUpSubtitle}
           </p>
         </div>
 
@@ -97,7 +109,7 @@ export default function SignUpPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-              Ism va Familiya *
+              {t.auth.fullNameLabel} *
             </label>
             <div className="relative">
               <User className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -106,7 +118,7 @@ export default function SignUpPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="masalan: Alisher Navoiy"
+                placeholder={t.auth.fullNamePlaceholder}
                 className="w-full pl-9 pr-3 py-2.5 bg-white border border-[#E7E0D8] rounded-[3px] text-sm text-[#281C18] focus:outline-none focus:border-[#BA4E25]"
               />
             </div>
@@ -115,7 +127,7 @@ export default function SignUpPage() {
           {/* Full Country Select (TZ Section 8.7) */}
           <div>
             <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-              Davlat (Country) *
+              {t.auth.countryLabel} *
             </label>
             <div className="relative">
               <Globe className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -134,9 +146,28 @@ export default function SignUpPage() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-              Email Manzil *
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase">
+                {t.auth.emailLabel} *
+              </label>
+              {email.length > 0 && (
+                <span
+                  className={`text-[10px] font-medium flex items-center gap-1 ${
+                    isEmailValid ? 'text-green-600' : 'text-[#BA4E25]'
+                  }`}
+                >
+                  {isEmailValid ? (
+                    <>
+                      <Check className="w-3 h-3" /> {t.auth.emailValid}
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-3 h-3" /> {t.auth.emailInvalid}
+                    </>
+                  )}
+                </span>
+              )}
+            </div>
             <div className="relative">
               <Mail className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -145,15 +176,30 @@ export default function SignUpPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="sizning.email@example.com"
-                className="w-full pl-9 pr-3 py-2.5 bg-white border border-[#E7E0D8] rounded-[3px] text-sm text-[#281C18] focus:outline-none focus:border-[#BA4E25]"
+                className={`w-full pl-9 pr-9 py-2.5 bg-white border rounded-[3px] text-sm text-[#281C18] focus:outline-none transition-colors ${
+                  email.length > 0 && !isEmailValid
+                    ? 'border-[#BA4E25] focus:border-[#BA4E25]'
+                    : email.length > 0 && isEmailValid
+                    ? 'border-green-600 focus:border-green-600'
+                    : 'border-[#E7E0D8] focus:border-[#BA4E25]'
+                }`}
               />
+              {email.length > 0 && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  {isEmailValid ? (
+                    <Check className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <X className="w-4 h-4 text-[#BA4E25]" />
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Password (TZ Section 8.8) */}
           <div>
             <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-              Parol *
+              {t.auth.passwordLabel} *
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -171,7 +217,7 @@ export default function SignUpPage() {
           {/* Confirm Password (TZ Section 8.8) */}
           <div>
             <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-              Parolni Tasdiqlash *
+              {t.auth.passwordConfirmLabel} *
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2" />
@@ -194,28 +240,28 @@ export default function SignUpPage() {
           <div className="bg-[#FAF4EC] border border-[#E7E0D8] rounded-[3px] p-3 space-y-1.5 text-[11px]">
             <div className="font-semibold text-[#6B5E55] mb-1 flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-[#BA4E25]" />
-              <span>Xavfsiz parol talablari:</span>
+              <span>{t.auth.passwordRequirementsTitle}</span>
             </div>
 
             <div className={`flex items-center gap-1.5 ${hasMinLength ? 'text-green-700 font-medium' : 'text-[#8F7E73]'}`}>
               {hasMinLength ? <Check className="w-3.5 h-3.5 text-green-600 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-[#D2C5BA] shrink-0" />}
-              <span>Kamida 8 ta belgi</span>
+              <span>{t.auth.reqMinLength}</span>
             </div>
 
             <div className={`flex items-center gap-1.5 ${hasUppercase ? 'text-green-700 font-medium' : 'text-[#8F7E73]'}`}>
               {hasUppercase ? <Check className="w-3.5 h-3.5 text-green-600 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-[#D2C5BA] shrink-0" />}
-              <span>Kamida 1 ta katta harf (A-Z)</span>
+              <span>{t.auth.reqUppercase}</span>
             </div>
 
             <div className={`flex items-center gap-1.5 ${hasNumber ? 'text-green-700 font-medium' : 'text-[#8F7E73]'}`}>
               {hasNumber ? <Check className="w-3.5 h-3.5 text-green-600 shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-[#D2C5BA] shrink-0" />}
-              <span>Kamida 1 ta raqam (0-9)</span>
+              <span>{t.auth.reqNumber}</span>
             </div>
 
             {confirmPassword.length > 0 && (
               <div className={`flex items-center gap-1.5 ${passwordsMatch ? 'text-green-700 font-medium' : 'text-red-600 font-medium'}`}>
                 {passwordsMatch ? <Check className="w-3.5 h-3.5 text-green-600 shrink-0" /> : <X className="w-3.5 h-3.5 text-red-500 shrink-0" />}
-                <span>{passwordsMatch ? 'Parollar bir-biriga mos keldi' : 'Parollar mos kelmadi'}</span>
+                <span>{passwordsMatch ? t.auth.passwordsMatch : t.auth.passwordsNoMatch}</span>
               </div>
             )}
           </div>
@@ -226,15 +272,63 @@ export default function SignUpPage() {
             className="w-full mt-2 py-3 px-4 bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold uppercase tracking-wider rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
           >
             <UserPlus className="w-4 h-4" />
-            <span>{loading ? 'Yaratilmoqda...' : 'Hisob Yaratish (Sign Up)'}</span>
+            <span>{loading ? t.auth.creatingAccount : t.auth.signUpBtn}</span>
           </button>
         </form>
 
+        {/* Divider */}
+        <div className="relative my-6 text-center">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#E7E0D8]" />
+          </div>
+          <span className="relative bg-[#FDFBF9] px-3 text-[11px] text-[#9E9086] uppercase font-semibold">
+            {t.auth.orContinueWith}
+          </span>
+        </div>
+
+        {/* OAuth Buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <a
+            href="/api/auth/oauth/google"
+            className="flex items-center justify-center gap-2 py-2.5 px-3 border border-[#E7E0D8] bg-white rounded-[3px] text-xs font-semibold text-[#4D3F38] hover:bg-[#F9F6F0] transition-colors shadow-2xs"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+              />
+              <path
+                fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+              />
+            </svg>
+            <span>Google</span>
+          </a>
+
+          <a
+            href="/api/auth/oauth/apple"
+            className="flex items-center justify-center gap-2 py-2.5 px-3 border border-[#E7E0D8] bg-white rounded-[3px] text-xs font-semibold text-[#4D3F38] hover:bg-[#F9F6F0] transition-colors shadow-2xs"
+          >
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.85c.66-.82 1.11-1.96.99-3.1-.96.04-2.12.64-2.79 1.43-.59.68-1.1 1.83-.96 2.95 1.07.08 2.1-.46 2.76-1.28z" />
+            </svg>
+            <span>Apple</span>
+          </a>
+        </div>
+
         <div className="mt-6 pt-5 border-t border-[#E7E0D8] text-center">
           <p className="text-xs text-[#726861]">
-            Allaqachon hisobingiz bormi?{' '}
+            {t.auth.alreadyHaveAccount}{' '}
             <Link href="/signin" className="font-semibold text-[#BA4E25] hover:underline">
-              Kirish (Sign In)
+              {t.auth.signInLink}
             </Link>
           </p>
         </div>

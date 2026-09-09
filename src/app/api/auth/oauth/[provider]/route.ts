@@ -1,0 +1,123 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { createSessionToken } from '@/lib/auth';
+
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ provider: string }> }
+) {
+  try {
+    const { provider } = await context.params;
+    const { searchParams, origin } = new URL(request.url);
+    const redirectTarget = searchParams.get('redirect') || '/account';
+
+    const normalizedProvider = (provider || '').toLowerCase();
+
+    if (normalizedProvider !== 'google' && normalizedProvider !== 'apple') {
+      return NextResponse.json(
+        { success: false, error: 'Unsupported OAuth provider' },
+        { status: 400 }
+      );
+    }
+
+    // Check if real provider credentials exist in environment
+    const googleClientId = process.env.GOOGLE_CLIENT_ID;
+    const appleClientId = process.env.APPLE_CLIENT_ID;
+
+    if (normalizedProvider === 'google' && googleClientId) {
+      // Real Google OAuth 2.0 flow
+      const redirectUri = `${origin}/api/auth/oauth/google/callback`;
+      const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+      googleAuthUrl.searchParams.set('client_id', googleClientId);
+      googleAuthUrl.searchParams.set('redirect_uri', redirectUri);
+      googleAuthUrl.searchParams.set('response_type', 'code');
+      googleAuthUrl.searchParams.set('scope', 'openid email profile');
+      googleAuthUrl.searchParams.set('access_type', 'offline');
+      googleAuthUrl.searchParams.set('prompt', 'consent');
+      googleAuthUrl.searchParams.set('state', redirectTarget);
+      return NextResponse.redirect(googleAuthUrl.toString());
+    }
+
+    if (normalizedProvider === 'apple' && appleClientId) {
+      // Real Apple OAuth flow
+      const redirectUri = `${origin}/api/auth/oauth/apple/callback`;
+      const appleAuthUrl = new URL('https://appleid.apple.com/auth/authorize');
+      appleAuthUrl.searchParams.set('client_id', appleClientId);
+      appleAuthUrl.searchParams.set('redirect_uri', redirectUri);
+      appleAuthUrl.searchParams.set('response_type', 'code id_token');
+      appleAuthUrl.searchParams.set('scope', 'name email');
+      appleAuthUrl.searchParams.set('response_mode', 'form_post');
+      appleAuthUrl.searchParams.set('state', redirectTarget);
+      return NextResponse.redirect(appleAuthUrl.toString());
+    }
+
+    // Developer / Demo mode: Instant OAuth Login when credentials are not yet configured in .env.
+    // Only ever active outside production, so a missing .env key can never become a live
+    // no-password login backdoor once deployed.
+    const isProduction: boolean = process.env.NODE_ENV === 'production';
+    if (isProduction) {
+      console.error(`OAuth ${normalizedProvider} requested but no credentials are configured.`);
+      return NextResponse.redirect(new URL('/signin?error=oauth_not_configured', request.url));
+    }
+
+    const mockUsers: Record<string, { email: string; name: string; country: string }> = {
+      google: {
+        email: 'alexandre.google@artqala.uz',
+        name: 'Alexandre Monet',
+        country: 'France',
+      },
+      apple: {
+        email: 'sophie.apple@artqala.uz',
+        name: 'Sophie Laurent',
+        country: 'Switzerland',
+      },
+    };
+
+    const mockData = mockUsers[normalizedProvider];
+
+    // Upsert user in database
+    const user = await prisma.user.upsert({
+      where: { email: mockData.email },
+      update: {
+        email_verified: true,
+      },
+      create: {
+        name: mockData.name,
+        email: mockData.email,
+        password_hash: 'OAUTH_EXTERNAL_LOGIN',
+        country: mockData.country,
+        role: 'CUSTOMER',
+        email_verified: true,
+        must_change_password: false,
+      },
+    });
+
+    const userSession = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      country: user.country,
+      role: user.role,
+      email_verified: user.email_verified,
+      must_change_password: false,
+    };
+
+    const sessionToken = createSessionToken(userSession);
+
+    const redirectUrl = new URL(redirectTarget, request.url);
+    const response = NextResponse.redirect(redirectUrl);
+
+    response.cookies.set('artqala_user', sessionToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60,
+      path: '/',
+    });
+
+    return response;
+  } catch (err: any) {
+    console.error('OAuth flow error:', err);
+    return NextResponse.redirect(new URL(`/signin?error=oauth_failed`, request.url));
+  }
+}

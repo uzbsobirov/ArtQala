@@ -130,8 +130,10 @@ Qo'shimcha sahifalar
 -   Asillik sertifikati (Certificate of Authenticity) — sotib olingan
     har bir asl kartina uchun PDF hujjat.
 
--   Mijozlar sharhlari (Reviews) — sotib olgan mijozlar fikr qoldirishi
-    mumkin.
+-   Mijozlar sharhlari (Reviews) — faqat haqiqatan so'rov yuborgan/sotib
+    olgan mijozlar fikr qoldirishi mumkin, admin tasdiqlagandan keyin
+    chiqadi; har bir kartina sahifasida o'sha kartinaga tegishli
+    sharhlar ham ko'rsatiladi (batafsil: bo'lim 8.12).
 
 3. Admin panel
 
@@ -259,7 +261,7 @@ so'rovning to'liq matni va javob yozish oynasi.
                              message, created_at, is_read
 
   reviews                    id, user_id, painting_id (nullable), rating, text,
-                             created_at
+                             is_approved, created_at
 
   wishlist                   user_id (nullable — local storage if no account),
                              painting_id
@@ -496,6 +498,35 @@ aniq yechimi:
 
 -   Grafiklar uchun tavsiya etilgan kutubxona: Recharts (React bilan
     mos, sodda va yengil).
+
+8.12. Sharhlar (Reviews) tizimi
+
+Har bir kartina sahifasida (kartina tavsifi ostida) o'sha aniq kartinaga
+yozilgan sharhlar ko'rsatiladi — reyting (yulduzcha, 1-5) va mijoz matni
+bilan. Alohida umumiy "Sharhlar" sahifasida esa barcha kartinalar
+bo'yicha eng so'nggi/eng yaxshi sharhlar to'plami ko'rsatiladi.
+
+-   Sharh yozish huquqi: faqat o'sha kartina bo'yicha haqiqiy inquiry
+    yuborgan/xarid qilgan (tizimga kirgan) mijozga beriladi — tasodifiy
+    tashrifchi yoki ro'yxatdan o'tmagan foydalanuvchi sharh yoza
+    olmaydi. Bu soxta sharhlarning oldini oladi.
+
+-   Mijoz sharhni faqat o'zi bog'liq bo'lgan kartina sahifasidan turib
+    yoza oladi (masalan, o'z shaxsiy kabinetidagi "Mening so'rovlarim"da
+    yakunlangan buyurtma yonida "Sharh qoldirish" tugmasi orqali).
+
+-   Moderatsiya: yangi yozilgan sharh DARHOL saytda chiqmaydi — avval
+    admin panelning "Reviews" bo'limida "kutilmoqda (pending)" holatida
+    turadi, admin uni tasdiqlagandan (approve) keyingina kartina
+    sahifasida va umumiy Sharhlar sahifasida ko'rinadi. Admin
+    nomaqbul/spam sharhni rad etishi (reject) yoki o'chirishi ham
+    mumkin.
+
+-   `reviews` jadvaliga `is_approved` (boolean, default: false) maydoni
+    qo'shiladi — TZ bo'lim 5 dagi jadval shunga mos yangilangan.
+
+-   Kartina sahifasida sharhlar tepasida o'rtacha reyting (masalan "4.8
+    ⭐ (12 ta sharh)") ko'rsatiladi.
 
 9. Ishga tushirish tartibi (tavsiya)
 

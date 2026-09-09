@@ -1,6 +1,13 @@
 import React from 'react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service | Art Qala Gallery',
+  description: 'Terms of Service for Art Qala Gallery in Tashkent, Uzbekistan. Information regarding original artwork purchases, authenticity certificates, and commissions.',
+};
 
 export default function TermsPage() {
+
   return (
     <div className="py-16 sm:py-20 px-6">
       <div className="max-w-3xl mx-auto bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-8 sm:p-12 space-y-6">

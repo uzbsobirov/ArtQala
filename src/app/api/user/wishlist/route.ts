@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from '@/lib/auth';
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const userCookie = cookieStore.get('artqala_user');
+    const session = await getServerSession();
 
-    if (!userCookie || !userCookie.value) {
+    if (!session) {
       return NextResponse.json({ wishlist: [] });
     }
 
-    const session = JSON.parse(userCookie.value);
     const items = await prisma.wishlistItem.findMany({
       where: { user_id: session.id },
       include: {
@@ -37,14 +35,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const userCookie = cookieStore.get('artqala_user');
+    const session = await getServerSession();
 
-    if (!userCookie || !userCookie.value) {
+    if (!session) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const session = JSON.parse(userCookie.value);
     const { paintingIds } = await request.json();
 
     if (Array.isArray(paintingIds)) {

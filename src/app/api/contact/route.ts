@@ -1,17 +1,43 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { cookies } from 'next/headers';
+import { getServerSession } from '@/lib/auth';
+import { validateEmail } from '@/lib/validation';
+import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    const rateLimitKey = `contact:${ip}`;
+    const rateCheck = checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
+    if (!rateCheck.allowed) {
+      const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Juda ko'p xabar yuborildi. Iltimos, ${minutesLeft} daqiqadan so'ng qayta urinib ko'ring.`,
+          retryAfterSeconds: rateCheck.retryAfterSeconds,
+        },
+        { status: 429 }
+      );
+    }
+    recordFailedAttempt(rateLimitKey);
+
     const body = await req.json();
     const { name, email, subject, message } = body;
 
     if (!name || !email || !message) {
       return NextResponse.json(
         { success: false, error: 'Name, email, and message are required.' },
+        { status: 400 }
+      );
+    }
+
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      return NextResponse.json(
+        { success: false, error: emailValidation.error },
         { status: 400 }
       );
     }
@@ -37,15 +63,13 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const userCookie = cookieStore.get('artqala_user')?.value;
+    const user = await getServerSession();
 
-    if (!userCookie) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = JSON.parse(userCookie);
-    if (!user || user.role !== 'ADMIN') {
+    if (user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

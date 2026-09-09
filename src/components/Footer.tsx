@@ -55,7 +55,7 @@ export default function Footer() {
                 rel="noreferrer"
                 className="text-[#429599] hover:underline text-xs pt-1 inline-flex items-center gap-1"
               >
-                <span>{lang === 'uz' ? "Xaritada ko'rish" : lang === 'ru' ? 'На карте' : 'View on map'} →</span>
+                <span>{t.contact.viewOnMap} →</span>
               </a>
             </div>
           </div>
@@ -117,10 +117,7 @@ export default function Footer() {
                 {t.nav.contact}
               </Link>
               <Link href="/reviews" className="hover:text-[#429599] transition-colors">
-                Reviews
-              </Link>
-              <Link href="/admin" className="text-xs text-[#BA4E25] hover:underline pt-1">
-                Admin Panel →
+                {t.footer.reviews}
               </Link>
             </div>
           </div>
@@ -131,9 +128,9 @@ export default function Footer() {
           <div className="flex items-center gap-3">
             <span>{t.footer.rights}</span>
             <span>·</span>
-            <Link href="/privacy" className="hover:underline">Privacy</Link>
+            <Link href="/privacy" className="hover:underline">{t.footer.privacy}</Link>
             <span>·</span>
-            <Link href="/terms" className="hover:underline">Terms</Link>
+            <Link href="/terms" className="hover:underline">{t.footer.terms}</Link>
           </div>
           <div className="flex items-center gap-4">
             <span>EN · RU · UZ (Lotin)</span>

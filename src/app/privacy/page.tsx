@@ -1,6 +1,13 @@
 import React from 'react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy | Art Qala Gallery',
+  description: 'Privacy Policy of Art Qala Gallery in Tashkent, Uzbekistan. Learn how we handle your personal information, inquiries, and artwork transactions.',
+};
 
 export default function PrivacyPage() {
+
   return (
     <div className="py-16 sm:py-20 px-6">
       <div className="max-w-3xl mx-auto bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-8 sm:p-12 space-y-6">

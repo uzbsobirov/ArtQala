@@ -20,6 +20,8 @@ import {
   Palette,
   ExternalLink,
   MessageCircle,
+  Star,
+  X,
 } from 'lucide-react';
 
 export default function AccountPage() {
@@ -38,6 +40,63 @@ export default function AccountPage() {
     type: 'inquiry' | 'service';
     item: any;
   } | null>(null);
+
+  // Review modal state (TZ 8.12)
+  const [reviewInquiry, setReviewInquiry] = useState<any | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState<string | null>(null);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  const handleOpenReview = (inquiry: any) => {
+    setReviewInquiry(inquiry);
+    setReviewRating(5);
+    setReviewText('');
+    setReviewSuccess(null);
+    setReviewError(null);
+  };
+
+  const handleSendReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewInquiry?.painting?.id) return;
+    setSubmittingReview(true);
+    setReviewError(null);
+    setReviewSuccess(null);
+
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          painting_id: reviewInquiry.painting.id,
+          rating: reviewRating,
+          author_name: user?.name || t.reviews.verifiedCollectorBadge,
+          text: reviewText.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReviewSuccess(
+          lang === 'uz'
+            ? "Sharhingiz qabul qilindi! Moderator tasdiqlagach saytda e'lon qilinadi."
+            : lang === 'ru'
+            ? 'Ваш отзыв принят! Он будет опубликован после проверки модератором.'
+            : 'Your review has been received and will be published once approved by our curator.'
+        );
+        setTimeout(() => {
+          setReviewInquiry(null);
+          setReviewSuccess(null);
+        }, 2500);
+      } else {
+        setReviewError(data.error || t.reviews.submitError);
+      }
+    } catch {
+      setReviewError(t.reviews.networkError);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   const fetchInquiries = async () => {
     try {
@@ -189,23 +248,23 @@ export default function AccountPage() {
             <User className="w-7 h-7" />
           </div>
           <h2 className="font-serif text-2xl font-semibold text-[#281C18]">
-            Sign in to access your account
+            {t.account.signInPromptTitle}
           </h2>
           <p className="text-xs text-[#726861] leading-relaxed">
-            Please log in to track your painting inquiries, view your custom service orders, and sync your saved wishlist.
+            {t.account.signInPromptDesc}
           </p>
           <div className="flex flex-col gap-2 pt-2">
             <Link
               href="/signin"
               className="bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold py-2.5 rounded-[3px] transition-all"
             >
-              Sign In
+              {t.nav.signIn}
             </Link>
             <Link
               href="/signup"
               className="border border-[#E7E0D8] text-[#554740] hover:border-[#BA4E25] hover:text-[#BA4E25] text-xs font-semibold py-2.5 rounded-[3px] transition-all"
             >
-              Create Account
+              {t.account.createAccountBtn}
             </Link>
           </div>
         </div>
@@ -218,25 +277,25 @@ export default function AccountPage() {
       case 'NEW':
         return (
           <span className="bg-[#E0F2FE] text-[#0369A1] text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
-            Under Review
+            {t.account.statusUnderReview}
           </span>
         );
       case 'IN_PROGRESS':
         return (
           <span className="bg-[#FEF3C7] text-[#B45309] text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
-            In Progress
+            {t.account.statusInProgress}
           </span>
         );
       case 'ANSWERED':
         return (
           <span className="bg-[#DCFCE7] text-[#15803D] text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
-            Answered
+            {t.account.statusAnswered}
           </span>
         );
       case 'COMPLETED':
         return (
           <span className="bg-[#F3E8FF] text-[#7E22CE] text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
-            Completed
+            {t.account.statusCompleted}
           </span>
         );
       default:
@@ -264,7 +323,7 @@ export default function AccountPage() {
                 </h1>
                 {user?.email_verified && (
                   <span className="bg-[#429599]/25 text-[#5AB3B7] text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border border-[#429599]/40">
-                    Verified
+                    {t.account.verifiedBadge}
                   </span>
                 )}
               </div>
@@ -281,7 +340,7 @@ export default function AccountPage() {
                 className="bg-[#429599] hover:bg-[#337C80] text-white text-xs font-semibold px-4 py-2 rounded-[3px] transition-all flex items-center gap-1.5"
               >
                 <Shield className="w-3.5 h-3.5" />
-                <span>Admin Panel</span>
+                <span>{t.account.adminPanelLink}</span>
               </Link>
             )}
             <button
@@ -289,7 +348,7 @@ export default function AccountPage() {
               className="border border-[#4A3B35] hover:border-[#BA4E25] text-[#FAF4EC] hover:text-[#BA4E25] text-xs font-semibold px-4 py-2 rounded-[3px] transition-all flex items-center gap-1.5"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
+              <span>{t.nav.signOut}</span>
             </button>
           </div>
         </div>
@@ -322,7 +381,7 @@ export default function AccountPage() {
             }`}
           >
             <Heart className="w-4 h-4" />
-            <span>Saved Artworks ({wishlistPaintings.length})</span>
+            <span>{t.account.tabWishlist} ({wishlistPaintings.length})</span>
           </button>
 
           <button
@@ -334,7 +393,7 @@ export default function AccountPage() {
             }`}
           >
             <User className="w-4 h-4" />
-            <span>Profile Details</span>
+            <span>{t.account.tabProfile}</span>
           </button>
         </div>
 
@@ -344,7 +403,7 @@ export default function AccountPage() {
             {/* Painting Inquiries */}
             <div>
               <h2 className="font-serif text-2xl font-semibold text-[#281C18] mb-4">
-                Painting Inquiries
+                {t.account.paintingInquiriesTitle}
               </h2>
 
               {inquiries.length > 0 ? (
@@ -373,7 +432,7 @@ export default function AccountPage() {
                           <div className="w-16 h-16 rounded-[2px] overflow-hidden relative border border-[#E7E0D8] shrink-0 bg-[#F4ECE1]">
                             <Image
                               src={thumb}
-                              alt="Painting thumbnail"
+                              alt={inq.painting?.title_en || t.account.paintingFallback}
                               fill
                               className="object-cover"
                             />
@@ -384,7 +443,13 @@ export default function AccountPage() {
                                 href={`/gallery/${inq.painting?.id}`}
                                 className="font-serif font-semibold text-lg text-[#281C18] hover:text-[#BA4E25] flex items-center gap-1.5 truncate"
                               >
-                                <span>{inq.painting?.title_en || 'Painting'}</span>
+                                <span>
+                                  {(lang === 'ru'
+                                    ? inq.painting?.title_ru
+                                    : lang === 'uz'
+                                    ? inq.painting?.title_uz
+                                    : inq.painting?.title_en) || t.account.paintingFallback}
+                                </span>
                                 <ExternalLink className="w-3.5 h-3.5 text-[#8F8178]" />
                               </Link>
                               {hasUnread && (
@@ -394,7 +459,7 @@ export default function AccountPage() {
                               )}
                             </div>
                             <p className="text-xs text-[#726861]">
-                              by {inq.painting?.artist?.name} · {formatPrice(inq.painting?.price || 0)}
+                              {t.gallery.byArtist} {inq.painting?.artist?.name} · {formatPrice(inq.painting?.price || 0)}
                             </p>
                             {lastMsg && (
                               <p className="text-xs text-[#554740] bg-[#F7F3EE] p-2 rounded-[2px] line-clamp-2 max-w-xl border border-[#EFE8DE]">
@@ -415,35 +480,44 @@ export default function AccountPage() {
                             </span>
                           </div>
 
-                          <button
-                            onClick={() => handleOpenChat('inquiry', inq)}
-                            className="bg-[#281C18] hover:bg-[#BA4E25] text-white text-xs font-semibold px-4 py-2 rounded-[3px] transition flex items-center gap-1.5 shadow-xs"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                            <span>
-                              {t.chat.openChat} ({messagesCount})
-                            </span>
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleOpenReview(inq)}
+                              className="border border-[#BA4E25] text-[#BA4E25] hover:bg-[#BA4E25] hover:text-white text-xs font-semibold px-3 py-2 rounded-[3px] transition flex items-center gap-1.5 shadow-xs"
+                            >
+                              <Star className="w-3.5 h-3.5 fill-current" />
+                              <span>{t.account.reviewBtn}</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleOpenChat('inquiry', inq)}
+                              className="bg-[#281C18] hover:bg-[#BA4E25] text-white text-xs font-semibold px-4 py-2 rounded-[3px] transition flex items-center gap-1.5 shadow-xs"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              <span>
+                                {t.chat.openChat} ({messagesCount})
+                              </span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-xs text-[#726861] bg-[#FDFBF9] p-6 rounded-[3px] border border-[#E7E0D8]">
-                  No painting inquiries submitted yet. Explore the{' '}
-                  <Link href="/gallery" className="text-[#BA4E25] underline font-semibold">
-                    Gallery
-                  </Link>{' '}
-                  to discover original pieces.
-                </p>
+                <div className="text-xs text-[#726861] bg-[#FDFBF9] p-6 rounded-[3px] border border-[#E7E0D8] space-y-1.5">
+                  <p>{t.account.noInquiriesYet}</p>
+                  <Link href="/gallery" className="text-[#BA4E25] underline font-semibold inline-block">
+                    {t.account.exploreGalleryCta}
+                  </Link>
+                </div>
               )}
             </div>
 
             {/* Service Requests */}
             <div className="pt-4">
               <h2 className="font-serif text-2xl font-semibold text-[#281C18] mb-4">
-                Custom Commissions &amp; Murals
+                {t.account.servicesTitle}
               </h2>
 
               {serviceRequests.length > 0 ? (
@@ -469,7 +543,7 @@ export default function AccountPage() {
                             </span>
                             <span className="text-[#A8988E]">·</span>
                             <span className="text-xs text-[#726861]">
-                              Contact: {sr.guest_contact}
+                              {t.account.contactLabel}: {sr.guest_contact}
                             </span>
                             {hasUnread && (
                               <span className="bg-[#BA4E25] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -510,13 +584,12 @@ export default function AccountPage() {
                   })}
                 </div>
               ) : (
-                <p className="text-xs text-[#726861] bg-[#FDFBF9] p-6 rounded-[3px] border border-[#E7E0D8]">
-                  No custom service requests submitted yet. Check our{' '}
-                  <Link href="/services" className="text-[#BA4E25] underline font-semibold">
-                    Services
-                  </Link>{' '}
-                  for murals, ceramics, and custom commissions.
-                </p>
+                <div className="text-xs text-[#726861] bg-[#FDFBF9] p-6 rounded-[3px] border border-[#E7E0D8] space-y-1.5">
+                  <p>{t.account.noServiceRequestsYet}</p>
+                  <Link href="/services" className="text-[#BA4E25] underline font-semibold inline-block">
+                    {t.account.exploreServicesCta}
+                  </Link>
+                </div>
               )}
             </div>
           </div>
@@ -537,16 +610,16 @@ export default function AccountPage() {
               <div className="text-center py-16 bg-[#FDFBF9] border border-[#E7E0D8] rounded-[3px] space-y-3">
                 <Heart className="w-8 h-8 text-[#BA4E25] mx-auto opacity-75" />
                 <h3 className="font-serif text-xl font-semibold text-[#281C18]">
-                  No saved artworks yet
+                  {t.account.noSavedArtworksTitle}
                 </h3>
                 <p className="text-xs text-[#726861] max-w-sm mx-auto">
-                  Browse our collection and tap the heart icon on any canvas to keep it here.
+                  {t.account.noSavedArtworksDesc}
                 </p>
                 <Link
                   href="/gallery"
                   className="inline-block bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold px-5 py-2.5 rounded-[3px] transition-all mt-2"
                 >
-                  Explore Gallery
+                  {t.account.exploreGalleryBtn}
                 </Link>
               </div>
             )}
@@ -557,13 +630,13 @@ export default function AccountPage() {
         {activeTab === 'profile' && (
           <div className="max-w-xl bg-[#FDFBF9] border border-[#E7E0D8] rounded-[3px] p-8 space-y-6">
             <h2 className="font-serif text-2xl font-semibold text-[#281C18]">
-              Account Settings
+              {t.account.accountSettingsTitle}
             </h2>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                  Full Name
+                  {t.account.fullNameLabel}
                 </label>
                 <input
                   type="text"
@@ -575,7 +648,7 @@ export default function AccountPage() {
 
               <div>
                 <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                  Email Address
+                  {t.account.emailAddressLabel}
                 </label>
                 <input
                   type="email"
@@ -587,7 +660,7 @@ export default function AccountPage() {
 
               <div>
                 <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                  Country
+                  {t.account.countryLabel}
                 </label>
                 <input
                   type="text"
@@ -599,7 +672,7 @@ export default function AccountPage() {
 
               <div className="pt-2">
                 <span className="text-xs text-[#8F8178]">
-                  Account Role: <strong className="text-[#281C18]">{user?.role}</strong>
+                  {t.account.accountRoleLabel}: <strong className="text-[#281C18]">{user?.role}</strong>
                 </span>
               </div>
             </div>
@@ -614,13 +687,17 @@ export default function AccountPage() {
           onClose={() => setActiveChat(null)}
           title={
             activeChat.type === 'inquiry'
-              ? activeChat.item.painting?.title_en || 'Painting Inquiry'
-              : `${activeChat.item.service_type} Service Request`
+              ? (lang === 'ru'
+                  ? activeChat.item.painting?.title_ru
+                  : lang === 'uz'
+                  ? activeChat.item.painting?.title_uz
+                  : activeChat.item.painting?.title_en) || t.account.paintingFallback
+              : `${activeChat.item.service_type} ${t.account.serviceRequestSuffix}`
           }
           subtitle={
             activeChat.type === 'inquiry'
-              ? `by ${activeChat.item.painting?.artist?.name || 'Art Qala Artist'}`
-              : `Contact: ${activeChat.item.guest_contact}`
+              ? `${t.gallery.byArtist} ${activeChat.item.painting?.artist?.name || 'Art Qala Artist'}`
+              : `${t.account.contactLabel}: ${activeChat.item.guest_contact}`
           }
           status={activeChat.item.status}
           statusBadge={getStatusBadge(activeChat.item.status)}
@@ -644,6 +721,112 @@ export default function AccountPage() {
               : undefined
           }
         />
+      )}
+
+      {/* TZ 8.12: Write Review Modal in Customer Account */}
+      {reviewInquiry && (
+        <div className="fixed inset-0 z-50 bg-[#281C18]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FAF4EC] border border-[#E7E0D8] rounded-[4px] max-w-lg w-full p-6 sm:p-8 space-y-5 shadow-2xl relative">
+            <button
+              onClick={() => setReviewInquiry(null)}
+              className="absolute top-5 right-5 text-[#8F8178] hover:text-[#281C18] p-1 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <span className="text-[11px] font-bold tracking-widest text-[#429599] uppercase">
+                {t.reviews.modalEyebrow}
+              </span>
+              <h3 className="font-serif text-2xl font-semibold text-[#281C18] mt-1">
+                {t.reviews.modalTitleReview.replace(
+                  '{title}',
+                  (lang === 'ru'
+                    ? reviewInquiry.painting?.title_ru
+                    : lang === 'uz'
+                    ? reviewInquiry.painting?.title_uz
+                    : reviewInquiry.painting?.title_en) || t.account.paintingFallback
+                )}
+              </h3>
+              <p className="text-xs text-[#726861] mt-0.5">
+                {t.reviews.modalDescShort}
+              </p>
+            </div>
+
+            {reviewSuccess ? (
+              <div className="p-4 bg-[#DCFCE7] border border-[#86EFAC] rounded-[3px] text-xs text-[#16A34A] flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
+                <span>{reviewSuccess}</span>
+              </div>
+            ) : (
+              <form onSubmit={handleSendReview} className="space-y-4">
+                {reviewError && (
+                  <div className="p-3 bg-[#FEE2E2] border border-[#FCA5A5] text-[#B91C1C] text-xs rounded-[2px]">
+                    {reviewError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
+                    {t.reviews.ratingLabel}
+                  </label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewRating(star)}
+                        className={`p-2 rounded-[2px] border transition-all ${
+                          reviewRating >= star
+                            ? 'text-[#DAA932] border-[#DAA932] bg-white shadow-xs'
+                            : 'text-gray-300 border-[#E7E0D8] bg-[#FDFBF9]'
+                        }`}
+                      >
+                        <Star
+                          className={`w-6 h-6 ${
+                            reviewRating >= star ? 'fill-current' : ''
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                    {t.reviews.yourReviewLabel}
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder={t.reviews.reviewPlaceholder}
+                    className="w-full text-xs px-3.5 py-2.5 bg-white border border-[#E7E0D8] rounded-[2px] focus:outline-none focus:border-[#BA4E25] resize-none"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setReviewInquiry(null)}
+                    className="px-4 py-2.5 text-xs text-[#726861] hover:text-[#281C18] transition"
+                  >
+                    {t.reviews.cancel}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingReview}
+                    className="bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-xs px-6 py-2.5 rounded-[3px] transition flex items-center gap-2 shadow-xs"
+                  >
+                    <Star className="w-3.5 h-3.5 fill-current" />
+                    <span>{submittingReview ? t.reviews.submitting : t.reviews.submitForApproval}</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
