@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { sendOtpEmail } from '@/lib/email';
+import { createSessionToken } from '@/lib/auth';
 import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
 import { validateEmail } from '@/lib/validation';
 
@@ -67,7 +67,10 @@ export async function POST(request: Request) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create inactive user pending OTP
+    // Email OTP verification is temporarily bypassed: Resend is still in
+    // sandbox mode (can only deliver to the account owner's own inbox), so
+    // requiring a code would lock every real signup out with no way in.
+    // Account is activated immediately, same as Google/Apple sign-in.
     const user = await prisma.user.create({
       data: {
         name,
@@ -75,35 +78,37 @@ export async function POST(request: Request) {
         password_hash: passwordHash,
         country: country || null,
         role: 'USER',
-        email_verified: false,
+        email_verified: true,
         auth_provider: 'EMAIL',
       },
     });
 
-    // Generate 6-digit OTP
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-    await prisma.otpVerification.create({
-      data: {
-        email: normalizedEmail,
-        code: otpCode,
-        purpose: 'SIGNUP',
-        expires_at: expiresAt,
-      },
-    });
-
-    // Send real OTP email via Resend
-    const emailResult = await sendOtpEmail(normalizedEmail, otpCode, name);
-    if (!emailResult.success) {
-      console.warn('Could not dispatch Resend email, code saved in DB:', emailResult.error);
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Account created. Please verify with the 6-digit code sent to your email.',
+    const userSession = {
+      id: user.id,
+      name: user.name,
       email: user.email,
+      country: user.country,
+      role: user.role,
+      email_verified: user.email_verified,
+      must_change_password: false,
+    };
+
+    const sessionToken = createSessionToken(userSession);
+    const response = NextResponse.json({
+      success: true,
+      message: 'Account created successfully.',
+      user: userSession,
     });
+
+    response.cookies.set('artqala_user', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60,
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     console.error('Signup error:', error);
     return NextResponse.json(

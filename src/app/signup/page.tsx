@@ -11,7 +11,7 @@ import { useApp } from '@/context/AppContext';
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { t } = useApp();
+  const { t, refreshUser } = useApp();
 
   const [name, setName] = useState('');
   const [country, setCountry] = useState('Uzbekistan');
@@ -69,8 +69,9 @@ export default function SignUpPage() {
         return;
       }
 
-      // Route to OTP verification
-      router.push(`/verify-otp?email=${encodeURIComponent(email)}&devOtp=${data.otpPreview || ''}`);
+      // Account is active immediately (no email verification step right now).
+      await refreshUser();
+      router.push('/account');
     } catch {
       setError(t.auth.networkError);
       setLoading(false);
