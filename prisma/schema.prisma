@@ -184,6 +184,7 @@ model OtpVerification {
   id         String   @id @default(cuid())
   email      String
   code       String
+  purpose    String   @default("SIGNUP") // SIGNUP or PASSWORD_RESET
   expires_at DateTime
   created_at DateTime @default(now())
 }

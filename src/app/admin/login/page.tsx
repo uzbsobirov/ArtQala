@@ -161,12 +161,6 @@ export default function AdminLoginPage() {
               )}
             </button>
           </form>
-
-          <div className="mt-6 pt-5 border-t border-[#2D1D16] text-center">
-            <p className="text-[11px] text-[#736358]">
-              Demo login: <span className="text-[#DAA932]">admin@artqala.uz</span> | Parol: <span className="text-[#DAA932]">admin123</span>
-            </p>
-          </div>
         </div>
       </main>
 

@@ -16,6 +16,8 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@prisma/adapter-neon": "^7.10.0",
     "@prisma/client": "^6.4.1",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.12",

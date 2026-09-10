@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createSessionToken } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
       where: {
         email: email.toLowerCase(),
         code: code.trim(),
+        purpose: 'SIGNUP',
         expires_at: { gte: new Date() },
       },
       orderBy: { created_at: 'desc' },
@@ -39,6 +41,7 @@ export async function POST(request: Request) {
         country: true,
         role: true,
         email_verified: true,
+        must_change_password: true,
       },
     });
 
@@ -53,10 +56,12 @@ export async function POST(request: Request) {
       user: updatedUser,
     });
 
-    // Set auth cookie
-    response.cookies.set('artqala_user', JSON.stringify(updatedUser), {
-      httpOnly: false,
+    // Set signed session cookie (matches signin/oauth) so the user is actually logged in
+    const sessionToken = createSessionToken(updatedUser);
+    response.cookies.set('artqala_user', sessionToken, {
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60,
       path: '/',
     });

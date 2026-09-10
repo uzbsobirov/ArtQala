@@ -88,6 +88,7 @@ export async function POST(request: Request) {
       data: {
         email: normalizedEmail,
         code: otpCode,
+        purpose: 'SIGNUP',
         expires_at: expiresAt,
       },
     });

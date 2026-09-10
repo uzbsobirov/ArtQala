@@ -74,7 +74,73 @@ export async function sendOtpEmail(
   });
 }
 
-// 2. Send Curator Reply Notification (TZ 8.11a)
+// 2. Send Password Reset Code
+export async function sendPasswordResetEmail(
+  to: string,
+  code: string,
+  recipientName?: string
+): Promise<EmailSendResult> {
+  const name = recipientName || 'Art Lover';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Reset your Art Qala password</title>
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #FAF4EC; font-family: 'Georgia', serif; color: #281C18;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #FAF4EC; padding: 40px 15px;">
+          <tr>
+            <td align="center">
+              <table width="100%" max-width="580" style="max-width: 580px; background-color: #FDFBF9; border: 1px solid #E7E0D8; border-radius: 4px; padding: 36px 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
+                <tr>
+                  <td style="border-bottom: 1px solid #EFE8DE; padding-bottom: 20px;">
+                    <h1 style="color: #BA4E25; margin: 0; font-size: 26px; letter-spacing: 1px;">Art Qala</h1>
+                    <p style="margin: 4px 0 0 0; color: #726861; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">Gallery &amp; Studio · Tashkent, Uzbekistan</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top: 28px;">
+                    <h2 style="font-size: 20px; color: #281C18; margin: 0 0 14px 0;">Hello, ${name}</h2>
+                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #554740; margin: 0 0 24px 0;">
+                      We received a request to reset the password for your Art Qala account. Enter the following 6-digit code to choose a new password:
+                    </p>
+
+                    <div style="background-color: #FAF4EC; border: 1px dashed #BA4E25; border-radius: 4px; padding: 20px; text-align: center; margin: 24px 0;">
+                      <span style="font-family: -apple-system, BlinkMacSystemFont, monospace; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #BA4E25;">
+                        ${code}
+                      </span>
+                    </div>
+
+                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; color: #8F8178; line-height: 1.5; margin: 0;">
+                      This code will expire in <strong>15 minutes</strong>. If you did not request a password reset, you can safely ignore this email — your password will not be changed.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="border-top: 1px solid #EFE8DE; margin-top: 30px; padding-top: 24px; text-align: center;">
+                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; color: #9E9086; margin: 0;">
+                      Art Qala Gallery · Barakhon Madrasah, Tashkent · info@artqala.uz
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `;
+
+  return sendResendEmail({
+    to,
+    subject: `Art Qala — Password Reset Code: ${code}`,
+    html,
+  });
+}
+
+// 3. Send Curator Reply Notification (TZ 8.11a)
 export async function sendCuratorReplyNotification(
   to: string,
   recipientName: string,
