@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createSessionToken } from '@/lib/auth';
+import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(request: Request) {
   try {
@@ -13,9 +14,26 @@ export async function POST(request: Request) {
       );
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+    const ip = getClientIp(request);
+    const rateLimitKey = `verify-otp:${ip}:${normalizedEmail}`;
+
+    const rateCheck = checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
+    if (!rateCheck.allowed) {
+      const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Too many attempts. Try again in ${minutesLeft} minutes.`,
+          retryAfterSeconds: rateCheck.retryAfterSeconds,
+        },
+        { status: 429 }
+      );
+    }
+
     const record = await prisma.otpVerification.findFirst({
       where: {
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         code: code.trim(),
         purpose: 'SIGNUP',
         expires_at: { gte: new Date() },
@@ -24,6 +42,7 @@ export async function POST(request: Request) {
     });
 
     if (!record) {
+      recordFailedAttempt(rateLimitKey);
       return NextResponse.json(
         { success: false, error: 'Invalid or expired verification code' },
         { status: 400 }
@@ -32,7 +51,7 @@ export async function POST(request: Request) {
 
     // Activate user
     const updatedUser = await prisma.user.update({
-      where: { email: email.toLowerCase() },
+      where: { email: normalizedEmail },
       data: { email_verified: true },
       select: {
         id: true,

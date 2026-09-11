@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify, createRemoteJWKSet } from 'jose';
 import { prisma } from '@/lib/prisma';
 import { createSessionToken } from '@/lib/auth';
+import { safeRedirectTarget } from '@/lib/safeRedirect';
 
 interface RouteContext {
   params: Promise<{ provider: string }>;
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
   const { provider } = await params;
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const state = searchParams.get('state') || '/account';
+  const state = safeRedirectTarget(searchParams.get('state'));
 
   if (provider !== 'google') {
     return NextResponse.redirect(new URL('/signin?error=oauth_failed', request.url));
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
     const form = await request.formData();
     const idToken = form.get('id_token');
-    const state = (form.get('state') as string) || '/account';
+    const state = safeRedirectTarget(form.get('state') as string | null);
     const userField = form.get('user');
 
     if (!idToken || typeof idToken !== 'string') {

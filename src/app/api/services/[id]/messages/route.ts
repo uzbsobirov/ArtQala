@@ -1,13 +1,26 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from '@/lib/auth';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
+// A service request belongs to the caller if it's linked to their account,
+// or the guest contact info they submitted contains the email they're
+// currently signed in with — matches the lookup in /api/user/inquiries.
+function ownsServiceRequest(sr: { user_id: string | null; guest_contact: string | null }, sessionUserId: string, sessionEmail: string) {
+  return sr.user_id === sessionUserId || sr.guest_contact?.toLowerCase().includes(sessionEmail.toLowerCase());
+}
+
 // GET /api/services/[id]/messages
 export async function GET(request: Request, context: RouteContext) {
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await context.params;
 
     const serviceRequest = await prisma.serviceRequest.findUnique({
@@ -23,6 +36,10 @@ export async function GET(request: Request, context: RouteContext) {
       return NextResponse.json({ success: false, error: 'Service request not found' }, { status: 404 });
     }
 
+    if (session.role !== 'ADMIN' && !ownsServiceRequest(serviceRequest, session.id, session.email)) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
     return NextResponse.json({ success: true, serviceRequest, messages: serviceRequest.messages });
   } catch (error) {
     console.error('Error fetching service request messages:', error);
@@ -33,15 +50,18 @@ export async function GET(request: Request, context: RouteContext) {
 // POST /api/services/[id]/messages
 export async function POST(request: Request, context: RouteContext) {
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await context.params;
     const body = await request.json();
-    const { message, sender, status } = body;
+    const { message, status } = body;
 
     if (!message || !message.trim()) {
       return NextResponse.json({ success: false, error: 'Message content is required' }, { status: 400 });
     }
-
-    const effectiveSender = sender === 'ADMIN' ? 'ADMIN' : 'CUSTOMER';
 
     const existingSR = await prisma.serviceRequest.findUnique({
       where: { id },
@@ -54,7 +74,14 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ success: false, error: 'Service request not found' }, { status: 404 });
     }
 
-    const newStatus = status || existingSR.status;
+    const isAdmin = session.role === 'ADMIN';
+    if (!isAdmin && !ownsServiceRequest(existingSR, session.id, session.email)) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Never trust a client-supplied sender — derive it from the verified session.
+    const effectiveSender = isAdmin ? 'ADMIN' : 'CUSTOMER';
+    const newStatus = (isAdmin && status) || existingSR.status;
 
     const [newMessage, updatedSR] = await prisma.$transaction([
       prisma.serviceRequestMessage.create({

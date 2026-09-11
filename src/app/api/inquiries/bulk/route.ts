@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { validateEmail, validatePhoneOrTelegram } from '@/lib/validation';
 import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
+import { getServerSession } from '@/lib/auth';
 
 const MAX_ITEMS = 20;
 
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
     recordFailedAttempt(rateLimitKey);
 
     const body = await request.json();
-    const { painting_ids, guest_name, guest_email, guest_phone, message, user_id } = body;
+    const { painting_ids, guest_name, guest_email, guest_phone, message } = body;
 
     if (!Array.isArray(painting_ids) || painting_ids.length === 0) {
       return NextResponse.json(
@@ -65,7 +66,10 @@ export async function POST(request: Request) {
 
     const normalizedEmail = guest_email.trim().toLowerCase();
 
-    let effectiveUserId = user_id;
+    // Never trust a client-supplied user_id — attach to the verified session
+    // if the caller is signed in, otherwise fall back to matching by email.
+    const session = await getServerSession();
+    let effectiveUserId = session?.id;
     if (!effectiveUserId) {
       const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
       if (existingUser) effectiveUserId = existingUser.id;

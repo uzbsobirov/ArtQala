@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createSessionToken } from '@/lib/auth';
+import { safeRedirectTarget } from '@/lib/safeRedirect';
 
 export async function GET(
   request: NextRequest,
@@ -9,7 +10,7 @@ export async function GET(
   try {
     const { provider } = await context.params;
     const { searchParams, origin } = new URL(request.url);
-    const redirectTarget = searchParams.get('redirect') || '/account';
+    const redirectTarget = safeRedirectTarget(searchParams.get('redirect'));
 
     const normalizedProvider = (provider || '').toLowerCase();
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from '@/lib/auth';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -7,14 +8,30 @@ interface RouteContext {
 
 export async function POST(request: Request, context: RouteContext) {
   try {
-    const { id } = await context.params;
-    let viewer = 'CUSTOMER';
-    try {
-      const body = await request.json();
-      if (body.viewer) viewer = body.viewer;
-    } catch {}
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
 
-    const senderToMarkRead = viewer === 'CUSTOMER' ? 'ADMIN' : 'CUSTOMER';
+    const { id } = await context.params;
+    const isAdmin = session.role === 'ADMIN';
+
+    if (!isAdmin) {
+      const inquiry = await prisma.inquiry.findUnique({
+        where: { id },
+        select: { user_id: true, guest_email: true },
+      });
+      const owns =
+        inquiry &&
+        (inquiry.user_id === session.id ||
+          inquiry.guest_email?.toLowerCase() === session.email.toLowerCase());
+      if (!owns) {
+        return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
+    // Never trust a client-supplied viewer — derive it from the verified session.
+    const senderToMarkRead = isAdmin ? 'CUSTOMER' : 'ADMIN';
 
     await prisma.inquiryMessage.updateMany({
       where: {

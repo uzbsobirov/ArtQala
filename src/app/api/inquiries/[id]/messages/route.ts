@@ -1,14 +1,26 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { cookies } from 'next/headers';
+import { getServerSession } from '@/lib/auth';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
+// An inquiry belongs to the caller if it's linked to their account, or was
+// submitted as a guest under the email they're currently signed in with —
+// matches the lookup in /api/user/inquiries.
+function ownsInquiry(inquiry: { user_id: string | null; guest_email: string | null }, sessionUserId: string, sessionEmail: string) {
+  return inquiry.user_id === sessionUserId || inquiry.guest_email?.toLowerCase() === sessionEmail.toLowerCase();
+}
+
 // GET /api/inquiries/[id]/messages
 export async function GET(request: Request, context: RouteContext) {
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await context.params;
 
     const inquiry = await prisma.inquiry.findUnique({
@@ -35,6 +47,10 @@ export async function GET(request: Request, context: RouteContext) {
       return NextResponse.json({ success: false, error: 'Inquiry not found' }, { status: 404 });
     }
 
+    if (session.role !== 'ADMIN' && !ownsInquiry(inquiry, session.id, session.email)) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
     return NextResponse.json({ success: true, inquiry, messages: inquiry.messages });
   } catch (error) {
     console.error('Error fetching inquiry messages:', error);
@@ -45,15 +61,18 @@ export async function GET(request: Request, context: RouteContext) {
 // POST /api/inquiries/[id]/messages
 export async function POST(request: Request, context: RouteContext) {
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await context.params;
     const body = await request.json();
-    const { message, sender, status } = body;
+    const { message, status } = body;
 
     if (!message || !message.trim()) {
       return NextResponse.json({ success: false, error: 'Message content is required' }, { status: 400 });
     }
-
-    const effectiveSender = sender === 'ADMIN' ? 'ADMIN' : 'CUSTOMER';
 
     const existingInquiry = await prisma.inquiry.findUnique({
       where: { id },
@@ -67,9 +86,18 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ success: false, error: 'Inquiry not found' }, { status: 404 });
     }
 
-    // Determine new status
-    let newStatus = status || existingInquiry.status;
-    if (!status) {
+    const isAdmin = session.role === 'ADMIN';
+    if (!isAdmin && !ownsInquiry(existingInquiry, session.id, session.email)) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Never trust a client-supplied sender — derive it from the verified session.
+    const effectiveSender = isAdmin ? 'ADMIN' : 'CUSTOMER';
+
+    // Determine new status — only an admin may set an explicit status override.
+    const statusOverride = isAdmin ? status : undefined;
+    let newStatus = statusOverride || existingInquiry.status;
+    if (!statusOverride) {
       if (effectiveSender === 'ADMIN') {
         newStatus = 'ANSWERED';
       } else if (existingInquiry.status === 'ANSWERED' || existingInquiry.status === 'COMPLETED') {

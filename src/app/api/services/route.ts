@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
+import { getServerSession } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
     recordFailedAttempt(rateLimitKey);
 
     const body = await request.json();
-    const { guest_name, guest_contact, service_type, description, user_id } = body;
+    const { guest_name, guest_contact, service_type, description } = body;
 
     if (!guest_name || !guest_contact || !service_type || !description) {
       return NextResponse.json(
@@ -30,13 +31,17 @@ export async function POST(request: Request) {
       );
     }
 
+    // Never trust a client-supplied user_id — attach to the verified session
+    // if the caller is signed in, otherwise it stays a guest request.
+    const session = await getServerSession();
+
     const serviceRequest = await prisma.serviceRequest.create({
       data: {
         guest_name,
         guest_contact,
         service_type,
         description,
-        user_id: user_id || null,
+        user_id: session?.id || null,
         status: 'NEW',
         messages: {
           create: {
