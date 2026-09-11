@@ -20,6 +20,7 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   // Email validation criteria
   const isEmailValid = isValidEmail(email);
@@ -53,13 +54,18 @@ export default function SignUpPage() {
       }
     }
 
+    if (!agreedToTerms) {
+      setError(t.auth.mustAgreeToTerms);
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, country, email, password }),
+        body: JSON.stringify({ name, country, email, password, agreedToTerms }),
       });
 
       const data = await res.json();
@@ -267,9 +273,29 @@ export default function SignUpPage() {
             )}
           </div>
 
+          {/* Terms & Privacy agreement */}
+          <label className="flex items-start gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              className="mt-0.5 w-4 h-4 shrink-0 accent-[#BA4E25]"
+            />
+            <span className="text-xs text-[#554740] leading-relaxed">
+              {t.auth.agreeToTermsPrefix}{' '}
+              <Link href="/terms" target="_blank" className="font-semibold text-[#BA4E25] hover:underline">
+                {t.footer.terms}
+              </Link>{' '}
+              {t.auth.agreeToTermsAnd}{' '}
+              <Link href="/privacy" target="_blank" className="font-semibold text-[#BA4E25] hover:underline">
+                {t.footer.privacy}
+              </Link>
+            </span>
+          </label>
+
           <button
             type="submit"
-            disabled={loading || (password.length > 0 && !isPasswordValid)}
+            disabled={loading || (password.length > 0 && !isPasswordValid) || !agreedToTerms}
             className="w-full mt-2 py-3 px-4 bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold uppercase tracking-wider rounded-[3px] transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
           >
             <UserPlus className="w-4 h-4" />

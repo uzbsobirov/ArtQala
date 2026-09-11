@@ -24,11 +24,18 @@ export async function POST(request: Request) {
     }
     recordFailedAttempt(signupKey);
 
-    const { name, email, password, country } = await request.json();
+    const { name, email, password, country, agreedToTerms } = await request.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
         { success: false, error: "Barcha maydonlar to'ldirilishi shart" },
+        { status: 400 }
+      );
+    }
+
+    if (!agreedToTerms) {
+      return NextResponse.json(
+        { success: false, error: 'Foydalanish shartlari va Maxfiylik siyosatiga rozilik bildirishingiz kerak' },
         { status: 400 }
       );
     }

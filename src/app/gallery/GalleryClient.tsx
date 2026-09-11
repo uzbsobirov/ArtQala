@@ -74,7 +74,7 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
         {/* Filter Pills & Search Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-6 border-b border-[#E7E0D8]">
           {/* Category Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none min-w-0 md:flex-1">
             <button
               onClick={() => {
                 setSelectedCategory('all');
@@ -132,7 +132,7 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
           </div>
 
           {/* Search bar */}
-          <div className="relative w-full md:w-64">
+          <div className="relative w-full md:w-64 shrink-0">
             <Search className="w-4 h-4 text-[#8A7C73] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
