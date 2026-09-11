@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getPaintingById } from '@/lib/api';
+import { getPaintingById, getRelatedPaintings } from '@/lib/api';
 import PaintingDetailClient from './PaintingDetailClient';
 
 interface PageProps {
@@ -58,5 +58,11 @@ export default async function PaintingDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  return <PaintingDetailClient painting={painting} />;
+  const relatedPaintings = await getRelatedPaintings(
+    painting.id,
+    painting.artist_id,
+    painting.category_id
+  );
+
+  return <PaintingDetailClient painting={painting} relatedPaintings={relatedPaintings} />;
 }

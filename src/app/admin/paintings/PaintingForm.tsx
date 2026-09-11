@@ -14,7 +14,9 @@ import {
   X,
   Loader2,
   Trash2,
+  Sparkles,
 } from 'lucide-react';
+import AiBackgroundModal from './AiBackgroundModal';
 
 interface PaintingFormProps {
   initialData?: any;
@@ -83,6 +85,7 @@ export default function PaintingForm({
   })();
   const [images, setImages] = useState<string[]>(initialImages);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [aiEditIndex, setAiEditIndex] = useState<number | null>(null);
 
   // Pricing
   const [price, setPrice] = useState(initialData?.price || 420);
@@ -641,15 +644,25 @@ export default function PaintingForm({
                           Asosiy
                         </span>
                       )}
-                      {images.length > 1 && (
+                      <div className="absolute top-1 right-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           type="button"
-                          onClick={() => setImages((prev) => prev.filter((_, i) => i !== idx))}
-                          className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => setAiEditIndex(idx)}
+                          title="AI bilan fon yaratish"
+                          className="p-1 bg-black/60 text-white rounded hover:bg-[#BA4E25]"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Sparkles className="w-3 h-3" />
                         </button>
-                      )}
+                        {images.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => setImages((prev) => prev.filter((_, i) => i !== idx))}
+                            className="p-1 bg-black/60 text-white rounded hover:bg-red-600"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1067,6 +1080,22 @@ export default function PaintingForm({
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modal: AI Background Generation (Gemini) */}
+      {aiEditIndex !== null && (
+        <AiBackgroundModal
+          originalImage={images[aiEditIndex]}
+          onClose={() => setAiEditIndex(null)}
+          onAccept={(newImageUrl) => {
+            setImages((prev) => {
+              const next = [...prev];
+              next.splice(aiEditIndex + 1, 0, newImageUrl);
+              return next;
+            });
+            setAiEditIndex(null);
+          }}
+        />
       )}
     </>
   );

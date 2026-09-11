@@ -81,6 +81,9 @@ export const translations = {
       promotionSuffix: 'PROMOTION',
       sending: 'Sending...',
       viewCertificateLink: 'View official Certificate of Authenticity →',
+      relatedEyebrow: 'DISCOVER MORE',
+      relatedTitle: 'You Might Also Like',
+      protectiveCaseHint: 'Would you like a protective shipping case for this piece? Mention it in your message.',
     },
     // Artists
     artists: {
@@ -393,6 +396,17 @@ export const translations = {
       backHomeBtn: 'Return to Home',
       browseGalleryBtn: 'Browse the Gallery',
     },
+    // Bulk wishlist inquiry (send one message about several saved paintings)
+    wishlistInquiry: {
+      sendAllBtn: 'Send Inquiry About Saved Pieces',
+      title: 'Inquire About These Pieces',
+      subtitle: 'One message, sent to our curators for all the pieces below.',
+      selectedPieces: 'Selected pieces',
+      removeItem: 'Remove',
+      emptyAfterRemove: 'No pieces left to inquire about.',
+      success: 'Thank you! Your inquiry has been sent for all selected pieces.',
+      sendBtn: 'Send Inquiry',
+    },
     // Certificate of Authenticity page
     certificate: {
       backToPainting: 'Back to Painting',
@@ -492,6 +506,9 @@ export const translations = {
       promotionSuffix: 'АКЦИЯ',
       sending: 'Отправка...',
       viewCertificateLink: 'Смотреть официальный сертификат подлинности →',
+      relatedEyebrow: 'ОТКРОЙТЕ ДЛЯ СЕБЯ',
+      relatedTitle: 'Вам также может понравиться',
+      protectiveCaseHint: 'Хотите защитный чехол для перевозки этой работы? Укажите это в сообщении.',
     },
     // Artists
     artists: {
@@ -804,6 +821,17 @@ export const translations = {
       backHomeBtn: 'На главную',
       browseGalleryBtn: 'Смотреть галерею',
     },
+    // Bulk wishlist inquiry (send one message about several saved paintings)
+    wishlistInquiry: {
+      sendAllBtn: 'Отправить запрос по избранному',
+      title: 'Запрос по этим работам',
+      subtitle: 'Одно сообщение будет отправлено кураторам по всем работам ниже.',
+      selectedPieces: 'Выбранные работы',
+      removeItem: 'Удалить',
+      emptyAfterRemove: 'Не осталось работ для запроса.',
+      success: 'Спасибо! Ваш запрос отправлен по всем выбранным работам.',
+      sendBtn: 'Отправить запрос',
+    },
     // Certificate of Authenticity page
     certificate: {
       backToPainting: 'Назад к картине',
@@ -903,6 +931,9 @@ export const translations = {
       promotionSuffix: 'AKSIYA',
       sending: 'Yuborilmoqda...',
       viewCertificateLink: "Rasmiy asillik sertifikatini ko'rish →",
+      relatedEyebrow: "YANA KASHF ETING",
+      relatedTitle: "Sizga yoqishi mumkin bo'lgan asarlar",
+      protectiveCaseHint: "Ushbu asar uchun himoya futlyari kerakmi? Xabaringizda shuni ayting.",
     },
     // Artists
     artists: {
@@ -1214,6 +1245,17 @@ export const translations = {
       description: "Siz izlayotgan sahifa ko'chirilgan, sotilgan yoki umuman mavjud bo'lmagan bo'lishi mumkin. Keling, galereyaga qaytamiz.",
       backHomeBtn: 'Bosh sahifaga qaytish',
       browseGalleryBtn: "Galereyani ko'rish",
+    },
+    // Bulk wishlist inquiry (send one message about several saved paintings)
+    wishlistInquiry: {
+      sendAllBtn: "Sevimlilar bo'yicha so'rov yuborish",
+      title: 'Ushbu asarlar bo\'yicha so\'rov',
+      subtitle: "Quyidagi barcha asarlar bo'yicha kuratorlarimizga bitta xabar yuboriladi.",
+      selectedPieces: 'Tanlangan asarlar',
+      removeItem: "O'chirish",
+      emptyAfterRemove: "So'rov yuborish uchun asar qolmadi.",
+      success: "Rahmat! So'rovingiz barcha tanlangan asarlar bo'yicha yuborildi.",
+      sendBtn: "So'rov yuborish",
     },
     // Certificate of Authenticity page
     certificate: {

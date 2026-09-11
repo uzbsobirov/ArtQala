@@ -4,7 +4,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
-import { Search, Heart, SlidersHorizontal } from 'lucide-react';
+import WishlistInquiryModal from '@/components/WishlistInquiryModal';
+import { Search, Heart, SlidersHorizontal, Send } from 'lucide-react';
 
 interface GalleryClientProps {
   paintings: any[];
@@ -18,6 +19,7 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [onlyWishlist, setOnlyWishlist] = useState<boolean>(false);
+  const [showWishlistInquiry, setShowWishlistInquiry] = useState<boolean>(false);
 
   useEffect(() => {
     if (searchParams.get('wishlist') === 'true') {
@@ -142,6 +144,19 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
           </div>
         </div>
 
+        {/* Send inquiry about all wishlist pieces at once */}
+        {onlyWishlist && filteredPaintings.length > 0 && (
+          <div className="flex justify-end mb-5">
+            <button
+              onClick={() => setShowWishlistInquiry(true)}
+              className="bg-[#281C18] hover:bg-[#BA4E25] text-white text-xs font-semibold px-4 py-2.5 rounded-[3px] transition flex items-center gap-1.5 shadow-xs"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>{t.wishlistInquiry.sendAllBtn} ({filteredPaintings.length})</span>
+            </button>
+          </div>
+        )}
+
         {/* Gallery Grid */}
         {filteredPaintings.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-7">
@@ -170,6 +185,13 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
           </div>
         )}
       </div>
+
+      {showWishlistInquiry && (
+        <WishlistInquiryModal
+          paintings={paintings.filter((p) => wishlist.includes(p.id))}
+          onClose={() => setShowWishlistInquiry(false)}
+        />
+      )}
     </div>
   );
 }

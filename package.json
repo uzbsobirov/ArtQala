@@ -16,16 +16,19 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@google/genai": "^2.22.0",
     "@neondatabase/serverless": "^1.1.0",
     "@prisma/adapter-neon": "^7.10.0",
     "@prisma/client": "^6.4.1",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.12",
+    "libphonenumber-js": "^1.13.13",
     "lucide-react": "^1.42.0",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "recharts": "^3.10.1"
+    "recharts": "^3.10.1",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

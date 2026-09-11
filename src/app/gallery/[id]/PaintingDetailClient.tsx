@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
+import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
 import {
   Heart,
   ShieldCheck,
@@ -15,13 +16,15 @@ import {
   X,
   Sparkles,
   Lock,
+  Info,
 } from 'lucide-react';
 
 interface PaintingDetailClientProps {
   painting: any;
+  relatedPaintings?: any[];
 }
 
-export default function PaintingDetailClient({ painting }: PaintingDetailClientProps) {
+export default function PaintingDetailClient({ painting, relatedPaintings = [] }: PaintingDetailClientProps) {
   const { lang, formatPrice, wishlist, toggleWishlist, t, user } = useApp();
 
   const [guestName, setGuestName] = useState('');
@@ -555,6 +558,10 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
                       placeholder="I would like to inquire about reservation, delivery to my hotel in Tashkent, or international shipping..."
                       className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[2px] focus:outline-none focus:border-[#BA4E25] resize-none"
                     />
+                    <p className="text-[10.5px] text-[#8F8178] mt-1.5 flex items-start gap-1">
+                      <Info className="w-3 h-3 shrink-0 mt-0.5" />
+                      <span>{t.painting.protectiveCaseHint}</span>
+                    </p>
                   </div>
 
                   <button
@@ -570,6 +577,27 @@ export default function PaintingDetailClient({ painting }: PaintingDetailClientP
             </div>
           </div>
         </div>
+
+        {/* Related Paintings Carousel */}
+        {relatedPaintings.length > 0 && (
+          <div className="mt-16 sm:mt-20 pt-10 border-t border-[#E7E0D8]">
+            <div className="mb-6">
+              <span className="text-xs font-semibold tracking-[3px] text-[#429599] uppercase">
+                {t.painting.relatedEyebrow}
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-[#281C18] mt-1">
+                {t.painting.relatedTitle}
+              </h2>
+            </div>
+            <div className="flex gap-5 overflow-x-auto pb-4 -mx-6 px-6 sm:-mx-10 sm:px-10 lg:-mx-14 lg:px-14 scrollbar-none">
+              {relatedPaintings.map((p) => (
+                <div key={p.id} className="w-[240px] sm:w-[260px] shrink-0">
+                  <PaintingCard painting={p as PaintingItem} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* TZ 8.12: Write Review Modal for Verified Inquirers */}

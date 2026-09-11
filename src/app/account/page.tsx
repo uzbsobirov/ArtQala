@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
 import ChatModal, { ThreadMessage } from '@/components/chat/ChatModal';
+import WishlistInquiryModal from '@/components/WishlistInquiryModal';
 import {
   User,
   Heart,
@@ -22,6 +23,7 @@ import {
   MessageCircle,
   Star,
   X,
+  Send,
 } from 'lucide-react';
 
 export default function AccountPage() {
@@ -34,6 +36,7 @@ export default function AccountPage() {
   const [totalUnread, setTotalUnread] = useState(0);
   const [wishlistPaintings, setWishlistPaintings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showWishlistInquiry, setShowWishlistInquiry] = useState(false);
 
   // Active chat state
   const [activeChat, setActiveChat] = useState<{
@@ -598,6 +601,17 @@ export default function AccountPage() {
         {/* Tab 2: Saved Artworks (Wishlist) */}
         {activeTab === 'wishlist' && (
           <div>
+            {wishlistPaintings.length > 0 && (
+              <div className="flex justify-end mb-5">
+                <button
+                  onClick={() => setShowWishlistInquiry(true)}
+                  className="bg-[#281C18] hover:bg-[#BA4E25] text-white text-xs font-semibold px-4 py-2.5 rounded-[3px] transition flex items-center gap-1.5 shadow-xs"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{t.wishlistInquiry.sendAllBtn} ({wishlistPaintings.length})</span>
+                </button>
+              </div>
+            )}
             {wishlistPaintings.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-7">
                 {wishlistPaintings.map((painting) => (
@@ -827,6 +841,13 @@ export default function AccountPage() {
             )}
           </div>
         </div>
+      )}
+
+      {showWishlistInquiry && (
+        <WishlistInquiryModal
+          paintings={wishlistPaintings}
+          onClose={() => setShowWishlistInquiry(false)}
+        />
       )}
     </div>
   );
