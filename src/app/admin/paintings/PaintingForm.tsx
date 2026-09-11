@@ -15,6 +15,7 @@ import {
   Loader2,
   Trash2,
   Sparkles,
+  Languages,
 } from 'lucide-react';
 import AiBackgroundModal from './AiBackgroundModal';
 
@@ -86,6 +87,61 @@ export default function PaintingForm({
   const [images, setImages] = useState<string[]>(initialImages);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [aiEditIndex, setAiEditIndex] = useState<number | null>(null);
+
+  // Auto-translation: typing in UZ or RU auto-fills the other two languages
+  // (via Gemini) for whichever field group ('title' | 'description' | 'technique')
+  // was just edited. Never overwrites a field the admin has already filled in.
+  const [translatingGroup, setTranslatingGroup] = useState<string | null>(null);
+
+  const fieldGroups = {
+    title: {
+      uz: [titleUz, setTitleUz] as const,
+      ru: [titleRu, setTitleRu] as const,
+      en: [titleEn, setTitleEn] as const,
+    },
+    description: {
+      uz: [descriptionUz, setDescriptionUz] as const,
+      ru: [descriptionRu, setDescriptionRu] as const,
+      en: [descriptionEn, setDescriptionEn] as const,
+    },
+    technique: {
+      uz: [techniqueUz, setTechniqueUz] as const,
+      ru: [techniqueRu, setTechniqueRu] as const,
+      en: [techniqueEn, setTechniqueEn] as const,
+    },
+  };
+
+  const autoTranslate = async (
+    group: keyof typeof fieldGroups,
+    sourceLang: 'uz' | 'ru',
+    text: string
+  ) => {
+    if (!text.trim()) return;
+    const groupFields = fieldGroups[group];
+    setTranslatingGroup(group);
+    try {
+      const res = await fetch('/api/admin/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, sourceLang }),
+      });
+      const data = await res.json();
+      if (data.success && data.translations) {
+        (['uz', 'ru', 'en'] as const).forEach((lang) => {
+          if (lang === sourceLang) return;
+          const value = data.translations[lang];
+          const [currentValue, setValue] = groupFields[lang];
+          if (value && !currentValue.trim()) {
+            setValue(value);
+          }
+        });
+      }
+    } catch {
+      // Silent failure — auto-translation is a convenience, not required to save the form.
+    } finally {
+      setTranslatingGroup(null);
+    }
+  };
 
   // Pricing
   const [price, setPrice] = useState(initialData?.price || 420);
@@ -381,14 +437,16 @@ export default function PaintingForm({
               {/* Sarlavhalar (3 tilda) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                  <label className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
                     SARLAVHA (UZ) *
+                    {translatingGroup === 'title' && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
                   </label>
                   <input
                     type="text"
                     required
                     value={titleUz}
                     onChange={(e) => setTitleUz(e.target.value)}
+                    onBlur={(e) => autoTranslate('title', 'uz', e.target.value)}
                     placeholder="Registon shafaq paytida"
                     className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
                   />
@@ -414,6 +472,7 @@ export default function PaintingForm({
                     type="text"
                     value={titleRu}
                     onChange={(e) => setTitleRu(e.target.value)}
+                    onBlur={(e) => autoTranslate('title', 'ru', e.target.value)}
                     placeholder="Регистан на закате"
                     className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
                   />
@@ -423,13 +482,15 @@ export default function PaintingForm({
               {/* Tavsiflar (3 tilda) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                  <label className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
                     TAVSIF (UZ)
+                    {translatingGroup === 'description' && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
                   </label>
                   <textarea
                     rows={3}
                     value={descriptionUz}
                     onChange={(e) => setDescriptionUz(e.target.value)}
+                    onBlur={(e) => autoTranslate('description', 'uz', e.target.value)}
                     placeholder="San'at asari haqida ma'lumot (O'zbekcha)..."
                     className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
                   />
@@ -454,6 +515,7 @@ export default function PaintingForm({
                     rows={3}
                     value={descriptionRu}
                     onChange={(e) => setDescriptionRu(e.target.value)}
+                    onBlur={(e) => autoTranslate('description', 'ru', e.target.value)}
                     placeholder="Описание картины на русском..."
                     className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
                   />
@@ -463,13 +525,15 @@ export default function PaintingForm({
               {/* Texnikalar (3 tilda) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                  <label className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
                     TEXNIKA (UZ)
+                    {translatingGroup === 'technique' && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
                   </label>
                   <input
                     type="text"
                     value={techniqueUz}
                     onChange={(e) => setTechniqueUz(e.target.value)}
+                    onBlur={(e) => autoTranslate('technique', 'uz', e.target.value)}
                     placeholder="Moybo'yoq, polotno"
                     className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
                   />
@@ -494,6 +558,7 @@ export default function PaintingForm({
                     type="text"
                     value={techniqueRu}
                     onChange={(e) => setTechniqueRu(e.target.value)}
+                    onBlur={(e) => autoTranslate('technique', 'ru', e.target.value)}
                     placeholder="Холст, масло"
                     className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
                   />
