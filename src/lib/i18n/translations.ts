@@ -73,7 +73,7 @@ export const translations = {
       inquireDesc: 'Send a direct request to our gallery curators in Tashkent. We arrange secure international crating and shipping.',
       yourName: 'Your Name',
       yourEmail: 'Your Email',
-      yourPhone: 'Phone or WhatsApp (optional)',
+      yourPhone: 'Phone or Telegram',
       yourMessage: 'Message or questions (shipping, reservation, etc.)',
       sendInquiry: 'Send Inquiry',
       inquirySuccess: 'Thank you! Your inquiry has been received. Our gallery manager will reply within 24 hours.',
@@ -407,6 +407,27 @@ export const translations = {
       success: 'Thank you! Your inquiry has been sent for all selected pieces.',
       sendBtn: 'Send Inquiry',
     },
+    // Phone / Telegram contact field (shared by inquiry forms)
+    phoneInput: {
+      phoneMode: 'Phone',
+      telegramMode: 'Telegram',
+      phonePlaceholder: 'Phone number',
+      telegramPlaceholder: 'username',
+      invalidPhone: "Enter a valid phone number for the selected country",
+      invalidTelegram: 'Enter a valid Telegram username (5-32 characters, e.g. @artlover)',
+      required: 'Phone number or Telegram username is required',
+    },
+    // International shipping cost estimator (UzPost-based)
+    shippingEstimator: {
+      title: 'Estimate international shipping',
+      selectCountry: 'Destination country',
+      posilkaLabel: 'Standard parcel',
+      emsLabel: 'EMS express',
+      daysUnit: 'days',
+      refundNote: 'Estimated delivery is usually within 15 days. If a shipment takes longer than 1 month, the shipping fee is refunded.',
+      disclaimer: 'Estimate only, based on standard international post rates. Final cost is confirmed by our curators.',
+      notAvailable: 'Online shipping estimate is not available for this destination — please contact us directly.',
+    },
     // Certificate of Authenticity page
     certificate: {
       backToPainting: 'Back to Painting',
@@ -498,7 +519,7 @@ export const translations = {
       inquireDesc: 'Напишите кураторам галереи в Ташкенте. Мы организуем безопасную упаковку и международную курьерскую доставку.',
       yourName: 'Ваше имя',
       yourEmail: 'Ваш Email',
-      yourPhone: 'Телефон или Telegram (по желанию)',
+      yourPhone: 'Телефон или Telegram',
       yourMessage: 'Вопрос или пожелание (доставка, бронь и т.д.)',
       sendInquiry: 'Отправить запрос',
       inquirySuccess: 'Спасибо! Ваш запрос принят. Куратор галереи свяжется с вами в течение 24 часов.',
@@ -832,6 +853,27 @@ export const translations = {
       success: 'Спасибо! Ваш запрос отправлен по всем выбранным работам.',
       sendBtn: 'Отправить запрос',
     },
+    // Phone / Telegram contact field (shared by inquiry forms)
+    phoneInput: {
+      phoneMode: 'Телефон',
+      telegramMode: 'Telegram',
+      phonePlaceholder: 'Номер телефона',
+      telegramPlaceholder: 'username',
+      invalidPhone: 'Введите корректный номер телефона для выбранной страны',
+      invalidTelegram: 'Введите корректный Telegram username (5-32 символа, например @artlover)',
+      required: 'Укажите номер телефона или Telegram username',
+    },
+    // International shipping cost estimator (UzPost-based)
+    shippingEstimator: {
+      title: 'Расчёт международной доставки',
+      selectCountry: 'Страна назначения',
+      posilkaLabel: 'Стандартная посылка',
+      emsLabel: 'EMS экспресс',
+      daysUnit: 'дней',
+      refundNote: 'Обычно доставка занимает до 15 дней. Если отправление идёт дольше 1 месяца, стоимость доставки возвращается.',
+      disclaimer: 'Это приблизительная оценка на основе стандартных международных почтовых тарифов. Точную стоимость подтверждают наши кураторы.',
+      notAvailable: 'Онлайн-расчёт доставки для этого направления недоступен — свяжитесь с нами напрямую.',
+    },
     // Certificate of Authenticity page
     certificate: {
       backToPainting: 'Назад к картине',
@@ -923,7 +965,7 @@ export const translations = {
       inquireDesc: 'Toshkentdagi galereya kuratorlariga to\'g\'ridan-to\'g\'ri so\'rov yuboring. Xavfsiz xalqaro yetkazib berishni tashkil qilamiz.',
       yourName: 'Ismingiz',
       yourEmail: 'Email manzilingiz',
-      yourPhone: 'Telefon yoki Telegram (ixtiyoriy)',
+      yourPhone: 'Telefon yoki Telegram',
       yourMessage: 'Xabaringiz yoki savolingiz (yetkazish, band qilish va h.k.)',
       sendInquiry: 'So\'rovni yuborish',
       inquirySuccess: 'Rahmat! So\'rovingiz qabul qilindi. Kuratorimiz 24 soat ichida javob beradi.',
@@ -1256,6 +1298,27 @@ export const translations = {
       emptyAfterRemove: "So'rov yuborish uchun asar qolmadi.",
       success: "Rahmat! So'rovingiz barcha tanlangan asarlar bo'yicha yuborildi.",
       sendBtn: "So'rov yuborish",
+    },
+    // Phone / Telegram contact field (shared by inquiry forms)
+    phoneInput: {
+      phoneMode: 'Telefon',
+      telegramMode: 'Telegram',
+      phonePlaceholder: 'Telefon raqami',
+      telegramPlaceholder: 'username',
+      invalidPhone: "Tanlangan davlat uchun to'g'ri telefon raqamini kiriting",
+      invalidTelegram: "To'g'ri Telegram username kiriting (5-32 belgi, masalan @artlover)",
+      required: "Telefon raqami yoki Telegram username kiritilishi shart",
+    },
+    // International shipping cost estimator (UzPost-based)
+    shippingEstimator: {
+      title: "Xalqaro yetkazib berish narxini hisoblash",
+      selectCountry: "Yetkazib beriladigan davlat",
+      posilkaLabel: "Oddiy posilka",
+      emsLabel: "EMS tezkor pochta",
+      daysUnit: "kun",
+      refundNote: "Odatda yetkazib berish 15 kun ichida amalga oshadi. Agar jo'natma 1 oydan ortiq davom etsa, yetkazib berish puli qaytarib beriladi.",
+      disclaimer: "Bu taxminiy hisob, xalqaro pochta standart tariflariga asoslangan. Yakuniy narxni kuratorlarimiz tasdiqlaydi.",
+      notAvailable: "Ushbu davlat uchun onlayn hisoblash mavjud emas — biz bilan to'g'ridan-to'g'ri bog'laning.",
     },
     // Certificate of Authenticity page
     certificate: {

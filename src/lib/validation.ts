@@ -1,6 +1,9 @@
 /**
  * Comprehensive and secure email validation utility for Art Qala
  */
+import { isValidPhoneNumber } from 'libphonenumber-js';
+
+const TELEGRAM_USERNAME_REGEX = /^@[a-zA-Z0-9_]{5,32}$/;
 
 // RFC 5322 standard compliant regular expression
 const EMAIL_REGEX =
@@ -47,6 +50,35 @@ export function validateEmail(email: unknown): { isValid: boolean; error?: strin
 
   if (!isValidEmail(trimmed)) {
     return { isValid: false, error: "Noto'g'ri email formati. Masalan: misol@artqala.uz" };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validates a contact value that is either an international phone number
+ * (must include a country calling code, e.g. +998901234567) or a Telegram
+ * username (e.g. @artlover). Mirrors the client-side PhoneInput component.
+ */
+export function validatePhoneOrTelegram(value: unknown): { isValid: boolean; error?: string } {
+  if (!value || typeof value !== 'string' || !value.trim()) {
+    return { isValid: false, error: 'Telefon raqami yoki Telegram foydalanuvchi nomi kiritilishi shart' };
+  }
+
+  const trimmed = value.trim();
+
+  if (trimmed.startsWith('@')) {
+    if (!TELEGRAM_USERNAME_REGEX.test(trimmed)) {
+      return { isValid: false, error: "Telegram foydalanuvchi nomi noto'g'ri (masalan: @artlover)" };
+    }
+    return { isValid: true };
+  }
+
+  if (!isValidPhoneNumber(trimmed)) {
+    return {
+      isValid: false,
+      error: "Telefon raqami noto'g'ri. Davlat kodi bilan kiriting (masalan: +998901234567)",
+    };
   }
 
   return { isValid: true };

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { validateEmail } from '@/lib/validation';
+import { validateEmail, validatePhoneOrTelegram } from '@/lib/validation';
 import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
 
 const MAX_ITEMS = 20;
@@ -55,6 +55,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const phoneValidation = validatePhoneOrTelegram(guest_phone);
+    if (!phoneValidation.isValid) {
+      return NextResponse.json(
+        { success: false, error: phoneValidation.error },
+        { status: 400 }
+      );
+    }
+
     const normalizedEmail = guest_email.trim().toLowerCase();
 
     let effectiveUserId = user_id;
@@ -84,7 +92,7 @@ export async function POST(request: Request) {
             painting_id: paintingId,
             guest_name: guest_name.trim(),
             guest_email: normalizedEmail,
-            guest_phone: guest_phone || null,
+            guest_phone: guest_phone.trim(),
             message: trimmedMessage,
             user_id: effectiveUserId || null,
             status: 'NEW',

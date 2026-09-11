@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useApp, Currency } from '@/context/AppContext';
 import { Language } from '@/lib/i18n/translations';
-import { Heart, Menu, X, Shield } from 'lucide-react';
+import { Heart, Menu, X, Shield, UserCircle } from 'lucide-react';
 
 export default function Header() {
   const pathname = usePathname();
@@ -202,6 +202,29 @@ export default function Header() {
               >
                 <Shield className="w-4 h-4" />
                 {t.nav.admin}
+              </Link>
+            )}
+
+            {/* Account / Sign In (mirrors desktop nav) */}
+            {user ? (
+              <Link
+                href="/account"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 text-base font-semibold text-[#BA4E25] pt-3 border-t border-[#E7E0D8]"
+              >
+                <span className="w-5 h-5 rounded-full bg-[#BA4E25] text-white text-[10px] flex items-center justify-center font-bold shrink-0">
+                  {user.name.slice(0, 1).toUpperCase()}
+                </span>
+                <span>{user.name.split(' ')[0]}</span>
+              </Link>
+            ) : (
+              <Link
+                href="/signin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 text-base font-semibold text-[#BA4E25] pt-3 border-t border-[#E7E0D8]"
+              >
+                <UserCircle className="w-5 h-5" />
+                {t.nav.signIn}
               </Link>
             )}
           </div>

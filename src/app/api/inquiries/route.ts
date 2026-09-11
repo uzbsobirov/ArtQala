@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { validateEmail } from '@/lib/validation';
+import { validateEmail, validatePhoneOrTelegram } from '@/lib/validation';
 import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(request: Request) {
@@ -39,6 +39,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const phoneValidation = validatePhoneOrTelegram(guest_phone);
+    if (!phoneValidation.isValid) {
+      return NextResponse.json(
+        { success: false, error: phoneValidation.error },
+        { status: 400 }
+      );
+    }
+
     let effectiveUserId = user_id;
     if (!effectiveUserId) {
       const existingUser = await prisma.user.findUnique({
@@ -54,7 +62,7 @@ export async function POST(request: Request) {
         painting_id,
         guest_name: guest_name.trim(),
         guest_email: guest_email.trim().toLowerCase(),
-        guest_phone: guest_phone || null,
+        guest_phone: guest_phone.trim(),
         message: message.trim(),
         user_id: effectiveUserId || null,
         status: 'NEW',

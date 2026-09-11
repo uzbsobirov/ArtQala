@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
+import PhoneInput from '@/components/PhoneInput';
+import ShippingEstimator from '@/components/ShippingEstimator';
 import {
   Heart,
   ShieldCheck,
@@ -30,6 +32,7 @@ export default function PaintingDetailClient({ painting, relatedPaintings = [] }
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
+  const [phoneValid, setPhoneValid] = useState(false);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -484,6 +487,9 @@ export default function PaintingDetailClient({ painting, relatedPaintings = [] }
             {/* Artwork Description */}
             <p className="text-sm text-[#5F534C] leading-relaxed">{description}</p>
 
+            {/* Shipping Cost Estimator */}
+            <ShippingEstimator sizeString={painting.size} />
+
             {/* Direct Inquiry Form */}
             <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[3px] p-6 space-y-4 shadow-sm">
               <h3 className="font-serif text-xl font-semibold text-[#281C18]">
@@ -535,15 +541,9 @@ export default function PaintingDetailClient({ painting, relatedPaintings = [] }
 
                   <div>
                     <label className="block text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                      {t.painting.yourPhone}
+                      {t.painting.yourPhone} *
                     </label>
-                    <input
-                      type="text"
-                      value={guestPhone}
-                      onChange={(e) => setGuestPhone(e.target.value)}
-                      placeholder="+998 ... or @telegram_handle"
-                      className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[2px] focus:outline-none focus:border-[#BA4E25]"
-                    />
+                    <PhoneInput value={guestPhone} onChange={setGuestPhone} onValidityChange={setPhoneValid} required />
                   </div>
 
                   <div>
@@ -566,8 +566,8 @@ export default function PaintingDetailClient({ painting, relatedPaintings = [] }
 
                   <button
                     type="submit"
-                    disabled={submitting}
-                    className="w-full bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-xs py-2.5 rounded-[3px] transition-all flex items-center justify-center gap-2"
+                    disabled={submitting || !phoneValid}
+                    className="w-full bg-[#BA4E25] hover:bg-[#9C3E1B] text-white font-semibold text-xs py-2.5 rounded-[3px] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>{submitting ? t.painting.sending : t.painting.sendInquiry}</span>
