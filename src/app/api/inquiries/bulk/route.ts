@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     recordFailedAttempt(rateLimitKey);
 
     const body = await request.json();
-    const { painting_ids, guest_name, guest_email, guest_phone, message } = body;
+    const { painting_ids, guest_name, guest_email, guest_phone, message, selected_accessories } = body;
 
     if (!Array.isArray(painting_ids) || painting_ids.length === 0) {
       return NextResponse.json(
@@ -88,6 +88,18 @@ export async function POST(request: Request) {
       );
     }
 
+    // Re-fetch accessory name/price from the DB rather than trusting the
+    // client — only the ids the customer checked are honored.
+    let accessoriesSnapshot: string | null = null;
+    if (Array.isArray(selected_accessories) && selected_accessories.length > 0) {
+      const accessoryIds = selected_accessories.map((a: { id: string }) => a?.id).filter(Boolean);
+      const found = await prisma.accessory.findMany({
+        where: { id: { in: accessoryIds }, is_active: true },
+        select: { id: true, name_en: true, name_ru: true, name_uz: true, price: true },
+      });
+      if (found.length > 0) accessoriesSnapshot = JSON.stringify(found);
+    }
+
     const trimmedMessage = message.trim();
     const inquiries = await prisma.$transaction(
       validIds.map((paintingId) =>
@@ -99,6 +111,7 @@ export async function POST(request: Request) {
             guest_phone: guest_phone.trim(),
             message: trimmedMessage,
             user_id: effectiveUserId || null,
+            selected_accessories: accessoriesSnapshot,
             status: 'NEW',
             messages: {
               create: {

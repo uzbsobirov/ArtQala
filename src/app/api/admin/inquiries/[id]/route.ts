@@ -46,6 +46,12 @@ export async function PUT(request: Request, context: RouteContext) {
         status: newStatus,
         admin_reply: body.admin_reply !== undefined ? body.admin_reply : existingInquiry.admin_reply,
         user_id: effectiveUserId,
+        final_price:
+          body.final_price !== undefined
+            ? body.final_price === null || body.final_price === ''
+              ? null
+              : parseFloat(body.final_price)
+            : existingInquiry.final_price,
       },
       include: {
         painting: true,

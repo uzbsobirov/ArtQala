@@ -10,6 +10,7 @@ import {
   Users,
   Layers,
   Percent,
+  Gem,
   MessageSquare,
   Wrench,
   Users2,
@@ -76,6 +77,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: '/admin/artists', label: t.admin.artists, icon: Users },
     { href: '/admin/categories', label: t.admin.categories, icon: Layers },
     { href: '/admin/discounts', label: t.admin.discounts, icon: Percent },
+    { href: '/admin/accessories', label: t.admin.accessories, icon: Gem },
     { href: '/admin/inquiries', label: t.admin.inquiries, icon: MessageSquare },
     { href: '/admin/services', label: t.admin.services, icon: Wrench },
     { href: '/admin/messages', label: t.admin.messages, icon: Mail },
@@ -91,6 +93,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     if (pathname.startsWith('/admin/artists')) return t.admin.artists;
     if (pathname.startsWith('/admin/categories')) return t.admin.categories;
     if (pathname.startsWith('/admin/discounts')) return t.admin.discounts;
+    if (pathname.startsWith('/admin/accessories')) return t.admin.accessories;
     if (pathname.startsWith('/admin/inquiries')) return t.admin.inquiries;
     if (pathname.startsWith('/admin/services')) return t.admin.services;
     if (pathname.startsWith('/admin/messages')) return t.admin.messages;

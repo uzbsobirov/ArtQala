@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import { X, Send, CheckCircle2, Info } from 'lucide-react';
 import PhoneInput from '@/components/PhoneInput';
+import AccessoryCheckboxes, { SelectedAccessory } from '@/components/AccessoryCheckboxes';
 
 interface WishlistPaintingLite {
   id: string;
@@ -12,6 +13,7 @@ interface WishlistPaintingLite {
   title_ru: string;
   title_uz: string;
   images: string;
+  category_id: string;
 }
 
 interface WishlistInquiryModalProps {
@@ -38,11 +40,13 @@ export default function WishlistInquiryModal({ paintings, onClose }: WishlistInq
   const [guestPhone, setGuestPhone] = useState('');
   const [phoneValid, setPhoneValid] = useState(false);
   const [message, setMessage] = useState('');
+  const [selectedAccessories, setSelectedAccessories] = useState<SelectedAccessory[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
   const selectedPaintings = paintings.filter((p) => selectedIds.includes(p.id));
+  const relevantCategoryIds = Array.from(new Set(selectedPaintings.map((p) => p.category_id)));
 
   const title = (p: WishlistPaintingLite) =>
     lang === 'ru' ? p.title_ru : lang === 'uz' ? p.title_uz : p.title_en;
@@ -69,6 +73,7 @@ export default function WishlistInquiryModal({ paintings, onClose }: WishlistInq
           guest_phone: guestPhone,
           message,
           user_id: user?.id,
+          selected_accessories: selectedAccessories,
         }),
       });
       const data = await res.json();
@@ -197,6 +202,10 @@ export default function WishlistInquiryModal({ paintings, onClose }: WishlistInq
                   <span>{t.painting.protectiveCaseHint}</span>
                 </p>
               </div>
+
+              {relevantCategoryIds.length > 0 && (
+                <AccessoryCheckboxes categoryIds={relevantCategoryIds} onChange={setSelectedAccessories} />
+              )}
 
               <button
                 type="submit"

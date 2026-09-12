@@ -172,6 +172,7 @@ export const translations = {
       artists: 'Artists',
       categories: 'Categories',
       discounts: 'Discounts',
+      accessories: 'Accessories',
       inquiries: 'Inquiries',
       services: 'Service Requests',
       messages: 'Contact Messages',
@@ -420,6 +421,10 @@ export const translations = {
       invalidTelegram: 'Enter a valid Telegram username (5-32 characters, e.g. @artlover)',
       required: 'Phone number or Telegram username is required',
     },
+    // Optional add-ons a customer can check when sending an inquiry
+    accessories: {
+      heading: 'Would you like to add any of these?',
+    },
     // International shipping cost estimator (UzPost-based)
     shippingEstimator: {
       title: 'Estimate international shipping',
@@ -621,6 +626,7 @@ export const translations = {
       artists: 'Художники',
       categories: 'Категории',
       discounts: 'Скидки',
+      accessories: 'Аксессуары',
       inquiries: 'Запросы',
       services: 'Заявки на услуги',
       messages: 'Сообщения',
@@ -869,6 +875,10 @@ export const translations = {
       invalidTelegram: 'Введите корректный Telegram username (5-32 символа, например @artlover)',
       required: 'Укажите номер телефона или Telegram username',
     },
+    // Optional add-ons a customer can check when sending an inquiry
+    accessories: {
+      heading: 'Хотите добавить что-то из этого?',
+    },
     // International shipping cost estimator (UzPost-based)
     shippingEstimator: {
       title: 'Расчёт международной доставки',
@@ -1070,6 +1080,7 @@ export const translations = {
       artists: 'Rassomlar',
       categories: 'Kategoriyalar',
       discounts: 'Chegirmalar',
+      accessories: 'Aksessuarlar',
       inquiries: 'So\'rovlar',
       services: 'Xizmat so\'rovlari',
       messages: 'Kontakt xabarlari',
@@ -1317,6 +1328,10 @@ export const translations = {
       invalidPhone: "Tanlangan davlat uchun to'g'ri telefon raqamini kiriting",
       invalidTelegram: "To'g'ri Telegram username kiriting (5-32 belgi, masalan @artlover)",
       required: "Telefon raqami yoki Telegram username kiritilishi shart",
+    },
+    // Optional add-ons a customer can check when sending an inquiry
+    accessories: {
+      heading: "Shulardan birortasini qo'shmoqchimisiz?",
     },
     // International shipping cost estimator (UzPost-based)
     shippingEstimator: {

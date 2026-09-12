@@ -63,13 +63,30 @@ model Artist {
 }
 
 model Category {
-  id         String     @id @default(cuid())
-  slug       String     @unique
+  id         String      @id @default(cuid())
+  slug       String      @unique
   name_en    String
   name_ru    String
   name_uz    String
 
-  paintings  Painting[]
+  paintings   Painting[]
+  accessories Accessory[] @relation("AccessoryCategories")
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
+}
+
+// Optional add-ons (protective case, etc.) a curator can offer alongside an
+// inquiry — surfaced as checkboxes on the inquiry form, scoped to whichever
+// painting categories they're relevant for.
+model Accessory {
+  id         String     @id @default(cuid())
+  name_en    String
+  name_ru    String
+  name_uz    String
+  price      Float
+  is_active  Boolean    @default(true)
+
+  categories Category[] @relation("AccessoryCategories")
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt
 }
@@ -121,6 +138,15 @@ model Inquiry {
   message      String?
   status       String    @default("NEW") // NEW, IN_PROGRESS, ANSWERED, COMPLETED
   admin_reply  String?
+
+  // Snapshot (JSON array of {id,name_en,name_ru,name_uz,price}) of whichever
+  // optional accessories the customer checked at submission time — kept as a
+  // snapshot so later catalog edits never rewrite past inquiries.
+  selected_accessories String?
+  // Curator-entered final price once a deal is actually agreed (may differ
+  // from the painting's list price + accessories, e.g. after a negotiated
+  // discount) — purely for internal record-keeping, never a checkout charge.
+  final_price          Float?
 
   messages     InquiryMessage[]
 

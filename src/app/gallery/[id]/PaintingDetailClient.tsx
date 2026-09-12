@@ -7,6 +7,7 @@ import { useApp } from '@/context/AppContext';
 import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
 import PhoneInput from '@/components/PhoneInput';
 import ShippingEstimator from '@/components/ShippingEstimator';
+import AccessoryCheckboxes, { SelectedAccessory } from '@/components/AccessoryCheckboxes';
 import {
   Heart,
   ShieldCheck,
@@ -34,6 +35,7 @@ export default function PaintingDetailClient({ painting, relatedPaintings = [] }
   const [guestPhone, setGuestPhone] = useState('');
   const [phoneValid, setPhoneValid] = useState(false);
   const [message, setMessage] = useState('');
+  const [selectedAccessories, setSelectedAccessories] = useState<SelectedAccessory[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -168,12 +170,14 @@ export default function PaintingDetailClient({ painting, relatedPaintings = [] }
           guest_email: guestEmail,
           guest_phone: guestPhone,
           message,
+          selected_accessories: selectedAccessories,
         }),
       });
       const data = await res.json();
       if (data.success) {
         setSubmitted(true);
         setMessage('');
+        setSelectedAccessories([]);
         // Re-check review eligibility now that an inquiry was placed
         checkReviewEligibility();
       }
@@ -563,6 +567,11 @@ export default function PaintingDetailClient({ painting, relatedPaintings = [] }
                       <span>{t.painting.protectiveCaseHint}</span>
                     </p>
                   </div>
+
+                  <AccessoryCheckboxes
+                    categoryIds={[painting.category_id]}
+                    onChange={setSelectedAccessories}
+                  />
 
                   <button
                     type="submit"
