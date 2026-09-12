@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import { CheckCircle2, Send, Sparkles } from 'lucide-react';
+import AccessoryCheckboxes, { SelectedAccessory } from '@/components/AccessoryCheckboxes';
 
 export default function ServicesClient() {
   const { t } = useApp();
@@ -13,6 +14,7 @@ export default function ServicesClient() {
   const [guestContact, setGuestContact] = useState('');
   const [serviceType, setServiceType] = useState('MURAL');
   const [description, setDescription] = useState('');
+  const [selectedAccessories, setSelectedAccessories] = useState<SelectedAccessory[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -33,12 +35,14 @@ export default function ServicesClient() {
           guest_contact: guestContact,
           service_type: serviceType,
           description,
+          selected_accessories: selectedAccessories,
         }),
       });
       const data = await res.json();
       if (data.success) {
         setSubmitted(true);
         setDescription('');
+        setSelectedAccessories([]);
       }
     } catch (error) {
       console.error('Error submitting service request:', error);
@@ -228,6 +232,12 @@ export default function ServicesClient() {
                   className="w-full px-3.5 py-2.5 bg-[#362722] border border-[#4D3932] rounded-[3px] text-sm text-[#FAF4EC] focus:outline-none focus:border-[#BA4E25] resize-none"
                 />
               </div>
+
+              <AccessoryCheckboxes
+                productTypes={[serviceType]}
+                onChange={setSelectedAccessories}
+                dark
+              />
 
               <button
                 type="submit"

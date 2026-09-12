@@ -4,6 +4,13 @@ import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
+const VALID_PRODUCT_TYPES = ['PAINTING', 'MURAL', 'CERAMICS', 'CUSTOM'];
+
+function sanitizeProductTypes(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return input.filter((t) => VALID_PRODUCT_TYPES.includes(t));
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -14,7 +21,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name_en, name_ru, name_uz, price, is_active, category_ids } = body;
+    const { name_en, name_ru, name_uz, price, is_active, product_types } = body;
 
     const updated = await prisma.accessory.update({
       where: { id },
@@ -24,11 +31,8 @@ export async function PUT(
         name_uz,
         price: parseFloat(price),
         is_active: Boolean(is_active),
-        categories: {
-          set: Array.isArray(category_ids) ? category_ids.map((cid: string) => ({ id: cid })) : [],
-        },
+        product_types: sanitizeProductTypes(product_types),
       },
-      include: { categories: true },
     });
 
     return NextResponse.json({ success: true, accessory: updated });

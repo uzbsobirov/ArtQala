@@ -9,7 +9,7 @@ export interface AccessoryOption {
   name_ru: string;
   name_uz: string;
   price: number;
-  categories: { id: string }[];
+  product_types: string[];
 }
 
 export interface SelectedAccessory {
@@ -21,13 +21,16 @@ export interface SelectedAccessory {
 }
 
 interface AccessoryCheckboxesProps {
-  // Category ids relevant to the item(s) being inquired about. An accessory
-  // with no categories of its own applies to everything.
-  categoryIds: string[];
+  // Product type(s) relevant to what's being inquired about — "PAINTING", or
+  // one of the Services types ("MURAL" | "CERAMICS" | "CUSTOM"). An accessory
+  // with no product_types of its own applies to everything.
+  productTypes: string[];
   onChange: (selected: SelectedAccessory[]) => void;
+  // Use dark-form styling (matches the Services page's dark quote-request card).
+  dark?: boolean;
 }
 
-export default function AccessoryCheckboxes({ categoryIds, onChange }: AccessoryCheckboxesProps) {
+export default function AccessoryCheckboxes({ productTypes, onChange, dark = false }: AccessoryCheckboxesProps) {
   const { lang, t } = useApp();
   const [accessories, setAccessories] = useState<AccessoryOption[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -50,7 +53,7 @@ export default function AccessoryCheckboxes({ categoryIds, onChange }: Accessory
   }, []);
 
   const relevant = accessories.filter(
-    (a) => a.categories.length === 0 || a.categories.some((c) => categoryIds.includes(c.id))
+    (a) => !a.product_types || a.product_types.length === 0 || a.product_types.some((t) => productTypes.includes(t))
   );
 
   const title = (a: AccessoryOption) =>
@@ -72,14 +75,22 @@ export default function AccessoryCheckboxes({ categoryIds, onChange }: Accessory
 
   return (
     <div>
-      <label className="block text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
+      <label
+        className={`block text-[10.5px] font-bold tracking-wider uppercase mb-1.5 ${
+          dark ? 'text-[#A8988E]' : 'text-[#6B5E55]'
+        }`}
+      >
         {t.accessories.heading}
       </label>
       <div className="space-y-1.5">
         {relevant.map((a) => (
           <label
             key={a.id}
-            className="flex items-center justify-between gap-2 text-xs bg-white border border-[#E7E0D8] rounded-[2px] px-3 py-2 cursor-pointer hover:border-[#BA4E25]/50"
+            className={`flex items-center justify-between gap-2 text-xs rounded-[2px] px-3 py-2 cursor-pointer border ${
+              dark
+                ? 'bg-[#362722] border-[#4D3932] hover:border-[#BA4E25]/50'
+                : 'bg-white border-[#E7E0D8] hover:border-[#BA4E25]/50'
+            }`}
           >
             <span className="flex items-center gap-2">
               <input
@@ -88,7 +99,7 @@ export default function AccessoryCheckboxes({ categoryIds, onChange }: Accessory
                 onChange={() => toggle(a)}
                 className="w-3.5 h-3.5 accent-[#BA4E25]"
               />
-              <span className="text-[#281C18]">{title(a)}</span>
+              <span className={dark ? 'text-[#FAF4EC]' : 'text-[#281C18]'}>{title(a)}</span>
             </span>
             <span className="text-[#BA4E25] font-semibold shrink-0">+${a.price}</span>
           </label>

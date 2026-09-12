@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Wrench, CheckCircle2, Send, Shield, User, Loader2, Mail } from 'lucide-react';
+import { Wrench, CheckCircle2, Send, Shield, User, Loader2, Mail, Gem, DollarSign } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 
 interface AdminServicesClientProps {
@@ -18,9 +18,24 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
   const [replyText, setReplyText] = useState('');
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [finalPrice, setFinalPrice] = useState<string>(
+    initialRequests[0]?.final_price != null ? String(initialRequests[0].final_price) : ''
+  );
+  const [savingPrice, setSavingPrice] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const selected = requests.find((r) => r.id === selectedId);
+
+  const selectedAccessories: { id: string; name_en: string; name_ru: string; name_uz: string; price: number }[] =
+    (() => {
+      if (!selected?.selected_accessories) return [];
+      try {
+        return JSON.parse(selected.selected_accessories);
+      } catch {
+        return [];
+      }
+    })();
+  const accessoriesTotal = selectedAccessories.reduce((sum, a) => sum + a.price, 0);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -35,6 +50,7 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
     setSelectedStatus(sr.status);
     setReplyText('');
     setSuccess(false);
+    setFinalPrice(sr.final_price != null ? String(sr.final_price) : '');
 
     // Mark unread customer messages as read
     const hasUnread = (sr.messages || []).some(
@@ -108,6 +124,30 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
       alert('Serverga ulanishda xatolik yuz berdi');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveFinalPrice = async () => {
+    if (!selected) return;
+    setSavingPrice(true);
+    try {
+      const res = await fetch(`/api/admin/services/${selected.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ final_price: finalPrice === '' ? null : finalPrice }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRequests((prev) =>
+          prev.map((item) =>
+            item.id === selected.id ? { ...item, final_price: data.serviceRequest.final_price } : item
+          )
+        );
+      }
+    } catch (err) {
+      console.error('Failed to save final price:', err);
+    } finally {
+      setSavingPrice(false);
     }
   };
 
@@ -272,6 +312,59 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
                     <option value="IN_PROGRESS">{t.admin.inProgress}</option>
                     <option value="COMPLETED">{t.admin.completed}</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Requested accessories + curator's final agreed price */}
+              <div className="bg-[#FAF4EC] border border-[#EBE4DA] rounded-[4px] p-4 space-y-3">
+                {selectedAccessories.length > 0 && (
+                  <div>
+                    <div className="text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5 flex items-center gap-1.5">
+                      <Gem className="w-3.5 h-3.5 text-[#BA4E25]" />
+                      <span>Mijoz so'ragan qo'shimcha mahsulotlar</span>
+                    </div>
+                    <ul className="space-y-1">
+                      {selectedAccessories.map((a) => (
+                        <li key={a.id} className="flex items-center justify-between text-xs text-[#4D3F38]">
+                          <span>{a.name_uz}</span>
+                          <span className="font-semibold text-[#BA4E25]">+${a.price}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="flex items-center justify-between text-xs font-bold text-[#281C18] pt-1.5 mt-1.5 border-t border-[#E7E0D8]">
+                      <span>Qo'shimcha mahsulotlar jami:</span>
+                      <span>${accessoriesTotal}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5 flex items-center gap-1.5">
+                    <DollarSign className="w-3.5 h-3.5 text-[#429599]" />
+                    <span>Yakuniy kelishilgan narx (ixtiyoriy)</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={finalPrice}
+                      onChange={(e) => setFinalPrice(e.target.value)}
+                      placeholder="Masalan: 500"
+                      className="flex-1 text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveFinalPrice}
+                      disabled={savingPrice}
+                      className="px-3.5 py-2 bg-[#281C18] hover:bg-[#3D2C26] text-white text-xs font-semibold rounded-[3px] transition-all disabled:opacity-50 shrink-0"
+                    >
+                      {savingPrice ? '...' : 'Saqlash'}
+                    </button>
+                  </div>
+                  <p className="text-[10.5px] text-[#8F8178] mt-1">
+                    Telegram/WhatsApp'da kelishilgan yakuniy summani shu yerga yozib qo'ying — faqat ichki hisobot uchun.
+                  </p>
                 </div>
               </div>
 

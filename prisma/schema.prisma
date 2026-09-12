@@ -63,32 +63,34 @@ model Artist {
 }
 
 model Category {
-  id         String      @id @default(cuid())
-  slug       String      @unique
+  id         String     @id @default(cuid())
+  slug       String     @unique
   name_en    String
   name_ru    String
   name_uz    String
 
-  paintings   Painting[]
-  accessories Accessory[] @relation("AccessoryCategories")
-  created_at DateTime    @default(now())
-  updated_at DateTime    @updatedAt
+  paintings  Painting[]
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
 }
 
 // Optional add-ons (protective case, etc.) a curator can offer alongside an
-// inquiry — surfaced as checkboxes on the inquiry form, scoped to whichever
-// painting categories they're relevant for.
+// inquiry — surfaced as checkboxes on the inquiry/service-request form.
+// Scoped by product type (not painting Category) so the same catalog covers
+// both painting inquiries and Services requests (mural/ceramics/custom).
+// product_types values: "PAINTING", "MURAL", "CERAMICS", "CUSTOM".
+// Empty array = applies everywhere.
 model Accessory {
-  id         String     @id @default(cuid())
-  name_en    String
-  name_ru    String
-  name_uz    String
-  price      Float
-  is_active  Boolean    @default(true)
+  id            String   @id @default(cuid())
+  name_en       String
+  name_ru       String
+  name_uz       String
+  price         Float
+  is_active     Boolean  @default(true)
+  product_types String[] @default([])
 
-  categories Category[] @relation("AccessoryCategories")
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Discount {
@@ -165,6 +167,10 @@ model ServiceRequest {
   description   String?
   status        String    @default("NEW") // NEW, IN_PROGRESS, COMPLETED
   admin_notes   String?
+
+  // Same accessory-snapshot / internal final-price pattern as Inquiry.
+  selected_accessories String?
+  final_price          Float?
 
   messages      ServiceRequestMessage[]
 

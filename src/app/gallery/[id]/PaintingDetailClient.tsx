@@ -569,7 +569,7 @@ export default function PaintingDetailClient({ painting, relatedPaintings = [] }
                   </div>
 
                   <AccessoryCheckboxes
-                    categoryIds={[painting.category_id]}
+                    productTypes={['PAINTING']}
                     onChange={setSelectedAccessories}
                   />
 

@@ -13,7 +13,6 @@ interface WishlistPaintingLite {
   title_ru: string;
   title_uz: string;
   images: string;
-  category_id: string;
 }
 
 interface WishlistInquiryModalProps {
@@ -46,7 +45,6 @@ export default function WishlistInquiryModal({ paintings, onClose }: WishlistInq
   const [error, setError] = useState('');
 
   const selectedPaintings = paintings.filter((p) => selectedIds.includes(p.id));
-  const relevantCategoryIds = Array.from(new Set(selectedPaintings.map((p) => p.category_id)));
 
   const title = (p: WishlistPaintingLite) =>
     lang === 'ru' ? p.title_ru : lang === 'uz' ? p.title_uz : p.title_en;
@@ -203,9 +201,7 @@ export default function WishlistInquiryModal({ paintings, onClose }: WishlistInq
                 </p>
               </div>
 
-              {relevantCategoryIds.length > 0 && (
-                <AccessoryCheckboxes categoryIds={relevantCategoryIds} onChange={setSelectedAccessories} />
-              )}
+              <AccessoryCheckboxes productTypes={['PAINTING']} onChange={setSelectedAccessories} />
 
               <button
                 type="submit"

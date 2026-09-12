@@ -3,13 +3,6 @@
 import React, { useState } from 'react';
 import { Gem, Plus, Trash2, Pencil, X, Check } from 'lucide-react';
 
-interface CategoryLite {
-  id: string;
-  name_en: string;
-  name_ru: string;
-  name_uz: string;
-}
-
 interface Accessory {
   id: string;
   name_en: string;
@@ -17,12 +10,11 @@ interface Accessory {
   name_uz: string;
   price: number;
   is_active: boolean;
-  categories: CategoryLite[];
+  product_types: string[];
 }
 
 interface AdminAccessoriesClientProps {
   initialAccessories: Accessory[];
-  categories: CategoryLite[];
 }
 
 interface FormState {
@@ -31,8 +23,17 @@ interface FormState {
   name_uz: string;
   price: string;
   is_active: boolean;
-  category_ids: string[];
+  product_types: string[];
 }
+
+const PRODUCT_TYPES: { value: string; label: string }[] = [
+  { value: 'PAINTING', label: 'Rasm (kartina)' },
+  { value: 'MURAL', label: 'Devoriy rasm (Mural)' },
+  { value: 'CERAMICS', label: 'Kulolchilik' },
+  { value: 'CUSTOM', label: 'Maxsus buyurtma' },
+];
+
+const productTypeLabel = (value: string) => PRODUCT_TYPES.find((p) => p.value === value)?.label || value;
 
 const emptyForm: FormState = {
   name_en: '',
@@ -40,10 +41,10 @@ const emptyForm: FormState = {
   name_uz: '',
   price: '',
   is_active: true,
-  category_ids: [],
+  product_types: [],
 };
 
-export default function AdminAccessoriesClient({ initialAccessories, categories }: AdminAccessoriesClientProps) {
+export default function AdminAccessoriesClient({ initialAccessories }: AdminAccessoriesClientProps) {
   const [accessories, setAccessories] = useState<Accessory[]>(initialAccessories);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -64,17 +65,17 @@ export default function AdminAccessoriesClient({ initialAccessories, categories 
       name_uz: a.name_uz,
       price: String(a.price),
       is_active: a.is_active,
-      category_ids: a.categories.map((c) => c.id),
+      product_types: a.product_types || [],
     });
     setShowModal(true);
   };
 
-  const toggleCategory = (id: string) => {
+  const toggleProductType = (value: string) => {
     setForm((prev) => ({
       ...prev,
-      category_ids: prev.category_ids.includes(id)
-        ? prev.category_ids.filter((c) => c !== id)
-        : [...prev.category_ids, id],
+      product_types: prev.product_types.includes(value)
+        ? prev.product_types.filter((t) => t !== value)
+        : [...prev.product_types, value],
     }));
   };
 
@@ -130,7 +131,7 @@ export default function AdminAccessoriesClient({ initialAccessories, categories 
           </h2>
           <p className="text-xs text-[#726861] mt-1">
             Mijozlar so'rov yuborayotganda tanlashi mumkin bo'lgan ixtiyoriy qo'shimcha xizmatlar (futlyar va h.k.).
-            Kategoriya bo'yicha qaysi kartinalarga tegishli ekanini belgilaysiz.
+            Qaysi mahsulot turiga (rasm, mural, kulolchilik, maxsus buyurtma) tegishli ekanini belgilaysiz.
           </p>
         </div>
         <button
@@ -153,7 +154,7 @@ export default function AdminAccessoriesClient({ initialAccessories, categories 
               <tr className="border-b border-[#E7E0D8] bg-[#FAF4EC]">
                 <th className="px-5 py-3 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase">Nomi</th>
                 <th className="px-5 py-3 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase">Narxi</th>
-                <th className="px-5 py-3 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase">Kategoriyalar</th>
+                <th className="px-5 py-3 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase">Mahsulot turi</th>
                 <th className="px-5 py-3 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase">Holati</th>
                 <th className="px-5 py-3 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase text-right">Amallar</th>
               </tr>
@@ -164,9 +165,9 @@ export default function AdminAccessoriesClient({ initialAccessories, categories 
                   <td className="px-5 py-3.5 text-sm font-semibold text-[#281C18]">{a.name_uz}</td>
                   <td className="px-5 py-3.5 text-sm font-bold text-[#BA4E25]">${a.price}</td>
                   <td className="px-5 py-3.5 text-xs text-[#6E6057]">
-                    {a.categories.length === 0
-                      ? 'Barcha kategoriyalar'
-                      : a.categories.map((c) => c.name_uz).join(', ')}
+                    {!a.product_types || a.product_types.length === 0
+                      ? 'Barcha turlar'
+                      : a.product_types.map(productTypeLabel).join(', ')}
                   </td>
                   <td className="px-5 py-3.5">
                     <span
@@ -262,19 +263,19 @@ export default function AdminAccessoriesClient({ initialAccessories, categories 
 
               <div>
                 <label className="block text-[11px] font-bold text-[#6B5E55] mb-1.5">
-                  Qaysi kategoriyalarga tegishli
+                  Qaysi mahsulot turiga tegishli
                 </label>
                 <p className="text-[10.5px] text-[#8F8178] mb-2">
-                  Hech birini belgilamasangiz — barcha kategoriyalarga tegishli bo'ladi.
+                  Hech birini belgilamasangiz — barcha turlarga (rasm, mural, kulolchilik, maxsus buyurtma) tegishli bo'ladi.
                 </p>
                 <div className="grid grid-cols-2 gap-1.5">
-                  {categories.map((cat) => {
-                    const selected = form.category_ids.includes(cat.id);
+                  {PRODUCT_TYPES.map((pt) => {
+                    const selected = form.product_types.includes(pt.value);
                     return (
                       <button
-                        key={cat.id}
+                        key={pt.value}
                         type="button"
-                        onClick={() => toggleCategory(cat.id)}
+                        onClick={() => toggleProductType(pt.value)}
                         className={`flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded border transition-all text-left cursor-pointer ${
                           selected
                             ? 'bg-[#281C18] text-[#FAF4EC] border-[#281C18]'
@@ -282,7 +283,7 @@ export default function AdminAccessoriesClient({ initialAccessories, categories 
                         }`}
                       >
                         {selected && <Check className="w-3 h-3 shrink-0" />}
-                        <span className="truncate">{cat.name_uz}</span>
+                        <span className="truncate">{pt.label}</span>
                       </button>
                     );
                   })}

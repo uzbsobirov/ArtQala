@@ -21,6 +21,12 @@ export async function PUT(request: Request, context: RouteContext) {
       data: {
         status: body.status,
         admin_notes: body.admin_notes,
+        final_price:
+          body.final_price !== undefined
+            ? body.final_price === null || body.final_price === ''
+              ? null
+              : parseFloat(body.final_price)
+            : undefined,
       },
     });
 

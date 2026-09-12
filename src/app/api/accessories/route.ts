@@ -4,8 +4,7 @@ import { prisma } from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 // Public, read-only: active accessories a customer can optionally add to an
-// inquiry, with the category ids they apply to (empty categories = applies
-// to every category).
+// inquiry or service request. product_types: [] means it applies everywhere.
 export async function GET() {
   try {
     const accessories = await prisma.accessory.findMany({
@@ -16,7 +15,7 @@ export async function GET() {
         name_ru: true,
         name_uz: true,
         price: true,
-        categories: { select: { id: true } },
+        product_types: true,
       },
       orderBy: { created_at: 'asc' },
     });

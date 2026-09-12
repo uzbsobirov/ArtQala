@@ -4,13 +4,19 @@ import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
+const VALID_PRODUCT_TYPES = ['PAINTING', 'MURAL', 'CERAMICS', 'CUSTOM'];
+
+function sanitizeProductTypes(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return input.filter((t) => VALID_PRODUCT_TYPES.includes(t));
+}
+
 export async function GET() {
   const auth = await requireAdmin();
   if (auth.errorResponse) return auth.errorResponse;
 
   try {
     const accessories = await prisma.accessory.findMany({
-      include: { categories: { select: { id: true, name_en: true, name_ru: true, name_uz: true } } },
       orderBy: { created_at: 'desc' },
     });
     return NextResponse.json({ success: true, accessories });
@@ -26,7 +32,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { name_en, name_ru, name_uz, price, is_active, category_ids } = body;
+    const { name_en, name_ru, name_uz, price, is_active, product_types } = body;
 
     if (!name_en || !name_uz || price === undefined || price === null) {
       return NextResponse.json(
@@ -42,11 +48,8 @@ export async function POST(request: Request) {
         name_uz,
         price: parseFloat(price),
         is_active: is_active !== undefined ? Boolean(is_active) : true,
-        categories: {
-          connect: Array.isArray(category_ids) ? category_ids.map((id: string) => ({ id })) : [],
-        },
+        product_types: sanitizeProductTypes(product_types),
       },
-      include: { categories: true },
     });
 
     return NextResponse.json({ success: true, accessory });
