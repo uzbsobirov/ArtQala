@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Cormorant_Garamond, Work_Sans } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { AppProvider } from '@/context/AppContext';
 import Header from '@/components/Header';
@@ -65,6 +66,8 @@ export const metadata: Metadata = {
 
 import VisitTracker from '@/components/analytics/VisitTracker';
 
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
 export default function RootLayout({
   children,
 }: {
@@ -77,6 +80,22 @@ export default function RootLayout({
       className={`${cormorant.variable} ${workSans.variable} h-full antialiased scroll-smooth`}
     >
       <body className="min-h-full flex flex-col bg-[#FAF4EC] text-[#281C18] selection:bg-[#BA4E25] selection:text-white">
+        {GA_MEASUREMENT_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_MEASUREMENT_ID}');
+              `}
+            </Script>
+          </>
+        )}
         <AppProvider>
           <VisitTracker />
           <div className="flex flex-col min-h-screen">
