@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Heart } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
+import CardCornerBodom from '@/components/patterns/CardCornerBodom';
 
 export interface PaintingItem {
   id: string;
@@ -115,6 +116,9 @@ export default function PaintingCard({ painting }: PaintingCardProps) {
             {t.gallery.soldBadge}
           </div>
         )}
+
+        {/* Bodomcha corner accent — appears on hover */}
+        <CardCornerBodom />
       </div>
 
       {/* Card Content */}

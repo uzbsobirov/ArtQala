@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import { ArrowRight, Send } from 'lucide-react';
+import AnimatedMadohil from '@/components/patterns/AnimatedMadohil';
+import AnimatedShamchiroq from '@/components/patterns/AnimatedShamchiroq';
 
 interface ArtistsClientProps {
   artists: any[];
@@ -25,6 +27,7 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
     <div className="py-14 sm:py-16">
       <div className="max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14">
         {/* Page Head */}
+        <AnimatedMadohil />
         <div className="max-w-2xl mb-12 space-y-2">
           <span className="text-xs font-semibold tracking-[3px] text-[#429599] uppercase">
             {t.artists.eyebrow}
@@ -80,9 +83,14 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
                   </div>
 
                   {/* Bio */}
-                  <p className="text-[13.5px] leading-relaxed text-[#5F534C] line-clamp-3">
-                    {bio}
-                  </p>
+                  <div className="flex gap-2.5">
+                    <div className="shrink-0 -mt-1 scale-[0.55] origin-top-left">
+                      <AnimatedShamchiroq />
+                    </div>
+                    <p className="text-[13.5px] leading-relaxed text-[#5F534C] line-clamp-3">
+                      {bio}
+                    </p>
+                  </div>
 
                   {/* 3 Work Thumbnails */}
                   <div className="grid grid-cols-3 gap-2 pt-2">

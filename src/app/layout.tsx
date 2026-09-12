@@ -4,6 +4,7 @@ import './globals.css';
 import { AppProvider } from '@/context/AppContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import KhorezmScrollTrack from '@/components/patterns/KhorezmScrollTrack';
 
 const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
@@ -81,6 +82,7 @@ export default function RootLayout({
           <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow">{children}</main>
+            <KhorezmScrollTrack />
             <Footer />
           </div>
         </AppProvider>

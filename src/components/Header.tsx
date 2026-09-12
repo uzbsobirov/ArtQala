@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useApp, Currency } from '@/context/AppContext';
 import { Language } from '@/lib/i18n/translations';
 import { Heart, Menu, X, Shield, UserCircle } from 'lucide-react';
+import AnimatedChorgul from '@/components/patterns/AnimatedChorgul';
 
 export default function Header() {
   const pathname = usePathname();
@@ -150,6 +151,7 @@ export default function Header() {
               <option value="RUB">₽ RUB</option>
               <option value="EUR">€ EUR</option>
             </select>
+            <AnimatedChorgul />
           </div>
         </nav>
 

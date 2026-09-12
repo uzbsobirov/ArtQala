@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
 import { Palette, Users, Brush, ArrowRight } from 'lucide-react';
+import AnimatedGirihWatermark from '@/components/patterns/AnimatedGirihWatermark';
+import AnimatedIslimiyDivider from '@/components/patterns/AnimatedIslimiyDivider';
+import AnimatedMadohil from '@/components/patterns/AnimatedMadohil';
 
 const HERO_SLIDES = [
   {
@@ -56,7 +59,6 @@ interface HomeClientProps {
 
 export default function HomeClient({ featuredPaintings }: HomeClientProps) {
   const { t, lang } = useApp();
-  const dividerRef = useRef<SVGSVGElement>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
@@ -97,6 +99,9 @@ export default function HomeClient({ featuredPaintings }: HomeClientProps) {
             `,
           }}
         />
+
+        {/* Girih watermark — subtle Ichan-Qala minaret motif behind the hero */}
+        <AnimatedGirihWatermark className="text-[#FAF4EC]" />
 
         <div className="relative z-10 max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
           {/* Left Text Block */}
@@ -207,6 +212,7 @@ export default function HomeClient({ featuredPaintings }: HomeClientProps) {
       {/* Featured Works Section */}
       <section className="py-20 sm:py-24 bg-[#F5EFE7] border-b border-[#E7E0D8]">
         <div className="max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14">
+          <AnimatedMadohil />
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12 reveal">
             <div>
               <span className="text-xs font-semibold tracking-[3px] text-[#429599] uppercase">
@@ -235,28 +241,15 @@ export default function HomeClient({ featuredPaintings }: HomeClientProps) {
         </div>
       </section>
 
-      {/* Decorative Uzbek Zigzag Line */}
-      <div className="max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14 py-8 overflow-hidden">
-        <svg
-          ref={dividerRef}
-          viewBox="0 0 1200 40"
-          preserveAspectRatio="none"
-          className="w-full h-8 block opacity-80"
-        >
-          <path
-            d="M0,20 L30,4 L60,36 L90,4 L120,36 L150,4 L180,36 L210,4 L240,36 L270,4 L300,36 L330,4 L360,36 L390,4 L420,36 L450,4 L480,36 L510,4 L540,36 L570,4 L600,36 L630,4 L660,36 L690,4 L720,36 L750,4 L780,36 L810,4 L840,36 L870,4 L900,36 L930,4 L960,36 L990,4 L1020,36 L1050,4 L1080,36 L1110,4 L1140,36 L1170,4 L1200,36"
-            fill="none"
-            stroke="#BA4E25"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+      {/* Islimiy divider — replaces the old static zigzag with the animated Xorazm motif */}
+      <div className="max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14">
+        <AnimatedIslimiyDivider />
       </div>
 
       {/* What We Offer Section */}
       <section className="py-20 sm:py-24 bg-[#FAF4EC]">
         <div className="max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14">
+          <AnimatedMadohil />
           <div className="text-center max-w-xl mx-auto mb-14 reveal">
             <span className="text-xs font-semibold tracking-[3px] text-[#429599] uppercase">
               {t.home.whatWeOfferEyebrow}

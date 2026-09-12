@@ -6,6 +6,8 @@ import { useApp } from '@/context/AppContext';
 import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
 import WishlistInquiryModal from '@/components/WishlistInquiryModal';
 import { Search, Heart, SlidersHorizontal, Send } from 'lucide-react';
+import AnimatedMadohil from '@/components/patterns/AnimatedMadohil';
+import DandanaScrollTrack from '@/components/patterns/DandanaScrollTrack';
 
 interface GalleryClientProps {
   paintings: any[];
@@ -59,6 +61,7 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
     <div className="py-14 sm:py-16">
       <div className="max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14">
         {/* Page Head */}
+        <AnimatedMadohil />
         <div className="max-w-2xl mb-10 space-y-2">
           <span className="text-xs font-semibold tracking-[3px] text-[#429599] uppercase">
             {t.gallery.eyebrow}
@@ -184,6 +187,11 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
             )}
           </div>
         )}
+
+        {/* Dandana — the gallery's bottom trim, echoing Ichan-Qala's wall crenellations */}
+        <div className="mt-14">
+          <DandanaScrollTrack />
+        </div>
       </div>
 
       {showWishlistInquiry && (
