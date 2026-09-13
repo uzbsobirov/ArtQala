@@ -18,6 +18,7 @@ import {
   Languages,
 } from 'lucide-react';
 import AiBackgroundModal from './AiBackgroundModal';
+import ImageCropModal from './ImageCropModal';
 
 interface PaintingFormProps {
   initialData?: any;
@@ -86,6 +87,7 @@ export default function PaintingForm({
   })();
   const [images, setImages] = useState<string[]>(initialImages);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [pendingCropFile, setPendingCropFile] = useState<File | null>(null);
   const [aiEditIndex, setAiEditIndex] = useState<number | null>(null);
 
   // Auto-translation: typing in UZ or RU auto-fills the other two languages
@@ -199,15 +201,12 @@ export default function PaintingForm({
   const calculatedDiscountPrice =
     numPercent > 0 ? Math.round(price * (1 - numPercent / 100)) : null;
 
-  // Handle local file upload
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  // Actually POSTs a file (original or cropped) to the upload API.
+  const uploadFile = async (fileToUpload: File) => {
     setUploadingImage(true);
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', fileToUpload);
 
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -225,6 +224,15 @@ export default function PaintingForm({
     } finally {
       setUploadingImage(false);
     }
+  };
+
+  // File picked — open the crop tool instead of uploading immediately.
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPendingCropFile(file);
+    // Allow re-selecting the exact same file later.
+    e.target.value = '';
   };
 
   const handleCreateArtist = async (e: React.FormEvent) => {
@@ -1159,6 +1167,22 @@ export default function PaintingForm({
               return next;
             });
             setAiEditIndex(null);
+          }}
+        />
+      )}
+
+      {/* Modal: Crop tool, shown right after picking a file */}
+      {pendingCropFile && (
+        <ImageCropModal
+          file={pendingCropFile}
+          onCancel={() => setPendingCropFile(null)}
+          onCropped={(croppedFile) => {
+            setPendingCropFile(null);
+            uploadFile(croppedFile);
+          }}
+          onSkip={(originalFile) => {
+            setPendingCropFile(null);
+            uploadFile(originalFile);
           }}
         />
       )}
