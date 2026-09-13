@@ -1,12 +1,18 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import { CheckCircle2, Send, Sparkles } from 'lucide-react';
 import AccessoryCheckboxes, { SelectedAccessory } from '@/components/AccessoryCheckboxes';
+import ServiceImageCarousel from '@/components/ServiceImageCarousel';
 
-export default function ServicesClient() {
+interface ServicesClientProps {
+  muralImages: string[];
+  ceramicsImages: string[];
+  customImages: string[];
+}
+
+export default function ServicesClient({ muralImages, ceramicsImages, customImages }: ServicesClientProps) {
   const { t } = useApp();
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -71,12 +77,7 @@ export default function ServicesClient() {
           {/* Service Row 1: Mural */}
           <div className="py-12 border-t border-[#E7E0D8] flex flex-col md:flex-row items-center gap-10 lg:gap-14">
             <div className="w-full md:w-1/2 aspect-[4/3] rounded-[4px] overflow-hidden relative border border-[#E7E0D8] bg-[#F4ECE1] group">
-              <Image
-                src="/assets/p-courtyard.svg"
-                alt="Mural Painting"
-                fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
-              />
+              <ServiceImageCarousel images={muralImages} fallbackSrc="/assets/p-courtyard.svg" alt="Mural Painting" />
             </div>
             <div className="w-full md:w-1/2 space-y-4">
               <h2 className="font-serif text-3xl font-semibold text-[#281C18]">
@@ -111,24 +112,14 @@ export default function ServicesClient() {
               </button>
             </div>
             <div className="w-full md:w-1/2 aspect-[4/3] rounded-[4px] overflow-hidden relative border border-[#E7E0D8] bg-[#F4ECE1] group">
-              <Image
-                src="/assets/p-handicraft.svg"
-                alt="Ceramics Workshop"
-                fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
-              />
+              <ServiceImageCarousel images={ceramicsImages} fallbackSrc="/assets/p-handicraft.svg" alt="Ceramics Workshop" />
             </div>
           </div>
 
           {/* Service Row 3: Custom Painting */}
           <div className="py-12 border-t border-b border-[#E7E0D8] flex flex-col md:flex-row items-center gap-10 lg:gap-14">
             <div className="w-full md:w-1/2 aspect-[4/3] rounded-[4px] overflow-hidden relative border border-[#E7E0D8] bg-[#F4ECE1] group">
-              <Image
-                src="/assets/p-diamond.svg"
-                alt="Custom Painting"
-                fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
-              />
+              <ServiceImageCarousel images={customImages} fallbackSrc="/assets/p-diamond.svg" alt="Custom Painting" />
             </div>
             <div className="w-full md:w-1/2 space-y-4">
               <h2 className="font-serif text-3xl font-semibold text-[#281C18]">

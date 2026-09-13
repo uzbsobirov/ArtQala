@@ -23,11 +23,18 @@ export async function PUT(
     const body = await request.json();
     const { name_en, name_ru, name_uz, price, is_active, product_types } = body;
 
+    if (!name_uz || price === undefined || price === null) {
+      return NextResponse.json(
+        { success: false, error: 'name_uz and price are required' },
+        { status: 400 }
+      );
+    }
+
     const updated = await prisma.accessory.update({
       where: { id },
       data: {
-        name_en,
-        name_ru,
+        name_en: name_en || name_uz,
+        name_ru: name_ru || name_en || name_uz,
         name_uz,
         price: parseFloat(price),
         is_active: Boolean(is_active),

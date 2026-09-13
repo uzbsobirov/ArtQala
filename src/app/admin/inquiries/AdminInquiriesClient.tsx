@@ -411,7 +411,9 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
                     </ul>
                     <div className="flex items-center justify-between text-xs font-bold text-[#281C18] pt-1.5 mt-1.5 border-t border-[#E7E0D8]">
                       <span>Kartina + tanlangan mahsulotlar:</span>
-                      <span>${(selected.painting?.price || 0) + accessoriesTotal}</span>
+                      <span>
+                        ${(selected.painting?.discount_price || selected.painting?.price || 0) + accessoriesTotal}
+                      </span>
                     </div>
                   </div>
                 )}

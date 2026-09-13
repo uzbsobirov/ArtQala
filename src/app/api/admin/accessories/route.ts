@@ -34,17 +34,17 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name_en, name_ru, name_uz, price, is_active, product_types } = body;
 
-    if (!name_en || !name_uz || price === undefined || price === null) {
+    if (!name_uz || price === undefined || price === null) {
       return NextResponse.json(
-        { success: false, error: 'name_en, name_uz and price are required' },
+        { success: false, error: 'name_uz and price are required' },
         { status: 400 }
       );
     }
 
     const accessory = await prisma.accessory.create({
       data: {
-        name_en,
-        name_ru: name_ru || name_en,
+        name_en: name_en || name_uz,
+        name_ru: name_ru || name_en || name_uz,
         name_uz,
         price: parseFloat(price),
         is_active: is_active !== undefined ? Boolean(is_active) : true,

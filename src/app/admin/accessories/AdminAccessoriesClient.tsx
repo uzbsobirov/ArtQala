@@ -225,10 +225,9 @@ export default function AdminAccessoriesClient({ initialAccessories }: AdminAcce
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">Nomi (EN) *</label>
+                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">Nomi (EN)</label>
                   <input
                     type="text"
-                    required
                     value={form.name_en}
                     onChange={(e) => setForm({ ...form, name_en: e.target.value })}
                     placeholder="Protective Case"
