@@ -143,9 +143,9 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
         </div>
 
         {/* Filter Pills & Search Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-6 border-b border-[#E7E0D8]">
-          {/* Category Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none min-w-0 md:flex-1">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-10 pb-6 border-b border-[#E7E0D8]">
+          {/* Category Pills — horizontal scroll on mobile (touch), wraps to multiple lines on desktop (mouse has no easy way to scroll a hidden overflow) */}
+          <div className="flex flex-nowrap md:flex-wrap items-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 scrollbar-none min-w-0 md:flex-1">
             <button
               onClick={() => {
                 setSelectedCategory('all');
