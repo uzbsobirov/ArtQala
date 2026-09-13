@@ -19,6 +19,7 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
     initialInquiries[0]?.final_price != null ? String(initialInquiries[0].final_price) : ''
   );
   const [savingPrice, setSavingPrice] = useState(false);
+  const [savingSold, setSavingSold] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   // Bumped on every successful mutation so an in-flight poll started before
   // it (and therefore reflecting pre-mutation data) gets discarded instead
@@ -184,6 +185,37 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
       console.error('Failed to save final price:', err);
     } finally {
       setSavingPrice(false);
+    }
+  };
+
+  const handleToggleSold = async (nextIsSold: boolean) => {
+    if (!selected?.painting?.id) return;
+    setSavingSold(true);
+    try {
+      const res = await fetch(`/api/admin/paintings/${selected.painting.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_sold: nextIsSold }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        pollGuardRef.current++;
+        // Other inquiries pointing at the same painting show the same badge.
+        setInquiries((prev) =>
+          prev.map((item) =>
+            item.painting?.id === selected.painting.id
+              ? { ...item, painting: { ...item.painting, is_sold: nextIsSold } }
+              : item
+          )
+        );
+      } else {
+        alert(data.error || "Kartinani sotilgan deb belgilashda xatolik yuz berdi");
+      }
+    } catch (err) {
+      console.error('Failed to toggle sold status:', err);
+      alert("Serverga bog'lanishda xatolik yuz berdi");
+    } finally {
+      setSavingSold(false);
     }
   };
 
@@ -382,8 +414,13 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
                     />
                   )}
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#281C18] truncate">
+                    <p className="text-sm font-semibold text-[#281C18] truncate flex items-center gap-1.5">
                       {selected.painting.title_en}
+                      {selected.painting.is_sold && (
+                        <span className="bg-[#DCFCE7] text-[#16A34A] text-[9.5px] font-bold px-1.5 py-0.5 rounded-full shrink-0">
+                          SOTILGAN
+                        </span>
+                      )}
                     </p>
                     <p className="text-xs mt-0.5">
                       {selected.painting.discount_price ? (
@@ -453,6 +490,36 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
                     Telegram/WhatsApp'da kelishilgan yakuniy summani shu yerga yozib qo'ying — faqat ichki hisobot uchun.
                   </p>
                 </div>
+
+                {selected.painting?.id && (
+                  <div className="flex items-center justify-between pt-3 border-t border-[#E7E0D8]">
+                    <div className="text-xs text-[#4D3F38]">
+                      {selected.painting.is_sold ? (
+                        <span className="inline-flex items-center gap-1.5 text-[#16A34A] font-semibold">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Kartina sotilgan deb belgilangan
+                        </span>
+                      ) : (
+                        'Kelishuv yakunlansa, kartinani shu yerdan sotilgan deb belgilashingiz mumkin.'
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSold(!selected.painting.is_sold)}
+                      disabled={savingSold}
+                      className={`px-3.5 py-2 text-xs font-semibold rounded-[3px] transition-all disabled:opacity-50 shrink-0 ${
+                        selected.painting.is_sold
+                          ? 'bg-white border border-[#E7E0D8] text-[#726861] hover:bg-gray-50'
+                          : 'bg-[#16A34A] hover:bg-[#128038] text-white'
+                      }`}
+                    >
+                      {savingSold
+                        ? '...'
+                        : selected.painting.is_sold
+                        ? 'Sotilganini bekor qilish'
+                        : 'Sotildi deb belgilash'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Thread History */}

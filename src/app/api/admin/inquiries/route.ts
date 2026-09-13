@@ -20,6 +20,7 @@ export async function GET() {
             price: true,
             discount_price: true,
             images: true,
+            is_sold: true,
           },
         },
         messages: {

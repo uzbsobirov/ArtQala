@@ -88,6 +88,47 @@ export async function PUT(request: Request, context: RouteContext) {
   }
 }
 
+// Lightweight partial update used to toggle "sold" straight from the
+// inquiries panel — deliberately touches only is_sold/sold_at, unlike PUT
+// above which rewrites the whole form and would otherwise wipe out fields
+// (e.g. discount_price) that weren't included in the request body.
+export async function PATCH(request: Request, context: RouteContext) {
+  const auth = await requireAdmin();
+  if (auth.errorResponse) return auth.errorResponse;
+
+  try {
+    const { id } = await context.params;
+    const body = await request.json();
+
+    if (typeof body.is_sold !== 'boolean') {
+      return NextResponse.json(
+        { success: false, error: 'is_sold (boolean) is required' },
+        { status: 400 }
+      );
+    }
+
+    const existing = await prisma.painting.findUnique({
+      where: { id },
+      select: { is_sold: true, sold_at: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+    }
+
+    const nextSoldAt = body.is_sold ? (existing.is_sold ? existing.sold_at : new Date()) : null;
+
+    const updated = await prisma.painting.update({
+      where: { id },
+      data: { is_sold: body.is_sold, sold_at: nextSoldAt },
+    });
+
+    return NextResponse.json({ success: true, painting: updated });
+  } catch (error) {
+    console.error('Mark sold error:', error);
+    return NextResponse.json({ success: false, error: 'Update failed' }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: Request, context: RouteContext) {
   const auth = await requireAdmin();
   if (auth.errorResponse) return auth.errorResponse;
