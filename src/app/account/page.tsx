@@ -128,12 +128,29 @@ export default function AccountPage() {
     }
   };
 
+  // Runs once on mount only — AppContext's wishlist starts as [] and is then
+  // replaced with a new array reference read from localStorage right after,
+  // so depending on `wishlist` here re-fired this fetch a second time and
+  // briefly raced the inquiries list back to empty before the real data
+  // arrived. Wishlist-driven painting lookups are handled separately below.
   useEffect(() => {
     async function fetchData() {
       try {
         await fetchInquiries();
+      } catch (err) {
+        console.error('Error loading account data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-        // Fetch wishlist items
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    async function fetchWishlistPaintings() {
+      try {
         const wishRes = await fetch('/api/paintings');
         if (wishRes.ok) {
           const wishData = await wishRes.json();
@@ -143,13 +160,11 @@ export default function AccountPage() {
           }
         }
       } catch (err) {
-        console.error('Error loading account data:', err);
-      } finally {
-        setLoading(false);
+        console.error('Error loading wishlist paintings:', err);
       }
     }
 
-    fetchData();
+    fetchWishlistPaintings();
   }, [wishlist]);
 
   // Handle opening chat
