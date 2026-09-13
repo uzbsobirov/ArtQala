@@ -22,7 +22,7 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
     initialRequests[0]?.final_price != null ? String(initialRequests[0].final_price) : ''
   );
   const [savingPrice, setSavingPrice] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const selected = requests.find((r) => r.id === selectedId);
 
@@ -37,13 +37,28 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
     })();
   const accessoriesTotal = selectedAccessories.reduce((sum, a) => sum + a.price, 0);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // Scrolls only the message thread itself, never the page.
   useEffect(() => {
-    scrollToBottom();
+    const el = messagesContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [selectedId, selected?.messages]);
+
+  // Poll for new service requests/messages so they show up without a manual reload.
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/admin/services');
+        const data = await res.json();
+        if (data.success) {
+          setRequests(data.serviceRequests);
+        }
+      } catch (err) {
+        console.error('Failed to refresh service requests:', err);
+      }
+    }, 20000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSelect = async (sr: any) => {
     setSelectedId(sr.id);
@@ -369,7 +384,7 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
               </div>
 
               {/* Thread History */}
-              <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+              <div ref={messagesContainerRef} className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
                 {(selected.messages || []).length === 0 ? (
                   <div className="bg-[#FAF4EC] border border-[#EBE4DA] rounded-[4px] p-5 text-sm text-[#3E332E] italic">
                     "{selected.description}"
@@ -423,7 +438,6 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
                     );
                   })
                 )}
-                <div ref={messagesEndRef} />
               </div>
 
               {/* Reply Form */}

@@ -41,15 +41,13 @@ export default function ChatModal({
   const { t } = useApp();
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // Scrolls only the message thread itself, never the page behind the modal.
   useEffect(() => {
     if (isOpen) {
-      scrollToBottom();
+      const el = messagesContainerRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
     }
   }, [isOpen, messages]);
 
@@ -103,7 +101,7 @@ export default function ChatModal({
         </div>
 
         {/* Message Thread History */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-[#FAF4EC]">
+        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-[#FAF4EC]">
           {messages.length === 0 ? (
             <div className="text-center py-16 text-xs text-[#8F8178]">
               {t.chat.noMessages}
@@ -157,7 +155,6 @@ export default function ChatModal({
               );
             })
           )}
-          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Bar */}

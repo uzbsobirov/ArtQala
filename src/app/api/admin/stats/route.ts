@@ -90,10 +90,28 @@ export async function GET(request: Request) {
       },
     });
 
-    const totalRevenue = soldPaintings.reduce(
-      (sum, p) => sum + (p.discount_price || p.price),
-      0
-    );
+    // A curator-agreed final_price (set on the winning inquiry) overrides the
+    // painting's list/discount price for revenue purposes — it's the actual
+    // negotiated sale amount, not just whatever the listing showed.
+    const finalPriceByPainting = new Map<string, number>();
+    if (soldPaintings.length > 0) {
+      const soldPaintingIds = soldPaintings.map((p) => p.id);
+      const inquiriesWithFinalPrice = await prisma.inquiry.findMany({
+        where: { painting_id: { in: soldPaintingIds }, final_price: { not: null } },
+        select: { painting_id: true, final_price: true, updated_at: true },
+        orderBy: { updated_at: 'desc' },
+      });
+      for (const inq of inquiriesWithFinalPrice) {
+        if (!finalPriceByPainting.has(inq.painting_id) && inq.final_price != null) {
+          finalPriceByPainting.set(inq.painting_id, inq.final_price);
+        }
+      }
+    }
+
+    const effectivePrice = (p: { id: string; price: number; discount_price: number | null }) =>
+      finalPriceByPainting.get(p.id) ?? (p.discount_price || p.price);
+
+    const totalRevenue = soldPaintings.reduce((sum, p) => sum + effectivePrice(p), 0);
 
     // 4. Calculate Timeline Dynamics based on range
     let timeline: {
@@ -148,7 +166,7 @@ export async function GET(request: Request) {
         if (saleDate) {
           const key = saleDate.toISOString().slice(0, 10);
           if (buckets[key]) {
-            buckets[key].revenue += p.discount_price || p.price;
+            buckets[key].revenue += effectivePrice(p);
           }
         }
       }
@@ -210,7 +228,7 @@ export async function GET(request: Request) {
         for (const p of soldPaintings) {
           const saleDate = p.sold_at || p.updated_at;
           if (saleDate && saleDate >= b.start && saleDate < b.end) {
-            b.revenue += p.discount_price || p.price;
+            b.revenue += effectivePrice(p);
           }
         }
       }
@@ -278,7 +296,7 @@ export async function GET(request: Request) {
             saleDate.getFullYear() === b.year &&
             saleDate.getMonth() === b.month
           ) {
-            b.revenue += p.discount_price || p.price;
+            b.revenue += effectivePrice(p);
           }
         }
       }

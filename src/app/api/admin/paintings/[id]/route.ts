@@ -40,6 +40,20 @@ export async function PUT(request: Request, context: RouteContext) {
     const { id } = await context.params;
     const body = await request.json();
 
+    const existing = await prisma.painting.findUnique({
+      where: { id },
+      select: { is_sold: true, sold_at: true },
+    });
+    if (!existing) {
+      return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+    }
+
+    const nextIsSold = Boolean(body.is_sold);
+    // Only stamp sold_at the moment a painting first becomes sold — an
+    // unrelated edit to an already-sold painting must not reset it (which
+    // would silently shift it into today's revenue bucket on the dashboard).
+    const nextSoldAt = nextIsSold ? (existing.is_sold ? existing.sold_at : new Date()) : null;
+
     const updated = await prisma.painting.update({
       where: { id },
       data: {
@@ -58,8 +72,8 @@ export async function PUT(request: Request, context: RouteContext) {
         discount_price: body.discount_price ? parseFloat(body.discount_price) : null,
         discount_starts_at: body.discount_starts_at ? new Date(body.discount_starts_at) : null,
         discount_ends_at: body.discount_ends_at ? new Date(body.discount_ends_at) : null,
-        is_sold: Boolean(body.is_sold),
-        sold_at: body.is_sold ? new Date() : null,
+        is_sold: nextIsSold,
+        sold_at: nextSoldAt,
         is_featured: Boolean(body.is_featured),
         images: body.images || undefined,
         artist_id: body.artist_id,

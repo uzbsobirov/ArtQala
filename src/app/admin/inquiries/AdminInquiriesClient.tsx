@@ -22,7 +22,7 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
     initialInquiries[0]?.final_price != null ? String(initialInquiries[0].final_price) : ''
   );
   const [savingPrice, setSavingPrice] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const selected = inquiries.find((i) => i.id === selectedId);
 
@@ -37,14 +37,40 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
     })();
   const accessoriesTotal = selectedAccessories.reduce((sum, a) => sum + a.price, 0);
 
-  // Auto scroll messages to bottom
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const getPaintingThumb = (painting: any): string | null => {
+    if (!painting?.images) return null;
+    try {
+      const parsed = JSON.parse(painting.images);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : null;
+    } catch {
+      return null;
+    }
   };
 
+  // Auto scroll messages to bottom — scrolls only the message thread itself,
+  // never the page (scrollIntoView would also drag the whole admin page down).
   useEffect(() => {
-    scrollToBottom();
+    const el = messagesContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [selectedId, selected?.messages]);
+
+  // Poll for new inquiries/messages (e.g. a customer's own reply) so they
+  // show up here without the admin having to manually reload the page.
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/admin/inquiries');
+        const data = await res.json();
+        if (data.success) {
+          setInquiries(data.inquiries);
+        }
+      } catch (err) {
+        console.error('Failed to refresh inquiries:', err);
+      }
+    }, 20000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSelect = async (inq: any) => {
     setSelectedId(inq.id);
@@ -255,8 +281,28 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
                   {getStatusBadge(inq.status)}
                 </div>
 
-                <div className="text-xs text-[#726861] mb-1 truncate">
-                  {inq.painting?.title_en || 'Artwork inquiry'} · {inq.painting?.price ? `$${inq.painting.price}` : ''}
+                <div className="flex items-center gap-2 mb-1">
+                  {getPaintingThumb(inq.painting) && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={getPaintingThumb(inq.painting)!}
+                      alt=""
+                      className="w-7 h-7 rounded-[2px] object-cover border border-[#E7E0D8] shrink-0"
+                    />
+                  )}
+                  <div className="text-xs text-[#726861] truncate">
+                    {inq.painting?.title_en || 'Artwork inquiry'} ·{' '}
+                    {inq.painting?.discount_price ? (
+                      <>
+                        <span className="line-through text-[#B5A599]">${inq.painting.price}</span>{' '}
+                        <span className="text-[#BA4E25] font-semibold">${inq.painting.discount_price}</span>
+                      </>
+                    ) : inq.painting?.price ? (
+                      `$${inq.painting.price}`
+                    ) : (
+                      ''
+                    )}
+                  </div>
                 </div>
 
                 {lastMessage && (
@@ -290,10 +336,7 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
                     {selected.guest_name}
                   </h3>
                   <p className="text-xs text-[#726861] mt-0.5">
-                    {selected.guest_email} {selected.guest_phone ? `· ${selected.guest_phone}` : ''} ·{' '}
-                    <span className="text-[#281C18] font-semibold">
-                      {selected.painting?.title_en} (${selected.painting?.price})
-                    </span>
+                    {selected.guest_email} {selected.guest_phone ? `· ${selected.guest_phone}` : ''}
                   </p>
                 </div>
 
@@ -314,6 +357,41 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
                   </select>
                 </div>
               </div>
+
+              {/* Which painting this inquiry is about — image, price, discount */}
+              {selected.painting && (
+                <a
+                  href={`/gallery/${selected.painting.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 bg-white border border-[#E7E0D8] rounded-[4px] p-3 hover:border-[#BA4E25]/50 transition-colors"
+                >
+                  {getPaintingThumb(selected.painting) && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={getPaintingThumb(selected.painting)!}
+                      alt=""
+                      className="w-14 h-14 rounded-[3px] object-cover border border-[#E7E0D8] shrink-0"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#281C18] truncate">
+                      {selected.painting.title_en}
+                    </p>
+                    <p className="text-xs mt-0.5">
+                      {selected.painting.discount_price ? (
+                        <>
+                          <span className="line-through text-[#B5A599]">${selected.painting.price}</span>{' '}
+                          <span className="text-[#BA4E25] font-bold">${selected.painting.discount_price}</span>
+                          <span className="text-[#8F8178]"> (skidkadagi narx)</span>
+                        </>
+                      ) : (
+                        <span className="text-[#554740] font-semibold">${selected.painting.price}</span>
+                      )}
+                    </p>
+                  </div>
+                </a>
+              )}
 
               {/* Requested accessories + curator's final agreed price */}
               <div className="bg-[#FAF4EC] border border-[#EBE4DA] rounded-[4px] p-4 space-y-3">
@@ -369,7 +447,7 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
               </div>
 
               {/* Thread History */}
-              <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+              <div ref={messagesContainerRef} className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
                 {(selected.messages || []).length === 0 ? (
                   <div className="bg-[#FAF4EC] border border-[#EBE4DA] rounded-[4px] p-5 text-sm text-[#3E332E] italic">
                     "{selected.message}"
@@ -423,7 +501,6 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
                     );
                   })
                 )}
-                <div ref={messagesEndRef} />
               </div>
 
               {/* Reply Input Form */}

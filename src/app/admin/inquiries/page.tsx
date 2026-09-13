@@ -12,6 +12,8 @@ export default async function AdminInquiriesPage() {
           id: true,
           title_en: true,
           price: true,
+          discount_price: true,
+          images: true,
         },
       },
       messages: {
