@@ -12,9 +12,6 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
   const { t } = useApp();
   const [requests, setRequests] = useState(initialRequests);
   const [selectedId, setSelectedId] = useState(initialRequests[0]?.id || null);
-  const [selectedStatus, setSelectedStatus] = useState(
-    initialRequests[0]?.status || 'NEW'
-  );
   const [replyText, setReplyText] = useState('');
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -23,8 +20,14 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
   );
   const [savingPrice, setSavingPrice] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  // Bumped on every successful mutation so an in-flight poll started before
+  // it gets discarded instead of clobbering the fresher local state.
+  const pollGuardRef = useRef(0);
 
   const selected = requests.find((r) => r.id === selectedId);
+  // Derived directly from `requests` (no separate state) so it can never
+  // drift out of sync with the list's own status badge.
+  const selectedStatus = selected?.status || 'NEW';
 
   const selectedAccessories: { id: string; name_en: string; name_ru: string; name_uz: string; price: number }[] =
     (() => {
@@ -46,10 +49,11 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
   // Poll for new service requests/messages so they show up without a manual reload.
   useEffect(() => {
     const interval = setInterval(async () => {
+      const versionAtStart = pollGuardRef.current;
       try {
         const res = await fetch('/api/admin/services');
         const data = await res.json();
-        if (data.success) {
+        if (data.success && pollGuardRef.current === versionAtStart) {
           setRequests(data.serviceRequests);
         }
       } catch (err) {
@@ -62,7 +66,6 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
 
   const handleSelect = async (sr: any) => {
     setSelectedId(sr.id);
-    setSelectedStatus(sr.status);
     setReplyText('');
     setSuccess(false);
     setFinalPrice(sr.final_price != null ? String(sr.final_price) : '');
@@ -80,6 +83,7 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
           body: JSON.stringify({ viewer: 'ADMIN' }),
         });
 
+        pollGuardRef.current++;
         setRequests((prev) =>
           prev.map((item) =>
             item.id === sr.id
@@ -116,7 +120,7 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
 
       const data = await res.json();
       if (data.success && data.message) {
-        setSelectedStatus(targetStatus);
+        pollGuardRef.current++;
         setRequests((prev) =>
           prev.map((item) =>
             item.id === selected.id
@@ -153,6 +157,7 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
       });
       const data = await res.json();
       if (data.success) {
+        pollGuardRef.current++;
         setRequests((prev) =>
           prev.map((item) =>
             item.id === selected.id ? { ...item, final_price: data.serviceRequest.final_price } : item
@@ -167,7 +172,6 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
   };
 
   const handleStatusChange = async (newStatus: string) => {
-    setSelectedStatus(newStatus);
     if (!selected) return;
 
     try {
@@ -177,6 +181,7 @@ export default function AdminServicesClient({ initialRequests }: AdminServicesCl
         body: JSON.stringify({ status: newStatus }),
       });
 
+      pollGuardRef.current++;
       setRequests((prev) =>
         prev.map((item) => (item.id === selected.id ? { ...item, status: newStatus } : item))
       );

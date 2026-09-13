@@ -13,9 +13,6 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
   const [inquiries, setInquiries] = useState(initialInquiries);
   const [selectedId, setSelectedId] = useState(initialInquiries[0]?.id || null);
   const [replyText, setReplyText] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState(
-    initialInquiries[0]?.status || 'NEW'
-  );
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [finalPrice, setFinalPrice] = useState<string>(
@@ -23,8 +20,16 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
   );
   const [savingPrice, setSavingPrice] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  // Bumped on every successful mutation so an in-flight poll started before
+  // it (and therefore reflecting pre-mutation data) gets discarded instead
+  // of clobbering the fresher local state — this was causing the status
+  // shown in the list to occasionally revert right after answering.
+  const pollGuardRef = useRef(0);
 
   const selected = inquiries.find((i) => i.id === selectedId);
+  // The status dropdown is derived directly from `inquiries` (no separate
+  // state) so it can never drift out of sync with the list's own badge.
+  const selectedStatus = selected?.status || 'NEW';
 
   const selectedAccessories: { id: string; name_en: string; name_ru: string; name_uz: string; price: number }[] =
     (() => {
@@ -58,10 +63,11 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
   // show up here without the admin having to manually reload the page.
   useEffect(() => {
     const interval = setInterval(async () => {
+      const versionAtStart = pollGuardRef.current;
       try {
         const res = await fetch('/api/admin/inquiries');
         const data = await res.json();
-        if (data.success) {
+        if (data.success && pollGuardRef.current === versionAtStart) {
           setInquiries(data.inquiries);
         }
       } catch (err) {
@@ -74,7 +80,6 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
 
   const handleSelect = async (inq: any) => {
     setSelectedId(inq.id);
-    setSelectedStatus(inq.status);
     setReplyText('');
     setSuccess(false);
     setFinalPrice(inq.final_price != null ? String(inq.final_price) : '');
@@ -92,6 +97,7 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
           body: JSON.stringify({ viewer: 'ADMIN' }),
         });
 
+        pollGuardRef.current++;
         setInquiries((prev) =>
           prev.map((item) =>
             item.id === inq.id
@@ -130,7 +136,7 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
 
       const data = await res.json();
       if (data.success && data.message) {
-        setSelectedStatus(targetStatus);
+        pollGuardRef.current++;
         setInquiries((prev) =>
           prev.map((item) =>
             item.id === selected.id
@@ -167,6 +173,7 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
       });
       const data = await res.json();
       if (data.success) {
+        pollGuardRef.current++;
         setInquiries((prev) =>
           prev.map((item) =>
             item.id === selected.id ? { ...item, final_price: data.inquiry.final_price } : item
@@ -181,7 +188,6 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
   };
 
   const handleStatusChange = async (newStatus: string) => {
-    setSelectedStatus(newStatus);
     if (!selected) return;
 
     try {
@@ -191,6 +197,7 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
         body: JSON.stringify({ status: newStatus }),
       });
 
+      pollGuardRef.current++;
       setInquiries((prev) =>
         prev.map((item) => (item.id === selected.id ? { ...item, status: newStatus } : item))
       );
