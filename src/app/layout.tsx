@@ -6,6 +6,7 @@ import { AppProvider } from '@/context/AppContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import KhorezmScrollTrack from '@/components/patterns/KhorezmScrollTrack';
+import { prisma } from '@/lib/prisma';
 
 const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
@@ -32,6 +33,9 @@ export const metadata: Metadata = {
   },
   description:
     'Art Qala is a premier art gallery in Tashkent, Uzbekistan, showcasing original paintings of historical monuments, portraits, and traditional crafts, alongside custom murals and ceramics.',
+  alternates: {
+    canonical: '/',
+  },
   keywords: [
     'Tashkent art gallery',
     'Uzbekistan paintings',
@@ -68,11 +72,41 @@ import VisitTracker from '@/components/analytics/VisitTracker';
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
-export default function RootLayout({
+async function getOrganizationJsonLd() {
+  try {
+    const settings = await prisma.siteSettings.findUnique({ where: { id: 'default' } });
+    const address = settings?.address || 'Barakhon Madrasah, Tashkent, Uzbekistan';
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'ArtGallery',
+      name: 'Art Qala',
+      description:
+        'Art Qala is a premier art gallery in Tashkent, Uzbekistan, showcasing original paintings of historical monuments, portraits, and traditional crafts, alongside custom murals and ceramics.',
+      url: siteUrl,
+      image: `${siteUrl}/logo.png`,
+      telephone: settings?.phone || '+998 66 233 44 55',
+      email: settings?.email || 'info@artqala.uz',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: address,
+        addressLocality: 'Tashkent',
+        addressCountry: 'UZ',
+      },
+      ...(settings?.location_map ? { hasMap: settings.location_map } : {}),
+      sameAs: [settings?.telegram, settings?.instagram].filter(Boolean),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const orgJsonLd = await getOrganizationJsonLd();
+
   return (
     <html
       lang="en"
@@ -80,6 +114,13 @@ export default function RootLayout({
       className={`${cormorant.variable} ${workSans.variable} h-full antialiased scroll-smooth`}
     >
       <body className="min-h-full flex flex-col bg-[#FAF4EC] text-[#281C18] selection:bg-[#BA4E25] selection:text-white">
+        {orgJsonLd && (
+          <script
+            type="application/ld+json"
+            // eslint-disable-next-line react/no-danger
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+          />
+        )}
         {GA_MEASUREMENT_ID && (
           <>
             <Script

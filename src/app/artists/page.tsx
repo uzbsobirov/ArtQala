@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: 'Artists — Uzbek Masters & Painters',
   description:
     'Meet the resident painters, ceramists, and mural artists of Art Qala Gallery creating original Central Asian works in Tashkent.',
+  alternates: { canonical: '/artists' },
   openGraph: {
     title: 'Artists — Uzbek Masters | Art Qala',
     description: 'Meet the master painters and craftspeople behind Art Qala artworks.',

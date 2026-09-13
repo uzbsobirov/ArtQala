@@ -36,6 +36,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
+    alternates: { canonical: `/gallery/${id}` },
     openGraph: {
       title: `${title} | Art Qala Gallery`,
       description,
@@ -47,6 +48,50 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
       images: [imageUrl],
     },
+  };
+}
+
+function buildProductJsonLd(painting: any, siteUrl: string) {
+  let imageUrl = `${siteUrl}/assets/p-arch.svg`;
+  try {
+    const parsed = JSON.parse(painting.images);
+    if (Array.isArray(parsed) && parsed.length > 0) imageUrl = parsed[0];
+  } catch {
+    if (painting.images && !painting.images.startsWith('[')) {
+      imageUrl = painting.images;
+    }
+  }
+  // Structured-data image must be an absolute URL — prefix relative /assets paths.
+  if (imageUrl.startsWith('/')) {
+    imageUrl = `${siteUrl}${imageUrl}`;
+  }
+
+  const price = painting.discount_price || painting.price;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: painting.title_en,
+    description:
+      painting.description_en ||
+      `${painting.title_en} — original ${painting.technique_en} painting by ${painting.artist?.name}.`,
+    image: imageUrl.startsWith('data:') ? undefined : imageUrl,
+    sku: painting.id,
+    brand: { '@type': 'Brand', name: 'Art Qala' },
+    category: painting.category?.name_en,
+    offers: {
+      '@type': 'Offer',
+      url: `${siteUrl}/gallery/${painting.id}`,
+      priceCurrency: 'USD',
+      price,
+      availability: painting.is_sold
+        ? 'https://schema.org/SoldOut'
+        : 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
+    },
+    ...(painting.artist?.name
+      ? { creator: { '@type': 'Person', name: painting.artist.name } }
+      : {}),
   };
 }
 
@@ -64,5 +109,17 @@ export default async function PaintingDetailPage({ params }: PageProps) {
     painting.category_id
   );
 
-  return <PaintingDetailClient painting={painting} relatedPaintings={relatedPaintings} />;
+  const siteUrl = process.env.NEXTAUTH_URL || 'https://artqala.uz';
+  const productJsonLd = buildProductJsonLd(painting, siteUrl);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <PaintingDetailClient painting={painting} relatedPaintings={relatedPaintings} />
+    </>
+  );
 }

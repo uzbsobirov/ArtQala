@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: 'Gallery — Original Paintings Collection',
   description:
     'Explore original Uzbek oil and acrylic paintings of historical monuments, portraits, and courtyards at Art Qala Gallery in Tashkent.',
+  alternates: { canonical: '/gallery' },
   openGraph: {
     title: 'Gallery — Original Paintings | Art Qala',
     description: 'Browse our collection of original Uzbek paintings with worldwide shipping.',

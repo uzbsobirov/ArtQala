@@ -4,6 +4,7 @@ import PrivacyClient from './PrivacyClient';
 export const metadata: Metadata = {
   title: 'Privacy Policy | Art Qala Gallery',
   description: 'Privacy Policy of Art Qala Gallery in Tashkent, Uzbekistan. Learn how we handle your personal information, inquiries, and artwork transactions.',
+  alternates: { canonical: '/privacy' },
 };
 
 export default function PrivacyPage() {

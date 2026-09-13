@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Client Reviews & Collector Testimonials | Art Qala',
   description: 'Read authentic reviews from international art collectors and clients who acquired original paintings and commissioned murals from Art Qala Gallery.',
+  alternates: { canonical: '/reviews' },
   openGraph: {
     title: 'Collector Reviews & Testimonials | Art Qala Gallery',
     description: 'Authentic reviews and testimonials from collectors of original Uzbek contemporary and classical paintings.',

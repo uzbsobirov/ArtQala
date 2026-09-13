@@ -18,6 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `Certificate of Authenticity #${certNumber} — ${painting.title_en} | Art Qala`,
     description: `Official Certificate of Authenticity for the original painting "${painting.title_en}" by master ${painting.artist?.name || 'Uzbek Master'}, registered at Art Qala Gallery.`,
+    alternates: { canonical: `/certificate/${id}` },
   };
 }
 
