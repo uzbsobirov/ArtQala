@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { Plus, Trash2, Pencil, X, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Pencil, X, Layers, CornerDownRight } from 'lucide-react';
 
 interface CategoryItem {
   id: string;
@@ -15,15 +14,18 @@ interface CategoryItem {
   _count?: { paintings: number };
 }
 
+type FormMode = 'create-parent' | 'create-child' | 'edit';
+
 export default function AdminCategoriesClient({
   initialCategories,
 }: {
   initialCategories: CategoryItem[];
 }) {
   const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
-  
+
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formMode, setFormMode] = useState<FormMode>('create-parent');
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
 
   const [nameUz, setNameUz] = useState('');
@@ -58,7 +60,7 @@ export default function AdminCategoriesClient({
     }
   };
 
-  const openCreateModal = () => {
+  const resetForm = () => {
     setEditingCategory(null);
     setNameUz('');
     setNameEn('');
@@ -66,11 +68,28 @@ export default function AdminCategoriesClient({
     setSlug('');
     setSlugManualEdited(false);
     setParentId('');
+  };
+
+  // Ota kategoriya — mustaqil mahsulot turi (masalan "Kartina", "Kulolchilik").
+  // Hech qanday ota-kategoriyaga bog'lanmaydi.
+  const openCreateParentModal = () => {
+    resetForm();
+    setFormMode('create-parent');
+    setIsModalOpen(true);
+  };
+
+  // Bola kategoriya — mavjud ota-kategoriyaning ichidagi mavzu (masalan
+  // "Kartina" ostidagi "Tabiat"). Ota-kategoriyani tanlash SHART.
+  const openCreateChildModal = () => {
+    resetForm();
+    setFormMode('create-child');
+    setParentId(topLevelOptions[0]?.id || '');
     setIsModalOpen(true);
   };
 
   const openEditModal = (cat: CategoryItem) => {
     setEditingCategory(cat);
+    setFormMode('edit');
     setNameUz(cat.name_uz || '');
     setNameEn(cat.name_en || '');
     setNameRu(cat.name_ru || '');
@@ -83,6 +102,10 @@ export default function AdminCategoriesClient({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nameUz.trim() && !nameEn.trim()) return;
+    if (formMode === 'create-child' && !parentId) {
+      alert("Bola kategoriya uchun ota-kategoriyani tanlash shart");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -91,11 +114,10 @@ export default function AdminCategoriesClient({
         name_en: nameEn || nameUz,
         name_ru: nameRu || nameUz,
         slug: slug.trim() || undefined,
-        parent_id: parentId || null,
+        parent_id: formMode === 'create-parent' ? null : parentId || null,
       };
 
       if (editingCategory) {
-        // UPDATE (PUT)
         const res = await fetch(`/api/admin/categories/${editingCategory.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -112,7 +134,6 @@ export default function AdminCategoriesClient({
           alert(data.error || 'Kategoriyani yangilashda xatolik');
         }
       } else {
-        // CREATE (POST)
         const res = await fetch('/api/admin/categories', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -127,11 +148,11 @@ export default function AdminCategoriesClient({
           ]);
           setIsModalOpen(false);
         } else {
-          alert(data.error || 'Kategoriya qo\'shishda xatolik yuz berdi');
+          alert(data.error || "Kategoriya qo'shishda xatolik yuz berdi");
         }
       }
     } catch {
-      alert('Serverga bog\'lanishda xatolik');
+      alert("Serverga bog'lanishda xatolik");
     } finally {
       setLoading(false);
     }
@@ -145,32 +166,82 @@ export default function AdminCategoriesClient({
       if (res.ok) {
         setCategories((prev) => prev.filter((c) => c.id !== id));
       } else {
-        alert('O\'chirishda xatolik yuz berdi.');
+        alert("O'chirishda xatolik yuz berdi.");
       }
     } catch {
-      alert('Serverga bog\'lanishda xatolik.');
+      alert("Serverga bog'lanishda xatolik.");
     }
   };
 
+  // Group for display: each top-level category followed by its children.
+  const parents = categories.filter((c) => !c.parent_id);
+  const childrenOf = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
+
+  const renderRow = (c: CategoryItem, isChild: boolean) => (
+    <tr key={c.id} className="hover:bg-[#FAF4EC]/40 transition-colors">
+      <td className="py-3.5 px-4 font-semibold text-[#281C18]">
+        <span className="flex items-center gap-1.5">
+          {isChild && <CornerDownRight className="w-3.5 h-3.5 text-[#C8B8AB] shrink-0" />}
+          {c.name_uz}
+        </span>
+      </td>
+      <td className="py-3.5 px-4 text-[#554740]">{c.name_en}</td>
+      <td className="py-3.5 px-4 text-[#554740]">{c.name_ru}</td>
+      <td className="py-3.5 px-4 font-mono text-[#8F8178]">{c.slug}</td>
+      <td className="py-3.5 px-4 text-center font-bold text-[#BA4E25]">
+        {c._count?.paintings || 0}
+      </td>
+      <td className="py-3.5 px-4 text-right">
+        <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={() => openEditModal(c)}
+            className="p-1.5 text-[#554740] hover:text-[#BA4E25] hover:bg-white rounded transition-colors cursor-pointer"
+            title="Tahrirlash"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDelete(c.id, c.name_uz || c.name_en)}
+            className="p-1.5 text-[#8F7E73] hover:text-red-600 hover:bg-white rounded transition-colors cursor-pointer"
+            title="O'chirish"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="font-serif text-3xl font-semibold text-[#281C18]">
             Kategoriyalar Boshqaruvi
           </h2>
           <p className="text-xs text-[#726861] mt-0.5">
-            Galereya janrlari va mavzulari — sayt filtrlari uchun (PostgreSQL)
+            <strong>Ota kategoriya</strong> — mahsulot turi (Kartina, Kulolchilik...). <strong>Bola kategoriya</strong> — shu turdagi mavzu (Tabiat, Portretlar...).
           </p>
         </div>
 
-        <button
-          onClick={openCreateModal}
-          className="px-4 py-2 bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold rounded-[3px] transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Yangi Kategoriya Qo'shish</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={openCreateParentModal}
+            className="px-4 py-2 bg-[#281C18] hover:bg-[#3A2A22] text-white text-xs font-semibold rounded-[3px] transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+          >
+            <Layers className="w-4 h-4" />
+            <span>Ota kategoriya qo'shish</span>
+          </button>
+          <button
+            onClick={openCreateChildModal}
+            disabled={topLevelOptions.length === 0}
+            className="px-4 py-2 bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold rounded-[3px] transition-all flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            title={topLevelOptions.length === 0 ? 'Avval kamida bitta ota-kategoriya yarating' : ''}
+          >
+            <Plus className="w-4 h-4" />
+            <span>Bola kategoriya qo'shish</span>
+          </button>
+        </div>
       </div>
 
       <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] shadow-xs overflow-hidden">
@@ -181,57 +252,39 @@ export default function AdminCategoriesClient({
               <th className="py-3 px-4">NOMI (EN)</th>
               <th className="py-3 px-4">NOMI (RU)</th>
               <th className="py-3 px-4">SLUG</th>
-              <th className="py-3 px-4">OTA-KATEGORIYA</th>
               <th className="py-3 px-4 text-center">ASARLAR SONI</th>
               <th className="py-3 px-4 text-right">AMALLAR</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F0EAE1]">
-            {categories.map((c) => (
-              <tr key={c.id} className="hover:bg-[#FAF4EC]/40 transition-colors">
-                <td className="py-3.5 px-4 font-semibold text-[#281C18]">
-                  {c.name_uz}
-                </td>
-                <td className="py-3.5 px-4 text-[#554740]">{c.name_en}</td>
-                <td className="py-3.5 px-4 text-[#554740]">{c.name_ru}</td>
-                <td className="py-3.5 px-4 font-mono text-[#8F8178]">{c.slug}</td>
-                <td className="py-3.5 px-4 text-[#554740]">
-                  {c.parent?.name_uz || <span className="text-[#C8B8AB]">— yuqori daraja —</span>}
-                </td>
-                <td className="py-3.5 px-4 text-center font-bold text-[#BA4E25]">
-                  {c._count?.paintings || 0}
-                </td>
-                <td className="py-3.5 px-4 text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() => openEditModal(c)}
-                      className="p-1.5 text-[#554740] hover:text-[#BA4E25] hover:bg-white rounded transition-colors cursor-pointer"
-                      title="Tahrirlash"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(c.id, c.name_uz || c.name_en)}
-                      className="p-1.5 text-[#8F7E73] hover:text-red-600 hover:bg-white rounded transition-colors cursor-pointer"
-                      title="O'chirish"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+            {parents.length === 0 && (
+              <tr>
+                <td colSpan={6} className="py-8 px-4 text-center text-[#8F8178]">
+                  Hali kategoriya yo'q. Avval "Ota kategoriya qo'shish" bilan boshlang.
                 </td>
               </tr>
+            )}
+            {parents.map((parent) => (
+              <React.Fragment key={parent.id}>
+                {renderRow(parent, false)}
+                {childrenOf(parent.id).map((child) => renderRow(child, true))}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Modal: Create or Edit Category */}
+      {/* Modal: Create (parent/child) or Edit Category */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4 border border-[#E7E0D8]">
             <div className="flex items-center justify-between border-b pb-3 border-[#E7E0D8]">
               <h3 className="font-serif text-lg font-bold text-[#281C18]">
-                {editingCategory ? 'Kategoriyani Tahrirlash' : 'Yangi Kategoriya Qo\'shish'}
+                {formMode === 'edit'
+                  ? 'Kategoriyani Tahrirlash'
+                  : formMode === 'create-parent'
+                  ? "Yangi Ota Kategoriya"
+                  : 'Yangi Bola Kategoriya'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -251,7 +304,7 @@ export default function AdminCategoriesClient({
                   required
                   value={nameUz}
                   onChange={(e) => handleNameUzChange(e.target.value)}
-                  placeholder="Ipak yo'li manzaralari"
+                  placeholder={formMode === 'create-parent' ? 'Kartina' : "Ipak yo'li manzaralari"}
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                 />
               </div>
@@ -264,7 +317,7 @@ export default function AdminCategoriesClient({
                   type="text"
                   value={nameEn}
                   onChange={(e) => setNameEn(e.target.value)}
-                  placeholder="Silk Road Landscapes"
+                  placeholder={formMode === 'create-parent' ? 'Paintings' : 'Silk Road Landscapes'}
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                 />
               </div>
@@ -277,31 +330,44 @@ export default function AdminCategoriesClient({
                   type="text"
                   value={nameRu}
                   onChange={(e) => setNameRu(e.target.value)}
-                  placeholder="Пейзажи Шелкового пути"
+                  placeholder={formMode === 'create-parent' ? 'Картины' : 'Пейзажи Шелкового пути'}
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
-                  Ota-kategoriya (mahsulot turi)
-                </label>
-                <select
-                  value={parentId}
-                  onChange={(e) => setParentId(e.target.value)}
-                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] bg-white"
-                >
-                  <option value="">— Yuqori daraja (o'zi mahsulot turi) —</option>
-                  {topLevelOptions.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name_uz}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[10.5px] text-[#8F7E73] mt-1">
-                  Masalan "Tabiat" kategoriyasining ota-kategoriyasi "Kartina" bo'lishi kerak. Agar bu o'zi mustaqil mahsulot turi bo'lsa (masalan "Kulolchilik"), bo'sh qoldiring.
+              {formMode === 'create-parent' && (
+                <p className="text-[10.5px] text-[#8F7E73] bg-[#FAF4EC] border border-[#E7E0D8] rounded px-3 py-2">
+                  Bu — mustaqil mahsulot turi bo'ladi (ota-kategoriyasi yo'q). Masalan: Kartina, Kulolchilik, Somon ishlari.
                 </p>
-              </div>
+              )}
+
+              {(formMode === 'create-child' || formMode === 'edit') && (
+                <div>
+                  <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                    Ota-kategoriya {formMode === 'create-child' && '*'}
+                  </label>
+                  <select
+                    required={formMode === 'create-child'}
+                    value={parentId}
+                    onChange={(e) => setParentId(e.target.value)}
+                    className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] bg-white"
+                  >
+                    {formMode === 'edit' && (
+                      <option value="">— Yuqori daraja (o'zi mahsulot turi) —</option>
+                    )}
+                    {topLevelOptions.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name_uz}
+                      </option>
+                    ))}
+                  </select>
+                  {formMode === 'create-child' && (
+                    <p className="text-[10.5px] text-[#8F7E73] mt-1">
+                      Bu kategoriya shu ota-kategoriyaning mavzusi/ichidagi bo'limi bo'ladi.
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -346,7 +412,7 @@ export default function AdminCategoriesClient({
                   disabled={loading}
                   className="px-4 py-2 bg-[#BA4E25] text-white text-xs font-semibold rounded hover:bg-[#9C3E1B] disabled:opacity-50 cursor-pointer"
                 >
-                  {loading ? 'Saqlanmoqda...' : editingCategory ? 'Saqlash' : 'Qo\'shish'}
+                  {loading ? 'Saqlanmoqda...' : editingCategory ? 'Saqlash' : "Qo'shish"}
                 </button>
               </div>
             </form>
