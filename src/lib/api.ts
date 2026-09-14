@@ -28,7 +28,7 @@ export async function getAllPaintings(categorySlug?: string) {
       where,
       include: {
         artist: true,
-        category: true,
+        category: { include: { parent: true } },
       },
       orderBy: { created_at: 'desc' },
     });
@@ -44,7 +44,7 @@ export async function getPaintingById(id: string) {
       where: { id },
       include: {
         artist: true,
-        category: true,
+        category: { include: { parent: true } },
       },
     });
   } catch (error) {

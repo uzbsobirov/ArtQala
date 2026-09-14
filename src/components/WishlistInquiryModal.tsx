@@ -7,6 +7,7 @@ import { X, Send, CheckCircle2, Info } from 'lucide-react';
 import PhoneInput from '@/components/PhoneInput';
 import AccessoryCheckboxes, { SelectedAccessory } from '@/components/AccessoryCheckboxes';
 import { largestSizeBucket } from '@/lib/paintingSize';
+import { effectiveProductType } from '@/lib/productType';
 
 interface WishlistPaintingLite {
   id: string;
@@ -15,7 +16,7 @@ interface WishlistPaintingLite {
   title_uz: string;
   images: string;
   size?: string;
-  category?: { slug: string };
+  category?: { slug: string; parent?: { slug: string } | null };
 }
 
 interface WishlistInquiryModalProps {
@@ -50,7 +51,7 @@ export default function WishlistInquiryModal({ paintings, onClose }: WishlistInq
   const selectedPaintings = paintings.filter((p) => selectedIds.includes(p.id));
 
   const selectedProductTypes = Array.from(
-    new Set(selectedPaintings.map((p) => p.category?.slug).filter((s): s is string => Boolean(s)))
+    new Set(selectedPaintings.map((p) => effectiveProductType(p.category)).filter((s): s is string => Boolean(s)))
   );
 
   // A shared "add a case" checkbox applies to the whole batch, so size it to

@@ -10,7 +10,9 @@ const SERVICE_PRODUCT_TYPES = ['MURAL', 'CERAMICS', 'CUSTOM'];
 
 async function sanitizeProductTypes(input: unknown): Promise<string[]> {
   if (!Array.isArray(input)) return [];
-  const categories = await prisma.category.findMany({ select: { slug: true } });
+  // Only top-level categories are physical product types — sub-categories
+  // (Nature, Portraits, ...) resolve to their parent before ever reaching here.
+  const categories = await prisma.category.findMany({ where: { parent_id: null }, select: { slug: true } });
   const valid = new Set([...SERVICE_PRODUCT_TYPES, ...categories.map((c) => c.slug)]);
   return input.filter((t) => typeof t === 'string' && valid.has(t));
 }

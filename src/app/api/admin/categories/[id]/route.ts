@@ -15,6 +15,12 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
+    // A category can't be its own parent, and (since only one level is used
+    // today) can't be assigned a parent that itself has a parent.
+    if (body.parent_id === id) {
+      return NextResponse.json({ success: false, error: 'A category cannot be its own parent' }, { status: 400 });
+    }
+
     const updated = await prisma.category.update({
       where: { id },
       data: {
@@ -22,6 +28,7 @@ export async function PUT(
         name_ru: body.name_ru,
         name_uz: body.name_uz,
         slug: body.slug,
+        parent_id: body.parent_id || null,
       },
     });
 

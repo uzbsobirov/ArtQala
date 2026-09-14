@@ -69,6 +69,14 @@ model Category {
   name_ru    String
   name_uz    String
 
+  // Groups subject-matter categories (Nature, Portraits, ...) under a
+  // physical product type (Kartina, Kulolchilik, ...). Top-level categories
+  // (the product types themselves) have parent_id = null. Only one level
+  // deep is used today, but nothing here prevents going deeper later.
+  parent_id  String?
+  parent     Category?  @relation("CategoryHierarchy", fields: [parent_id], references: [id], onDelete: SetNull)
+  children   Category[] @relation("CategoryHierarchy")
+
   paintings  Painting[]
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt

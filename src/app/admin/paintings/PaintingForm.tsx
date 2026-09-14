@@ -189,6 +189,13 @@ export default function PaintingForm({
   const [newCategorySlug, setNewCategorySlug] = useState('');
   const [newCategorySlugManual, setNewCategorySlugManual] = useState(false);
   const [addingCategory, setAddingCategory] = useState(false);
+  // A category created while adding a painting is almost always a subject
+  // (Nature, Portraits, ...) of an existing product type — default to
+  // "Kartina" if it exists, otherwise leave it as its own top-level type.
+  const topLevelCategoryOptions = categoriesList.filter((c: any) => !c.parent_id);
+  const [newCategoryParentId, setNewCategoryParentId] = useState<string>(
+    () => topLevelCategoryOptions.find((c: any) => c.slug === 'kartina')?.id || ''
+  );
 
   const slugify = (text: string): string => {
     return text
@@ -290,6 +297,7 @@ export default function PaintingForm({
           name_en: newCategoryNameEn || newCategoryNameUz,
           name_ru: newCategoryNameRu || newCategoryNameUz,
           slug: newCategorySlug.trim() || slugify(newCategoryNameUz || newCategoryNameEn),
+          parent_id: newCategoryParentId || null,
         }),
       });
       const data = await res.json();
@@ -1109,6 +1117,24 @@ export default function PaintingForm({
                   placeholder="Пейзажи Шелкового пути"
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                  Ota-kategoriya (mahsulot turi)
+                </label>
+                <select
+                  value={newCategoryParentId}
+                  onChange={(e) => setNewCategoryParentId(e.target.value)}
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] bg-white"
+                >
+                  <option value="">— Yuqori daraja (o'zi mahsulot turi) —</option>
+                  {topLevelCategoryOptions.map((c: any) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name_uz}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

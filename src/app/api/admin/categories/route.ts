@@ -11,6 +11,7 @@ export async function GET() {
   try {
     const categories = await prisma.category.findMany({
       include: {
+        parent: true,
         _count: { select: { paintings: true } },
       },
       orderBy: { created_at: 'asc' },
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { name_en, name_ru, name_uz, slug } = body;
+    const { name_en, name_ru, name_uz, slug, parent_id } = body;
 
     if (!name_en && !name_uz) {
       return NextResponse.json({ success: false, error: 'Category name is required' }, { status: 400 });
@@ -46,6 +47,7 @@ export async function POST(request: Request) {
         name_en: name_en || name_uz,
         name_ru: name_ru || name_uz,
         name_uz: name_uz || name_en,
+        parent_id: parent_id || null,
       },
     });
 

@@ -10,6 +10,8 @@ interface CategoryItem {
   name_en: string;
   name_ru: string;
   name_uz: string;
+  parent_id?: string | null;
+  parent?: { id: string; name_uz: string } | null;
   _count?: { paintings: number };
 }
 
@@ -29,7 +31,15 @@ export default function AdminCategoriesClient({
   const [nameRu, setNameRu] = useState('');
   const [slug, setSlug] = useState('');
   const [slugManualEdited, setSlugManualEdited] = useState(false);
+  const [parentId, setParentId] = useState<string>('');
   const [loading, setLoading] = useState(false);
+
+  // Only a top-level category (no parent of its own) can be picked as a
+  // parent — only one level of nesting is used, and a category can't be a
+  // parent of one being edited.
+  const topLevelOptions = categories.filter(
+    (c) => !c.parent_id && c.id !== editingCategory?.id
+  );
 
   const slugify = (text: string): string => {
     return text
@@ -55,6 +65,7 @@ export default function AdminCategoriesClient({
     setNameRu('');
     setSlug('');
     setSlugManualEdited(false);
+    setParentId('');
     setIsModalOpen(true);
   };
 
@@ -65,6 +76,7 @@ export default function AdminCategoriesClient({
     setNameRu(cat.name_ru || '');
     setSlug(cat.slug || '');
     setSlugManualEdited(true);
+    setParentId(cat.parent_id || '');
     setIsModalOpen(true);
   };
 
@@ -79,6 +91,7 @@ export default function AdminCategoriesClient({
         name_en: nameEn || nameUz,
         name_ru: nameRu || nameUz,
         slug: slug.trim() || undefined,
+        parent_id: parentId || null,
       };
 
       if (editingCategory) {
@@ -168,6 +181,7 @@ export default function AdminCategoriesClient({
               <th className="py-3 px-4">NOMI (EN)</th>
               <th className="py-3 px-4">NOMI (RU)</th>
               <th className="py-3 px-4">SLUG</th>
+              <th className="py-3 px-4">OTA-KATEGORIYA</th>
               <th className="py-3 px-4 text-center">ASARLAR SONI</th>
               <th className="py-3 px-4 text-right">AMALLAR</th>
             </tr>
@@ -181,6 +195,9 @@ export default function AdminCategoriesClient({
                 <td className="py-3.5 px-4 text-[#554740]">{c.name_en}</td>
                 <td className="py-3.5 px-4 text-[#554740]">{c.name_ru}</td>
                 <td className="py-3.5 px-4 font-mono text-[#8F8178]">{c.slug}</td>
+                <td className="py-3.5 px-4 text-[#554740]">
+                  {c.parent?.name_uz || <span className="text-[#C8B8AB]">— yuqori daraja —</span>}
+                </td>
                 <td className="py-3.5 px-4 text-center font-bold text-[#BA4E25]">
                   {c._count?.paintings || 0}
                 </td>
@@ -263,6 +280,27 @@ export default function AdminCategoriesClient({
                   placeholder="Пейзажи Шелкового пути"
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                  Ota-kategoriya (mahsulot turi)
+                </label>
+                <select
+                  value={parentId}
+                  onChange={(e) => setParentId(e.target.value)}
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] bg-white"
+                >
+                  <option value="">— Yuqori daraja (o'zi mahsulot turi) —</option>
+                  {topLevelOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name_uz}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10.5px] text-[#8F7E73] mt-1">
+                  Masalan "Tabiat" kategoriyasining ota-kategoriyasi "Kartina" bo'lishi kerak. Agar bu o'zi mustaqil mahsulot turi bo'lsa (masalan "Kulolchilik"), bo'sh qoldiring.
+                </p>
               </div>
 
               <div>
