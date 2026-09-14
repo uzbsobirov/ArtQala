@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { getCountries, getCountryCallingCode, isValidPhoneNumber, type CountryCode } from 'libphonenumber-js';
 import { useApp } from '@/context/AppContext';
+import FilterSelect from '@/components/FilterSelect';
 
 const TELEGRAM_REGEX = /^@[a-zA-Z0-9_]{5,32}$/;
 
@@ -91,22 +92,20 @@ export default function PhoneInput({ value, onChange, onValidityChange, required
       </div>
 
       {mode === 'phone' ? (
-        <div className="flex items-center gap-1.5 bg-white border border-[#E7E0D8] rounded-[2px] overflow-hidden focus-within:border-[#BA4E25]">
-          <select
+        <div className="flex items-center gap-1.5 bg-white border border-[#E7E0D8] rounded-[2px] focus-within:border-[#BA4E25]">
+          <FilterSelect
             value={country}
-            onChange={(e) => {
-              const nextCountry = e.target.value as CountryCode;
+            onChange={(v) => {
+              const nextCountry = v as CountryCode;
               setCountry(nextCountry);
               emitChange('phone', nextCountry, localNumber, telegramHandle);
             }}
-            className="text-xs px-2 py-2 bg-[#FAF4EC] border-r border-[#E7E0D8] focus:outline-none max-w-[92px]"
-          >
-            {countries.map((c) => (
-              <option key={c} value={c}>
-                {c} +{getCountryCallingCode(c)}
-              </option>
-            ))}
-          </select>
+            searchable
+            searchPlaceholder={t.phoneInput.phoneMode}
+            className="w-[92px] shrink-0"
+            buttonClassName="!rounded-l-[2px] !rounded-r-none !border-0 !border-r !border-[#E7E0D8] !bg-[#FAF4EC] !py-2 !px-2 !text-xs !ring-0 focus:!ring-0"
+            options={countries.map((c) => ({ value: c, label: `${c} +${getCountryCallingCode(c)}` }))}
+          />
           <input
             type="tel"
             required={required}

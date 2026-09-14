@@ -8,6 +8,14 @@ import { useApp, Currency } from '@/context/AppContext';
 import { Language } from '@/lib/i18n/translations';
 import { Heart, Menu, X, Shield, UserCircle } from 'lucide-react';
 import AnimatedChorgul from '@/components/patterns/AnimatedChorgul';
+import FilterSelect from '@/components/FilterSelect';
+
+const CURRENCY_OPTIONS = [
+  { value: 'USD', label: '$ USD' },
+  { value: 'UZS', label: "so'm UZS" },
+  { value: 'RUB', label: '₽ RUB' },
+  { value: 'EUR', label: '€ EUR' },
+];
 
 export default function Header() {
   const pathname = usePathname();
@@ -140,17 +148,13 @@ export default function Header() {
               </button>
             ))}
 
-            <select
+            <FilterSelect
               value={currency}
-              onChange={(e) => setCurrency(e.target.value as Currency)}
-              aria-label="Select Currency"
-              className="font-sans text-[11px] font-semibold px-2 py-1 rounded-full border border-[#E7E0D8] bg-transparent text-[#4D3F38] hover:border-[#429599] hover:text-[#429599] transition-colors cursor-pointer outline-none ml-1"
-            >
-              <option value="USD">$ USD</option>
-              <option value="UZS">so'm UZS</option>
-              <option value="RUB">₽ RUB</option>
-              <option value="EUR">€ EUR</option>
-            </select>
+              onChange={(v) => setCurrency(v as Currency)}
+              options={CURRENCY_OPTIONS}
+              className="w-[84px] ml-1"
+              buttonClassName="!rounded-full !py-1 !px-2.5 !text-[11px] !font-semibold !border-[#E7E0D8] hover:!border-[#429599] hover:!text-[#429599]"
+            />
             <AnimatedChorgul />
           </div>
         </nav>
@@ -248,17 +252,13 @@ export default function Header() {
               ))}
             </div>
 
-            <select
+            <FilterSelect
               value={currency}
-              onChange={(e) => setCurrency(e.target.value as Currency)}
-              aria-label="Select Currency Mobile"
-              className="text-xs font-semibold px-2 py-1 rounded-full border border-[#E7E0D8] bg-transparent text-[#4D3F38]"
-            >
-              <option value="USD">$ USD</option>
-              <option value="UZS">so'm UZS</option>
-              <option value="RUB">₽ RUB</option>
-              <option value="EUR">€ EUR</option>
-            </select>
+              onChange={(v) => setCurrency(v as Currency)}
+              options={CURRENCY_OPTIONS}
+              className="w-[88px]"
+              buttonClassName="!rounded-full !py-1 !px-2.5 !text-xs !font-semibold !border-[#E7E0D8]"
+            />
           </div>
         </div>
       )}

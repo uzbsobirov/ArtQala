@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { UserPlus, Mail, Lock, User, Globe, AlertCircle, Check, X, ShieldCheck } from 'lucide-react';
 import { COUNTRIES } from '@/lib/countries';
+import FilterSelect from '@/components/FilterSelect';
 import { validateEmail, isValidEmail } from '@/lib/validation';
 import { useApp } from '@/context/AppContext';
 
@@ -137,18 +138,14 @@ export default function SignUpPage() {
               {t.auth.countryLabel} *
             </label>
             <div className="relative">
-              <Globe className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <select
+              <Globe className="w-4 h-4 text-[#8F8178] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+              <FilterSelect
                 value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="w-full pl-9 pr-8 py-2.5 bg-white border border-[#E7E0D8] rounded-[3px] text-sm text-[#281C18] focus:outline-none focus:border-[#BA4E25] appearance-none"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+                onChange={setCountry}
+                searchable
+                buttonClassName="!pl-9 !rounded-[3px] !py-2.5 !text-sm"
+                options={COUNTRIES.map((c) => ({ value: c, label: c }))}
+              />
             </div>
           </div>
 

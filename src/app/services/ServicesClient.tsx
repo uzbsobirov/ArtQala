@@ -6,6 +6,7 @@ import { CheckCircle2, Send, Sparkles } from 'lucide-react';
 import AccessoryCheckboxes, { SelectedAccessory } from '@/components/AccessoryCheckboxes';
 import ServiceImageCarousel from '@/components/ServiceImageCarousel';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import FilterSelect from '@/components/FilterSelect';
 
 interface ServicesClientProps {
   muralImages: string[];
@@ -201,15 +202,17 @@ export default function ServicesClient({ muralImages, ceramicsImages, customImag
                 <label className="block text-[11px] font-bold tracking-wider text-[#A8988E] uppercase mb-1">
                   {t.services.serviceLabel} *
                 </label>
-                <select
+                <FilterSelect
                   value={serviceType}
-                  onChange={(e) => setServiceType(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-[#362722] border border-[#4D3932] rounded-[3px] text-sm text-[#FAF4EC] focus:outline-none focus:border-[#BA4E25]"
-                >
-                  <option value="MURAL">{t.services.optionMural}</option>
-                  <option value="CERAMICS">{t.services.optionCeramics}</option>
-                  <option value="CUSTOM">{t.services.optionCustom}</option>
-                </select>
+                  onChange={setServiceType}
+                  dark
+                  buttonClassName="!rounded-[3px] !py-2.5 !text-sm"
+                  options={[
+                    { value: 'MURAL', label: t.services.optionMural },
+                    { value: 'CERAMICS', label: t.services.optionCeramics },
+                    { value: 'CUSTOM', label: t.services.optionCustom },
+                  ]}
+                />
               </div>
 
               <div>

@@ -5,6 +5,7 @@ import { getCountries, type CountryCode } from 'libphonenumber-js';
 import { useApp } from '@/context/AppContext';
 import { estimateShipping, estimatePaintingWeightKg, POSILKA_RATES_UZS, EMS_ZONE_BY_COUNTRY } from '@/lib/shipping';
 import { Truck, Info } from 'lucide-react';
+import FilterSelect from '@/components/FilterSelect';
 
 interface ShippingEstimatorProps {
   sizeString: string;
@@ -69,17 +70,16 @@ export default function ShippingEstimator({ sizeString }: ShippingEstimatorProps
         <label className="block text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
           {t.shippingEstimator.selectCountry}
         </label>
-        <select
+        <FilterSelect
           value={country}
-          onChange={(e) => setCountry(e.target.value as CountryCode)}
-          className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[2px] focus:outline-none focus:border-[#BA4E25]"
-        >
-          {countries.map((c) => (
-            <option key={c} value={c}>
-              {countryDisplayNames ? countryDisplayNames.of(c) : c}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => setCountry(v as CountryCode)}
+          searchable
+          buttonClassName="!rounded-[2px] !py-2"
+          options={countries.map((c) => ({
+            value: c,
+            label: countryDisplayNames ? countryDisplayNames.of(c) || c : c,
+          }))}
+        />
       </div>
 
       {estimate.posilka || estimate.ems ? (
