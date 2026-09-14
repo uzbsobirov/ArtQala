@@ -123,7 +123,7 @@ export default function FilterSelect({
       </button>
       {open && (
         <div
-          className={`absolute z-30 left-0 right-0 mt-1.5 rounded-md shadow-lg animate-[fadeSlideIn_0.15s_ease-out] flex flex-col max-h-72 ${
+          className={`absolute z-30 left-0 mt-1.5 rounded-md shadow-lg animate-[fadeSlideIn_0.15s_ease-out] flex flex-col max-h-72 min-w-full w-max max-w-[min(24rem,90vw)] ${
             dark ? 'bg-[#362722] border border-[#4D3932]' : 'bg-white border border-[#E7E0D8]'
           }`}
         >
