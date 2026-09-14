@@ -5,29 +5,15 @@ import { useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
 import WishlistInquiryModal from '@/components/WishlistInquiryModal';
-import { Search, Heart, SlidersHorizontal, Send, ChevronDown, X } from 'lucide-react';
+import { Search, Heart, SlidersHorizontal, Send, ChevronDown, X, Palette, CalendarDays, Ruler } from 'lucide-react';
 import AnimatedMadohil from '@/components/patterns/AnimatedMadohil';
 import DandanaScrollTrack from '@/components/patterns/DandanaScrollTrack';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import { getSizeBucket } from '@/lib/paintingSize';
 
 interface GalleryClientProps {
   paintings: any[];
   categories: any[];
-}
-
-// Buckets a painting's largest dimension (normalized to cm) into small/medium/large.
-function getSizeBucket(sizeStr?: string): 'small' | 'medium' | 'large' | null {
-  if (!sizeStr) return null;
-  const match = sizeStr.match(/(\d+(?:\.\d+)?)\s*[×x*X]\s*(\d+(?:\.\d+)?)\s*(sm|cm|dyum|in)?/i);
-  if (!match) return null;
-  const w = parseFloat(match[1]);
-  const h = parseFloat(match[2]);
-  const unit = (match[3] || 'sm').toLowerCase();
-  const toCm = unit === 'dyum' || unit === 'in' ? 2.54 : 1;
-  const maxDim = Math.max(w, h) * toCm;
-  if (maxDim < 50) return 'small';
-  if (maxDim <= 90) return 'medium';
-  return 'large';
 }
 
 export default function GalleryClient({ paintings, categories }: GalleryClientProps) {
@@ -45,23 +31,44 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedSize, setSelectedSize] = useState<string>('all');
 
+  // Scoped to the selected category (top pills), so the artist/year lists in
+  // Advanced Filters only ever offer choices that actually exist within it —
+  // picking a category then an artist/year that has no work there is what
+  // used to silently return zero results.
+  const categoryScopedPaintings = useMemo(() => {
+    if (selectedCategory === 'all') return paintings;
+    return paintings.filter((p) => p.category?.slug === selectedCategory);
+  }, [paintings, selectedCategory]);
+
   const artistOptions = useMemo(() => {
     const map = new Map<string, string>();
-    paintings.forEach((p) => {
+    categoryScopedPaintings.forEach((p) => {
       if (p.artist?.id && p.artist?.name) map.set(p.artist.id, p.artist.name);
     });
     return Array.from(map.entries())
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [paintings]);
+  }, [categoryScopedPaintings]);
 
   const yearOptions = useMemo(() => {
     const years = new Set<number>();
-    paintings.forEach((p) => {
+    categoryScopedPaintings.forEach((p) => {
       if (p.year) years.add(p.year);
     });
     return Array.from(years).sort((a, b) => b - a);
-  }, [paintings]);
+  }, [categoryScopedPaintings]);
+
+  // If switching category makes the current artist/year selection invalid,
+  // reset it instead of silently filtering everything to zero results.
+  useEffect(() => {
+    if (selectedArtistId !== 'all' && !artistOptions.some((a) => a.id === selectedArtistId)) {
+      setSelectedArtistId('all');
+    }
+    if (selectedYear !== 'all' && !yearOptions.some((y) => String(y) === selectedYear)) {
+      setSelectedYear('all');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory]);
 
   const hasActiveAdvancedFilters =
     selectedArtistId !== 'all' || selectedYear !== 'all' || selectedSize !== 'all';
@@ -238,68 +245,76 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
 
         {/* Advanced Filters Panel */}
         {showAdvancedFilters && (
-          <div className="flex flex-wrap items-end gap-4 -mt-6 mb-10 p-4 bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px]">
-            <div>
-              <label className="block text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                {t.gallery.filterByArtist}
-              </label>
-              <select
-                value={selectedArtistId}
-                onChange={(e) => setSelectedArtistId(e.target.value)}
-                className="text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] min-w-[160px]"
-              >
-                <option value="all">{t.gallery.allArtists}</option>
-                {artistOptions.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="relative -mt-6 mb-10 p-5 sm:p-6 bg-[#FDFBF9] border border-[#E7E0D8] rounded-lg shadow-sm overflow-hidden animate-[fadeSlideIn_0.2s_ease-out]">
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#BA4E25] via-[#D98C4A] to-[#429599]" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="flex items-center gap-1.5 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
+                  <Palette className="w-3 h-3 text-[#BA4E25]" />
+                  {t.gallery.filterByArtist}
+                </label>
+                <select
+                  value={selectedArtistId}
+                  onChange={(e) => setSelectedArtistId(e.target.value)}
+                  className="w-full text-xs px-3 py-2.5 bg-white border border-[#E7E0D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#BA4E25]/20 focus:border-[#BA4E25] transition-colors"
+                >
+                  <option value="all">{t.gallery.allArtists}</option>
+                  {artistOptions.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                {t.gallery.filterByYear}
-              </label>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] min-w-[120px]"
-              >
-                <option value="all">{t.gallery.allYears}</option>
-                {yearOptions.map((y) => (
-                  <option key={y} value={String(y)}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
+                  <CalendarDays className="w-3 h-3 text-[#BA4E25]" />
+                  {t.gallery.filterByYear}
+                </label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                  className="w-full text-xs px-3 py-2.5 bg-white border border-[#E7E0D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#BA4E25]/20 focus:border-[#BA4E25] transition-colors"
+                >
+                  <option value="all">{t.gallery.allYears}</option>
+                  {yearOptions.map((y) => (
+                    <option key={y} value={String(y)}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                {t.gallery.filterBySize}
-              </label>
-              <select
-                value={selectedSize}
-                onChange={(e) => setSelectedSize(e.target.value)}
-                className="text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] min-w-[130px]"
-              >
-                <option value="all">{t.gallery.allSizes}</option>
-                <option value="small">{t.gallery.sizeSmall}</option>
-                <option value="medium">{t.gallery.sizeMedium}</option>
-                <option value="large">{t.gallery.sizeLarge}</option>
-              </select>
-            </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
+                  <Ruler className="w-3 h-3 text-[#BA4E25]" />
+                  {t.gallery.filterBySize}
+                </label>
+                <select
+                  value={selectedSize}
+                  onChange={(e) => setSelectedSize(e.target.value)}
+                  className="w-full text-xs px-3 py-2.5 bg-white border border-[#E7E0D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#BA4E25]/20 focus:border-[#BA4E25] transition-colors"
+                >
+                  <option value="all">{t.gallery.allSizes}</option>
+                  <option value="small">{t.gallery.sizeSmall}</option>
+                  <option value="medium">{t.gallery.sizeMedium}</option>
+                  <option value="large">{t.gallery.sizeLarge}</option>
+                </select>
+              </div>
 
-            {hasActiveAdvancedFilters && (
-              <button
-                onClick={clearAdvancedFilters}
-                className="flex items-center gap-1 text-xs font-semibold text-[#BA4E25] hover:underline pb-2"
-              >
-                <X className="w-3.5 h-3.5" />
-                <span>{t.gallery.clearFilters}</span>
-              </button>
-            )}
+              {hasActiveAdvancedFilters && (
+                <div className="flex items-end">
+                  <button
+                    onClick={clearAdvancedFilters}
+                    className="flex items-center justify-center gap-1.5 w-full text-xs font-semibold text-[#BA4E25] border border-[#E7E0D8] hover:border-[#BA4E25] hover:bg-[#BA4E25]/5 rounded-md px-3 py-2.5 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>{t.gallery.clearFilters}</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

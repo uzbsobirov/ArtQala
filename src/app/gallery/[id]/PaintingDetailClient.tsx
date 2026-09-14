@@ -8,6 +8,7 @@ import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
 import PhoneInput from '@/components/PhoneInput';
 import ShippingEstimator from '@/components/ShippingEstimator';
 import AccessoryCheckboxes, { SelectedAccessory } from '@/components/AccessoryCheckboxes';
+import { getSizeBucket } from '@/lib/paintingSize';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import {
   Heart,
@@ -570,7 +571,8 @@ export default function PaintingDetailClient({ painting, relatedPaintings = [] }
                   </div>
 
                   <AccessoryCheckboxes
-                    productTypes={['PAINTING']}
+                    productTypes={[painting.category.slug]}
+                    sizeBucket={getSizeBucket(painting.size)}
                     onChange={setSelectedAccessories}
                   />
 

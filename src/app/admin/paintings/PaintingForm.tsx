@@ -68,9 +68,13 @@ export default function PaintingForm({
   const [sizeHeight, setSizeHeight] = useState<number>(initialParsedSize.height);
   const [sizeUnit, setSizeUnit] = useState<string>(initialParsedSize.unit);
 
-  const [techniqueUz, setTechniqueUz] = useState(initialData?.technique_uz || "Moybo'yoq, polotno");
-  const [techniqueEn, setTechniqueEn] = useState(initialData?.technique_en || 'Oil on canvas');
-  const [techniqueRu, setTechniqueRu] = useState(initialData?.technique_ru || 'Холст, масло');
+  // Empty by default (not pre-filled with the "Oil on canvas" example) so
+  // autoTranslate's "don't overwrite a field the admin already filled in"
+  // check doesn't mistake the placeholder text for a real answer and skip
+  // translating technique into EN/RU.
+  const [techniqueUz, setTechniqueUz] = useState(initialData?.technique_uz || '');
+  const [techniqueEn, setTechniqueEn] = useState(initialData?.technique_en || '');
+  const [techniqueRu, setTechniqueRu] = useState(initialData?.technique_ru || '');
   const [year, setYear] = useState(initialData?.year || 2024);
   const [artistId, setArtistId] = useState(initialData?.artist_id || initialArtists[0]?.id || '');
   const [categoryId, setCategoryId] = useState(initialData?.category_id || initialCategories[0]?.id || '');
@@ -321,9 +325,9 @@ export default function PaintingForm({
       description_en: descriptionEn || descriptionUz,
       description_ru: descriptionRu || descriptionUz,
       size: formattedSize,
-      technique_uz: techniqueUz,
-      technique_en: techniqueEn,
-      technique_ru: techniqueRu,
+      technique_uz: techniqueUz || techniqueEn,
+      technique_en: techniqueEn || techniqueUz,
+      technique_ru: techniqueRu || techniqueUz || techniqueEn,
       year: parseInt(String(year)),
       artist_id: artistId,
       category_id: categoryId,

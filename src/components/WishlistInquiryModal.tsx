@@ -6,6 +6,7 @@ import { useApp } from '@/context/AppContext';
 import { X, Send, CheckCircle2, Info } from 'lucide-react';
 import PhoneInput from '@/components/PhoneInput';
 import AccessoryCheckboxes, { SelectedAccessory } from '@/components/AccessoryCheckboxes';
+import { largestSizeBucket } from '@/lib/paintingSize';
 
 interface WishlistPaintingLite {
   id: string;
@@ -13,6 +14,8 @@ interface WishlistPaintingLite {
   title_ru: string;
   title_uz: string;
   images: string;
+  size?: string;
+  category?: { slug: string };
 }
 
 interface WishlistInquiryModalProps {
@@ -45,6 +48,14 @@ export default function WishlistInquiryModal({ paintings, onClose }: WishlistInq
   const [error, setError] = useState('');
 
   const selectedPaintings = paintings.filter((p) => selectedIds.includes(p.id));
+
+  const selectedProductTypes = Array.from(
+    new Set(selectedPaintings.map((p) => p.category?.slug).filter((s): s is string => Boolean(s)))
+  );
+
+  // A shared "add a case" checkbox applies to the whole batch, so size it to
+  // the largest piece selected (see largestSizeBucket for why).
+  const sharedSizeBucket = largestSizeBucket(selectedPaintings.map((p) => p.size));
 
   const title = (p: WishlistPaintingLite) =>
     lang === 'ru' ? p.title_ru : lang === 'uz' ? p.title_uz : p.title_en;
@@ -201,7 +212,11 @@ export default function WishlistInquiryModal({ paintings, onClose }: WishlistInq
                 </p>
               </div>
 
-              <AccessoryCheckboxes productTypes={['PAINTING']} onChange={setSelectedAccessories} />
+              <AccessoryCheckboxes
+                productTypes={selectedProductTypes}
+                sizeBucket={sharedSizeBucket}
+                onChange={setSelectedAccessories}
+              />
 
               <button
                 type="submit"

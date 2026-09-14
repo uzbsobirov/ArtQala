@@ -76,16 +76,22 @@ model Category {
 
 // Optional add-ons (protective case, etc.) a curator can offer alongside an
 // inquiry — surfaced as checkboxes on the inquiry/service-request form.
-// Scoped by product type (not painting Category) so the same catalog covers
-// both painting inquiries and Services requests (mural/ceramics/custom).
-// product_types values: "PAINTING", "MURAL", "CERAMICS", "CUSTOM".
-// Empty array = applies everywhere.
+// product_types values are either a Category.slug (for painting inquiries —
+// scoped to that painting's actual gallery category) or one of the fixed
+// Services codes: "MURAL", "CERAMICS", "CUSTOM". Empty array = applies
+// everywhere.
 model Accessory {
   id            String   @id @default(cuid())
   name_en       String
   name_ru       String
   name_uz       String
-  price         Float
+  // Size-tiered pricing (a protective case for a small piece shouldn't cost
+  // the same as one for a large canvas). price_medium/price_large fall back
+  // to price_small when unset, so a single price still works for accessories
+  // that don't vary by size (e.g. a flat consultation fee).
+  price_small   Float
+  price_medium  Float?
+  price_large   Float?
   is_active     Boolean  @default(true)
   product_types String[] @default([])
 

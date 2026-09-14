@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { validateEmail, validatePhoneOrTelegram } from '@/lib/validation';
 import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
 import { getServerSession } from '@/lib/auth';
+import { largestSizeBucket, priceForSize } from '@/lib/paintingSize';
 
 const MAX_ITEMS = 20;
 
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
 
     const validPaintings = await prisma.painting.findMany({
       where: { id: { in: painting_ids } },
-      select: { id: true },
+      select: { id: true, size: true },
     });
     const validIds = validPaintings.map((p) => p.id);
 
@@ -89,15 +90,24 @@ export async function POST(request: Request) {
     }
 
     // Re-fetch accessory name/price from the DB rather than trusting the
-    // client — only the ids the customer checked are honored.
+    // client — only the ids the customer checked are honored. Priced for the
+    // largest painting in the batch (matches the client's WishlistInquiryModal).
     let accessoriesSnapshot: string | null = null;
     if (Array.isArray(selected_accessories) && selected_accessories.length > 0) {
+      const sizeBucket = largestSizeBucket(validPaintings.map((p) => p.size));
       const accessoryIds = selected_accessories.map((a: { id: string }) => a?.id).filter(Boolean);
       const found = await prisma.accessory.findMany({
         where: { id: { in: accessoryIds }, is_active: true },
-        select: { id: true, name_en: true, name_ru: true, name_uz: true, price: true },
+        select: { id: true, name_en: true, name_ru: true, name_uz: true, price_small: true, price_medium: true, price_large: true },
       });
-      if (found.length > 0) accessoriesSnapshot = JSON.stringify(found);
+      const priced = found.map((a) => ({
+        id: a.id,
+        name_en: a.name_en,
+        name_ru: a.name_ru,
+        name_uz: a.name_uz,
+        price: priceForSize(a, sizeBucket),
+      }));
+      if (priced.length > 0) accessoriesSnapshot = JSON.stringify(priced);
     }
 
     const trimmedMessage = message.trim();

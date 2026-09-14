@@ -1,55 +1,105 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Gem, Plus, Trash2, Pencil, X, Check } from 'lucide-react';
+import { Gem, Plus, Trash2, Pencil, X, Check, Languages } from 'lucide-react';
 
 interface Accessory {
   id: string;
   name_en: string;
   name_ru: string;
   name_uz: string;
-  price: number;
+  price_small: number;
+  price_medium: number | null;
+  price_large: number | null;
   is_active: boolean;
   product_types: string[];
 }
 
+interface Category {
+  id: string;
+  slug: string;
+  name_uz: string;
+}
+
 interface AdminAccessoriesClientProps {
   initialAccessories: Accessory[];
+  categories: Category[];
 }
 
 interface FormState {
   name_en: string;
   name_ru: string;
   name_uz: string;
-  price: string;
+  price_small: string;
+  price_medium: string;
+  price_large: string;
   is_active: boolean;
   product_types: string[];
 }
 
-const PRODUCT_TYPES: { value: string; label: string }[] = [
-  { value: 'PAINTING', label: 'Rasm (kartina)' },
-  { value: 'MURAL', label: 'Devoriy rasm (Mural)' },
-  { value: 'CERAMICS', label: 'Kulolchilik' },
-  { value: 'CUSTOM', label: 'Maxsus buyurtma' },
+// Services (mural/ceramics/custom commissions) aren't backed by a DB table —
+// these three literal codes are what ServicesClient sends as productTypes.
+// Painting-side options come from the Category table (see productTypeOptions
+// below), so gallery categories added later in the Categories tab show up
+// here automatically without a code change.
+const SERVICE_TYPES: { value: string; label: string }[] = [
+  { value: 'MURAL', label: 'Xizmat: Devoriy rasm (Mural)' },
+  { value: 'CERAMICS', label: 'Xizmat: Kulolchilik buyurtmasi' },
+  { value: 'CUSTOM', label: 'Xizmat: Maxsus buyurtma' },
 ];
-
-const productTypeLabel = (value: string) => PRODUCT_TYPES.find((p) => p.value === value)?.label || value;
 
 const emptyForm: FormState = {
   name_en: '',
   name_ru: '',
   name_uz: '',
-  price: '',
+  price_small: '',
+  price_medium: '',
+  price_large: '',
   is_active: true,
   product_types: [],
 };
 
-export default function AdminAccessoriesClient({ initialAccessories }: AdminAccessoriesClientProps) {
+export default function AdminAccessoriesClient({ initialAccessories, categories }: AdminAccessoriesClientProps) {
   const [accessories, setAccessories] = useState<Accessory[]>(initialAccessories);
+
+  const productTypeOptions = [
+    ...categories.map((c) => ({ value: c.slug, label: c.name_uz })),
+    ...SERVICE_TYPES,
+  ];
+  const productTypeLabel = (value: string) =>
+    productTypeOptions.find((p) => p.value === value)?.label || value;
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [translating, setTranslating] = useState(false);
+
+  // Typing in UZ and blurring auto-fills EN/RU via Gemini — mirrors the same
+  // pattern in the Paintings form. Never overwrites a field the admin has
+  // already typed something into.
+  const autoTranslateName = async (text: string) => {
+    if (!text.trim()) return;
+    setTranslating(true);
+    try {
+      const res = await fetch('/api/admin/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, sourceLang: 'uz' }),
+      });
+      const data = await res.json();
+      if (data.success && data.translations) {
+        setForm((prev) => ({
+          ...prev,
+          name_en: prev.name_en.trim() ? prev.name_en : data.translations.en || prev.name_en,
+          name_ru: prev.name_ru.trim() ? prev.name_ru : data.translations.ru || prev.name_ru,
+        }));
+      }
+    } catch {
+      // Silent failure — auto-translation is a convenience, not required to save.
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   const openAddModal = () => {
     setEditingId(null);
@@ -63,7 +113,9 @@ export default function AdminAccessoriesClient({ initialAccessories }: AdminAcce
       name_en: a.name_en,
       name_ru: a.name_ru,
       name_uz: a.name_uz,
-      price: String(a.price),
+      price_small: String(a.price_small),
+      price_medium: a.price_medium !== null ? String(a.price_medium) : '',
+      price_large: a.price_large !== null ? String(a.price_large) : '',
       is_active: a.is_active,
       product_types: a.product_types || [],
     });
@@ -131,7 +183,7 @@ export default function AdminAccessoriesClient({ initialAccessories }: AdminAcce
           </h2>
           <p className="text-xs text-[#726861] mt-1">
             Mijozlar so'rov yuborayotganda tanlashi mumkin bo'lgan ixtiyoriy qo'shimcha xizmatlar (futlyar va h.k.).
-            Qaysi mahsulot turiga (rasm, mural, kulolchilik, maxsus buyurtma) tegishli ekanini belgilaysiz.
+            Qaysi kategoriya yoki xizmat turiga tegishli ekanini belgilaysiz.
           </p>
         </div>
         <button
@@ -163,7 +215,11 @@ export default function AdminAccessoriesClient({ initialAccessories }: AdminAcce
               {accessories.map((a) => (
                 <tr key={a.id} className="border-b border-[#F2ECE4] last:border-0">
                   <td className="px-5 py-3.5 text-sm font-semibold text-[#281C18]">{a.name_uz}</td>
-                  <td className="px-5 py-3.5 text-sm font-bold text-[#BA4E25]">${a.price}</td>
+                  <td className="px-5 py-3.5 text-sm font-bold text-[#BA4E25]">
+                    {a.price_medium === null && a.price_large === null
+                      ? `$${a.price_small}`
+                      : `$${a.price_small} – $${a.price_large ?? a.price_medium}`}
+                  </td>
                   <td className="px-5 py-3.5 text-xs text-[#6E6057]">
                     {!a.product_types || a.product_types.length === 0
                       ? 'Barcha turlar'
@@ -220,12 +276,16 @@ export default function AdminAccessoriesClient({ initialAccessories }: AdminAcce
                     required
                     value={form.name_uz}
                     onChange={(e) => setForm({ ...form, name_uz: e.target.value })}
+                    onBlur={(e) => autoTranslateName(e.target.value)}
                     placeholder="Himoya futlyari"
                     className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">Nomi (EN)</label>
+                  <label className="flex items-center gap-1.5 text-[11px] font-bold text-[#6B5E55] mb-1">
+                    Nomi (EN)
+                    {translating && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
+                  </label>
                   <input
                     type="text"
                     value={form.name_en}
@@ -235,7 +295,10 @@ export default function AdminAccessoriesClient({ initialAccessories }: AdminAcce
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">Nomi (RU)</label>
+                  <label className="flex items-center gap-1.5 text-[11px] font-bold text-[#6B5E55] mb-1">
+                    Nomi (RU)
+                    {translating && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
+                  </label>
                   <input
                     type="text"
                     value={form.name_ru}
@@ -247,17 +310,51 @@ export default function AdminAccessoriesClient({ initialAccessories }: AdminAcce
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">Narxi (USD) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  required
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  placeholder="50"
-                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
-                />
+                <label className="block text-[11px] font-bold text-[#6B5E55] mb-1.5">
+                  Narxi (USD) — o'lchamiga qarab
+                </label>
+                <p className="text-[10.5px] text-[#8F8178] mb-2">
+                  O'rta/Katta uchun bo'sh qoldirsangiz, Kichik narxdan foydalaniladi.
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-[#8F8178] mb-1">Kichik *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      required
+                      value={form.price_small}
+                      onChange={(e) => setForm({ ...form, price_small: e.target.value })}
+                      placeholder="25"
+                      className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[#8F8178] mb-1">O'rta</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={form.price_medium}
+                      onChange={(e) => setForm({ ...form, price_medium: e.target.value })}
+                      placeholder="50"
+                      className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[#8F8178] mb-1">Katta</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={form.price_large}
+                      onChange={(e) => setForm({ ...form, price_large: e.target.value })}
+                      placeholder="85"
+                      className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -265,10 +362,10 @@ export default function AdminAccessoriesClient({ initialAccessories }: AdminAcce
                   Qaysi mahsulot turiga tegishli
                 </label>
                 <p className="text-[10.5px] text-[#8F8178] mb-2">
-                  Hech birini belgilamasangiz — barcha turlarga (rasm, mural, kulolchilik, maxsus buyurtma) tegishli bo'ladi.
+                  Hech birini belgilamasangiz — barcha turlarga tegishli bo'ladi.
                 </p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {PRODUCT_TYPES.map((pt) => {
+                <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto">
+                  {productTypeOptions.map((pt) => {
                     const selected = form.product_types.includes(pt.value);
                     return (
                       <button

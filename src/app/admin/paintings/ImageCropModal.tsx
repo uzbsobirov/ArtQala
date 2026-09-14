@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import Cropper, { Area } from 'react-easy-crop';
-import { X, Check, ZoomIn, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useCallback } from 'react';
+import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+import { X, Check, Loader2 } from 'lucide-react';
 
 interface ImageCropModalProps {
   file: File;
@@ -11,33 +12,41 @@ interface ImageCropModalProps {
   onSkip: (originalFile: File) => void;
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.addEventListener('load', () => resolve(img));
-    img.addEventListener('error', reject);
-    img.src = src;
-  });
+function centeredCropFor(width: number, height: number, aspect?: number): Crop {
+  if (!aspect) {
+    // Free-form: start with a crop covering most of the image, no ratio lock.
+    return centerCrop(
+      { unit: '%', width: 90, height: 90, x: 5, y: 5 },
+      width,
+      height
+    );
+  }
+  return centerCrop(
+    makeAspectCrop({ unit: '%', width: 90 }, aspect, width, height),
+    width,
+    height
+  );
 }
 
-async function getCroppedBlob(imageSrc: string, cropPixels: Area): Promise<Blob> {
-  const image = await loadImage(imageSrc);
+function getCroppedBlob(image: HTMLImageElement, pixelCrop: PixelCrop): Promise<Blob> {
+  const scaleX = image.naturalWidth / image.width;
+  const scaleY = image.naturalHeight / image.height;
   const canvas = document.createElement('canvas');
-  canvas.width = cropPixels.width;
-  canvas.height = cropPixels.height;
+  canvas.width = Math.round(pixelCrop.width * scaleX);
+  canvas.height = Math.round(pixelCrop.height * scaleY);
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas not supported');
 
   ctx.drawImage(
     image,
-    cropPixels.x,
-    cropPixels.y,
-    cropPixels.width,
-    cropPixels.height,
+    pixelCrop.x * scaleX,
+    pixelCrop.y * scaleY,
+    pixelCrop.width * scaleX,
+    pixelCrop.height * scaleY,
     0,
     0,
-    cropPixels.width,
-    cropPixels.height
+    canvas.width,
+    canvas.height
   );
 
   return new Promise((resolve, reject) => {
@@ -49,23 +58,42 @@ async function getCroppedBlob(imageSrc: string, cropPixels: Area): Promise<Blob>
   });
 }
 
+const ASPECT_PRESETS: { label: string; value: number | undefined }[] = [
+  { label: 'Erkin', value: undefined },
+  { label: 'Kvadrat', value: 1 },
+  { label: 'Peyzaj 4:3', value: 4 / 3 },
+  { label: 'Portret 3:4', value: 3 / 4 },
+];
+
 export default function ImageCropModal({ file, onCancel, onCropped, onSkip }: ImageCropModalProps) {
   const [imageSrc] = useState(() => URL.createObjectURL(file));
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [aspect, setAspect] = useState<number>(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [aspect, setAspect] = useState<number | undefined>(undefined);
+  const [crop, setCrop] = useState<Crop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [processing, setProcessing] = useState(false);
+  const imgRef = useRef<HTMLImageElement | null>(null);
 
-  const onCropComplete = useCallback((_area: Area, areaPixels: Area) => {
-    setCroppedAreaPixels(areaPixels);
-  }, []);
+  const onImageLoad = useCallback(
+    (e: React.SyntheticEvent<HTMLImageElement>) => {
+      const { width, height } = e.currentTarget;
+      setCrop(centeredCropFor(width, height, aspect));
+    },
+    [aspect]
+  );
+
+  const changeAspect = (value: number | undefined) => {
+    setAspect(value);
+    if (imgRef.current) {
+      const { width, height } = imgRef.current;
+      setCrop(centeredCropFor(width, height, value));
+    }
+  };
 
   const handleConfirmCrop = async () => {
-    if (!croppedAreaPixels) return;
+    if (!completedCrop || !imgRef.current) return;
     setProcessing(true);
     try {
-      const blob = await getCroppedBlob(imageSrc, croppedAreaPixels);
+      const blob = await getCroppedBlob(imgRef.current, completedCrop);
       const croppedFile = new File([blob], file.name.replace(/\.\w+$/, '.jpg'), {
         type: 'image/jpeg',
       });
@@ -87,16 +115,23 @@ export default function ImageCropModal({ file, onCancel, onCropped, onSkip }: Im
           </button>
         </div>
 
-        <div className="relative w-full h-[360px] bg-[#1D100B]">
-          <Cropper
-            image={imageSrc}
+        <div className="relative w-full max-h-[420px] overflow-auto flex items-center justify-center bg-[#1D100B] p-2">
+          <ReactCrop
             crop={crop}
-            zoom={zoom}
+            onChange={(_, percentCrop) => setCrop(percentCrop)}
+            onComplete={(c) => setCompletedCrop(c)}
             aspect={aspect}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onCropComplete={onCropComplete}
-          />
+            className="max-h-[400px]"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              ref={imgRef}
+              src={imageSrc}
+              alt="Kesiladigan rasm"
+              onLoad={onImageLoad}
+              className="max-h-[400px] w-auto"
+            />
+          </ReactCrop>
         </div>
 
         <div className="p-5 space-y-4">
@@ -104,16 +139,15 @@ export default function ImageCropModal({ file, onCancel, onCropped, onSkip }: Im
             <label className="block text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
               Nisbat
             </label>
-            <div className="flex gap-1.5">
-              {[
-                { label: 'Kvadrat', value: 1 },
-                { label: 'Peyzaj 4:3', value: 4 / 3 },
-                { label: 'Portret 3:4', value: 3 / 4 },
-              ].map((opt) => (
+            <p className="text-[10.5px] text-[#8F8178] mb-2">
+              &quot;Erkin&quot; tanlansa, kesish chegarasini burchaklaridan tortib xohlagancha o&apos;zgartirishingiz mumkin.
+            </p>
+            <div className="flex gap-1.5 flex-wrap">
+              {ASPECT_PRESETS.map((opt) => (
                 <button
                   key={opt.label}
                   type="button"
-                  onClick={() => setAspect(opt.value)}
+                  onClick={() => changeAspect(opt.value)}
                   className={`text-[11px] font-semibold px-3 py-1.5 rounded-full border transition-all ${
                     aspect === opt.value
                       ? 'bg-[#281C18] text-[#FAF4EC] border-[#281C18]'
@@ -124,22 +158,6 @@ export default function ImageCropModal({ file, onCancel, onCropped, onSkip }: Im
                 </button>
               ))}
             </div>
-          </div>
-
-          <div>
-            <label className="flex items-center gap-1.5 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
-              <ZoomIn className="w-3.5 h-3.5" />
-              Kattalashtirish
-            </label>
-            <input
-              type="range"
-              min={1}
-              max={3}
-              step={0.01}
-              value={zoom}
-              onChange={(e) => setZoom(parseFloat(e.target.value))}
-              className="w-full accent-[#BA4E25]"
-            />
           </div>
 
           <div className="flex flex-wrap justify-end gap-2 pt-2 border-t border-[#E7E0D8]">
@@ -160,7 +178,7 @@ export default function ImageCropModal({ file, onCancel, onCropped, onSkip }: Im
             <button
               type="button"
               onClick={handleConfirmCrop}
-              disabled={processing || !croppedAreaPixels}
+              disabled={processing || !completedCrop}
               className="px-4 py-2 bg-[#BA4E25] text-white text-xs font-semibold rounded hover:bg-[#9C3E1B] disabled:opacity-50 flex items-center gap-1.5"
             >
               {processing ? (

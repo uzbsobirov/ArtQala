@@ -182,7 +182,7 @@ export default function SignUpPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="sizning.email@example.com"
+                placeholder={t.auth.emailPlaceholder}
                 className={`w-full pl-9 pr-9 py-2.5 bg-white border rounded-[3px] text-sm text-[#281C18] focus:outline-none transition-colors ${
                   email.length > 0 && !isEmailValid
                     ? 'border-[#BA4E25] focus:border-[#BA4E25]'

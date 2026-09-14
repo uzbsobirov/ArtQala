@@ -4,11 +4,15 @@ import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-const VALID_PRODUCT_TYPES = ['PAINTING', 'MURAL', 'CERAMICS', 'CUSTOM'];
+// Services codes (fixed) union with actual Category.slug values (dynamic —
+// whatever categories exist in the Categories tab, incl. ones added later).
+const SERVICE_PRODUCT_TYPES = ['MURAL', 'CERAMICS', 'CUSTOM'];
 
-function sanitizeProductTypes(input: unknown): string[] {
+async function sanitizeProductTypes(input: unknown): Promise<string[]> {
   if (!Array.isArray(input)) return [];
-  return input.filter((t) => VALID_PRODUCT_TYPES.includes(t));
+  const categories = await prisma.category.findMany({ select: { slug: true } });
+  const valid = new Set([...SERVICE_PRODUCT_TYPES, ...categories.map((c) => c.slug)]);
+  return input.filter((t) => typeof t === 'string' && valid.has(t));
 }
 
 export async function PUT(
@@ -21,11 +25,11 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name_en, name_ru, name_uz, price, is_active, product_types } = body;
+    const { name_en, name_ru, name_uz, price_small, price_medium, price_large, is_active, product_types } = body;
 
-    if (!name_uz || price === undefined || price === null) {
+    if (!name_uz || price_small === undefined || price_small === null) {
       return NextResponse.json(
-        { success: false, error: 'name_uz and price are required' },
+        { success: false, error: 'name_uz and price_small are required' },
         { status: 400 }
       );
     }
@@ -34,11 +38,13 @@ export async function PUT(
       where: { id },
       data: {
         name_en: name_en || name_uz,
-        name_ru: name_ru || name_en || name_uz,
+        name_ru: name_ru || name_uz || name_en,
         name_uz,
-        price: parseFloat(price),
+        price_small: parseFloat(price_small),
+        price_medium: price_medium !== undefined && price_medium !== null && price_medium !== '' ? parseFloat(price_medium) : null,
+        price_large: price_large !== undefined && price_large !== null && price_large !== '' ? parseFloat(price_large) : null,
         is_active: Boolean(is_active),
-        product_types: sanitizeProductTypes(product_types),
+        product_types: await sanitizeProductTypes(product_types),
       },
     });
 

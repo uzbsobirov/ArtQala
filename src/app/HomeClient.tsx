@@ -10,48 +10,15 @@ import AnimatedGirihWatermark from '@/components/patterns/AnimatedGirihWatermark
 import AnimatedIslimiyDivider from '@/components/patterns/AnimatedIslimiyDivider';
 import AnimatedMadohil from '@/components/patterns/AnimatedMadohil';
 
-const HERO_SLIDES = [
-  {
-    image: '/assets/p-arch.svg',
-    title_en: 'Registon at Dusk',
-    title_uz: 'Registon shafaq paytida',
-    title_ru: 'Регистан на закате',
-    artist: 'Dilnoza Yusupova',
-    year: '2024',
-  },
-  {
-    image: '/assets/p-dome.svg',
-    title_en: 'Bibi-Khanym Turquoise Dome',
-    title_uz: 'Bibixonim feruza gumbazi',
-    title_ru: 'Бирюзовый купол Биби-Ханым',
-    artist: 'Bekzod Rahimov',
-    year: '2024',
-  },
-  {
-    image: '/assets/p-courtyard.svg',
-    title_en: 'Old Bukhara Hovli',
-    title_uz: 'Eski Buxoro hovlisi',
-    title_ru: 'Двор старой Бухары',
-    artist: 'Rustam Ismoilov',
-    year: '2023',
-  },
-  {
-    image: '/assets/p-portrait.svg',
-    title_en: 'The Weaver',
-    title_uz: "To'quvchi ayol",
-    title_ru: 'Ткачиха',
-    artist: 'Gulnora Karimova',
-    year: '2023',
-  },
-  {
-    image: '/assets/p-diamond.svg',
-    title_en: 'Suzani Rhythm',
-    title_uz: "So'zana ohangi",
-    title_ru: 'Ритм сюзане',
-    artist: 'Dilnoza Yusupova',
-    year: '2024',
-  },
-];
+function firstImage(images: string): string {
+  try {
+    const parsed = JSON.parse(images);
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+  } catch {
+    if (images && !images.startsWith('[')) return images;
+  }
+  return '/assets/p-arch.svg';
+}
 
 interface HomeClientProps {
   featuredPaintings: any[];
@@ -61,12 +28,25 @@ export default function HomeClient({ featuredPaintings }: HomeClientProps) {
   const { t, lang } = useApp();
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  // Hero carousel shows real featured gallery pieces (up to 5) instead of
+  // fixed demo artwork/artist names that don't exist in the database.
+  const heroSlides = featuredPaintings.slice(0, 5).map((p) => ({
+    id: p.id,
+    image: firstImage(p.images),
+    title_en: p.title_en,
+    title_uz: p.title_uz,
+    title_ru: p.title_ru,
+    artist: p.artist?.name || '',
+    year: String(p.year),
+  }));
+
   useEffect(() => {
+    if (heroSlides.length < 2) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 4500);
     return () => clearInterval(timer);
-  }, []);
+  }, [heroSlides.length]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -146,64 +126,72 @@ export default function HomeClient({ featuredPaintings }: HomeClientProps) {
               }}
             />
 
-            {/* Floating Art Frame Carousel */}
+            {/* Floating Art Frame Carousel — real featured pieces from the gallery */}
             <div className="relative w-full h-full rounded-[4px] overflow-hidden border border-[#52443E] shadow-[0_35px_70px_-25px_rgba(0,0,0,0.85)] animate-float bg-[#281C18] group">
-              {HERO_SLIDES.map((slide, idx) => (
-                <div
-                  key={idx}
-                  className={`absolute inset-0 transition-opacity duration-1000 ${
-                    currentSlide === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                  }`}
-                >
-                  <Image
-                    src={slide.image}
-                    alt={
-                      lang === 'uz' ? slide.title_uz : lang === 'ru' ? slide.title_ru : slide.title_en
-                    }
-                    fill
-                    priority={idx === 0}
-                    className="object-cover"
-                  />
-                </div>
-              ))}
+              {heroSlides.length === 0 ? (
+                <Image src="/assets/p-arch.svg" alt="Art Qala" fill priority className="object-cover" />
+              ) : (
+                heroSlides.map((slide, idx) => (
+                  <div
+                    key={slide.id}
+                    className={`absolute inset-0 transition-opacity duration-1000 ${
+                      currentSlide === idx ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                    }`}
+                  >
+                    <Image
+                      src={slide.image}
+                      alt={
+                        lang === 'uz' ? slide.title_uz : lang === 'ru' ? slide.title_ru : slide.title_en
+                      }
+                      fill
+                      priority={idx === 0}
+                      className="object-cover"
+                    />
+                  </div>
+                ))
+              )}
 
               {/* Slide Counter & Dots */}
-              <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-[#1D100B]/70 backdrop-blur-xs px-2.5 py-1 rounded-full border border-white/10">
-                {HERO_SLIDES.map((_, dotIdx) => (
-                  <button
-                    key={dotIdx}
-                    onClick={() => setCurrentSlide(dotIdx)}
-                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                      currentSlide === dotIdx
-                        ? 'w-5 bg-[#DAA932]'
-                        : 'w-1.5 bg-white/40 hover:bg-white/70'
-                    }`}
-                    aria-label={`Slide ${dotIdx + 1}`}
-                  />
-                ))}
-              </div>
+              {heroSlides.length > 1 && (
+                <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-[#1D100B]/70 backdrop-blur-xs px-2.5 py-1 rounded-full border border-white/10">
+                  {heroSlides.map((_, dotIdx) => (
+                    <button
+                      key={dotIdx}
+                      onClick={() => setCurrentSlide(dotIdx)}
+                      className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                        currentSlide === dotIdx
+                          ? 'w-5 bg-[#DAA932]'
+                          : 'w-1.5 bg-white/40 hover:bg-white/70'
+                      }`}
+                      aria-label={`Slide ${dotIdx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Slide Details Overlay */}
-              <div className="absolute bottom-4 left-4 right-4 z-20 bg-[#1D100B]/85 backdrop-blur-xs p-3.5 rounded-[3px] border border-[#FAF4EC]/10 text-xs flex items-center justify-between">
-                <div>
-                  <div className="font-serif font-semibold text-sm text-[#FAF4EC]">
-                    {lang === 'uz'
-                      ? HERO_SLIDES[currentSlide].title_uz
-                      : lang === 'ru'
-                      ? HERO_SLIDES[currentSlide].title_ru
-                      : HERO_SLIDES[currentSlide].title_en}
+              {heroSlides.length > 0 && (
+                <div className="absolute bottom-4 left-4 right-4 z-20 bg-[#1D100B]/85 backdrop-blur-xs p-3.5 rounded-[3px] border border-[#FAF4EC]/10 text-xs flex items-center justify-between">
+                  <div>
+                    <div className="font-serif font-semibold text-sm text-[#FAF4EC]">
+                      {lang === 'uz'
+                        ? heroSlides[currentSlide].title_uz
+                        : lang === 'ru'
+                        ? heroSlides[currentSlide].title_ru
+                        : heroSlides[currentSlide].title_en}
+                    </div>
+                    <div className="text-[11px] text-[#A6988E]">
+                      {heroSlides[currentSlide].artist} · {heroSlides[currentSlide].year}
+                    </div>
                   </div>
-                  <div className="text-[11px] text-[#A6988E]">
-                    {HERO_SLIDES[currentSlide].artist} · {HERO_SLIDES[currentSlide].year}
-                  </div>
+                  <Link
+                    href={`/gallery/${heroSlides[currentSlide].id}`}
+                    className="text-xs font-semibold text-[#5AB3B7] hover:text-[#DAA932] transition-colors"
+                  >
+                    {lang === 'uz' ? "Ko'rish →" : lang === 'ru' ? 'Смотреть →' : 'View →'}
+                  </Link>
                 </div>
-                <Link
-                  href="/gallery"
-                  className="text-xs font-semibold text-[#5AB3B7] hover:text-[#DAA932] transition-colors"
-                >
-                  {lang === 'uz' ? "Ko'rish →" : lang === 'ru' ? 'Смотреть →' : 'View →'}
-                </Link>
-              </div>
+              )}
             </div>
           </div>
         </div>

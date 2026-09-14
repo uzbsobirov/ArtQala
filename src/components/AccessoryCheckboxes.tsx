@@ -2,13 +2,16 @@
 
 import React, { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { priceForSize, type SizeBucket } from '@/lib/paintingSize';
 
 export interface AccessoryOption {
   id: string;
   name_en: string;
   name_ru: string;
   name_uz: string;
-  price: number;
+  price_small: number;
+  price_medium: number | null;
+  price_large: number | null;
   product_types: string[];
 }
 
@@ -21,16 +24,22 @@ export interface SelectedAccessory {
 }
 
 interface AccessoryCheckboxesProps {
-  // Product type(s) relevant to what's being inquired about — "PAINTING", or
-  // one of the Services types ("MURAL" | "CERAMICS" | "CUSTOM"). An accessory
-  // with no product_types of its own applies to everything.
+  // Product type(s) relevant to what's being inquired about — a painting's
+  // Category slug(s) (e.g. "handicrafts"), or one of the Services types
+  // ("MURAL" | "CERAMICS" | "CUSTOM"). An accessory with no product_types of
+  // its own applies to everything.
   productTypes: string[];
+  // The painting's size bucket, so a size-tiered accessory (case, framing…)
+  // charges the right amount instead of one flat price for every size.
+  // Omit when there's no known size yet (e.g. a Services commission) — the
+  // small/base price is used as a sensible default.
+  sizeBucket?: SizeBucket | null;
   onChange: (selected: SelectedAccessory[]) => void;
   // Use dark-form styling (matches the Services page's dark quote-request card).
   dark?: boolean;
 }
 
-export default function AccessoryCheckboxes({ productTypes, onChange, dark = false }: AccessoryCheckboxesProps) {
+export default function AccessoryCheckboxes({ productTypes, sizeBucket, onChange, dark = false }: AccessoryCheckboxesProps) {
   const { lang, t } = useApp();
   const [accessories, setAccessories] = useState<AccessoryOption[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -67,7 +76,13 @@ export default function AccessoryCheckboxes({ productTypes, onChange, dark = fal
     onChange(
       relevant
         .filter((acc) => next.includes(acc.id))
-        .map(({ id, name_en, name_ru, name_uz, price }) => ({ id, name_en, name_ru, name_uz, price }))
+        .map((acc) => ({
+          id: acc.id,
+          name_en: acc.name_en,
+          name_ru: acc.name_ru,
+          name_uz: acc.name_uz,
+          price: priceForSize(acc, sizeBucket),
+        }))
     );
   };
 
@@ -101,7 +116,7 @@ export default function AccessoryCheckboxes({ productTypes, onChange, dark = fal
               />
               <span className={dark ? 'text-[#FAF4EC]' : 'text-[#281C18]'}>{title(a)}</span>
             </span>
-            <span className="text-[#BA4E25] font-semibold shrink-0">+${a.price}</span>
+            <span className="text-[#BA4E25] font-semibold shrink-0">+${priceForSize(a, sizeBucket)}</span>
           </label>
         ))}
       </div>
