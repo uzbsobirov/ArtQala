@@ -1,6 +1,10 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
 import ContactClient from './ContactClient';
+
+const siteUrl = process.env.NEXTAUTH_URL || 'https://artqala.uz';
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: 'Contact', path: '/contact' }], siteUrl);
 
 export const metadata: Metadata = {
   title: 'Contact Us & Gallery Location | Tashkent',
@@ -13,6 +17,15 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
-  return <ContactClient />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <ContactClient />
+    </>
+  );
 }
 

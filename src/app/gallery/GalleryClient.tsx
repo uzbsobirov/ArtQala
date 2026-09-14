@@ -8,6 +8,7 @@ import WishlistInquiryModal from '@/components/WishlistInquiryModal';
 import { Search, Heart, SlidersHorizontal, Send, ChevronDown, X } from 'lucide-react';
 import AnimatedMadohil from '@/components/patterns/AnimatedMadohil';
 import DandanaScrollTrack from '@/components/patterns/DandanaScrollTrack';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface GalleryClientProps {
   paintings: any[];
@@ -127,6 +128,7 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
 
   return (
     <div className="py-14 sm:py-16">
+      <Breadcrumbs items={[{ label: t.nav.gallery }]} />
       <div className="max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14">
         {/* Page Head */}
         <AnimatedMadohil />

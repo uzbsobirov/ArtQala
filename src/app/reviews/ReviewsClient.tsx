@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import { Star, ShieldCheck, Sparkles, ExternalLink, ArrowRight, MessageSquareCheck } from 'lucide-react';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface ReviewsClientProps {
   initialReviews: any[];
@@ -38,6 +39,7 @@ export default function ReviewsClient({ initialReviews }: ReviewsClientProps) {
 
   return (
     <div className="py-14 sm:py-16">
+      <Breadcrumbs items={[{ label: t.footer.reviews }]} />
       <div className="max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14">
         {/* Page Head */}
         <div className="max-w-2xl mb-12 space-y-2">

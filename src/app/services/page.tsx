@@ -1,9 +1,13 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
+import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
 import ServicesClient from './ServicesClient';
 
 export const dynamic = 'force-dynamic';
+
+const siteUrl = process.env.NEXTAUTH_URL || 'https://artqala.uz';
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: 'Services', path: '/services' }], siteUrl);
 
 export const metadata: Metadata = {
   title: 'Services — Murals, Ceramics & Custom Art Commissions',
@@ -62,10 +66,17 @@ export default async function ServicesPage() {
   const customImages = generalImages.slice(5, 10);
 
   return (
-    <ServicesClient
-      muralImages={muralImages}
-      ceramicsImages={ceramicsImages}
-      customImages={customImages}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <ServicesClient
+        muralImages={muralImages}
+        ceramicsImages={ceramicsImages}
+        customImages={customImages}
+      />
+    </>
   );
 }

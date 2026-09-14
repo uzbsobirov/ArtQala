@@ -2,6 +2,7 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getPaintingById, getRelatedPaintings } from '@/lib/api';
+import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
 import PaintingDetailClient from './PaintingDetailClient';
 
 interface PageProps {
@@ -111,6 +112,13 @@ export default async function PaintingDetailPage({ params }: PageProps) {
 
   const siteUrl = process.env.NEXTAUTH_URL || 'https://artqala.uz';
   const productJsonLd = buildProductJsonLd(painting, siteUrl);
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd(
+    [
+      { name: 'Gallery', path: '/gallery' },
+      { name: painting.title_en, path: `/gallery/${id}` },
+    ],
+    siteUrl
+  );
 
   return (
     <>
@@ -118,6 +126,11 @@ export default async function PaintingDetailPage({ params }: PageProps) {
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <PaintingDetailClient painting={painting} relatedPaintings={relatedPaintings} />
     </>

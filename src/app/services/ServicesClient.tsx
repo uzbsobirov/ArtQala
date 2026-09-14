@@ -5,6 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { CheckCircle2, Send, Sparkles } from 'lucide-react';
 import AccessoryCheckboxes, { SelectedAccessory } from '@/components/AccessoryCheckboxes';
 import ServiceImageCarousel from '@/components/ServiceImageCarousel';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface ServicesClientProps {
   muralImages: string[];
@@ -60,6 +61,7 @@ export default function ServicesClient({ muralImages, ceramicsImages, customImag
   return (
     <div>
       <div className="py-14 sm:py-16">
+        <Breadcrumbs items={[{ label: t.nav.services }]} />
         <div className="max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14">
           {/* Page Head */}
           <div className="max-w-2xl mb-12 space-y-2">

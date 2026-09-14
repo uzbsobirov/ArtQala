@@ -8,6 +8,7 @@ import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
 import PhoneInput from '@/components/PhoneInput';
 import ShippingEstimator from '@/components/ShippingEstimator';
 import AccessoryCheckboxes, { SelectedAccessory } from '@/components/AccessoryCheckboxes';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import {
   Heart,
   ShieldCheck,
@@ -234,11 +235,11 @@ export default function PaintingDetailClient({ painting, relatedPaintings = [] }
 
   return (
     <div className="py-10 sm:py-14">
+      <Breadcrumbs items={[{ label: t.nav.gallery, href: '/gallery' }, { label: title }]} />
       <div className="max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14">
-        {/* Breadcrumb */}
         <Link
           href="/gallery"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-[#BA4E25] hover:underline mb-8"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-[#BA4E25] hover:underline mb-8 mt-6"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>{t.painting.backToGallery}</span>

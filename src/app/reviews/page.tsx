@@ -1,9 +1,13 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
+import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
 import ReviewsClient from './ReviewsClient';
 
 export const dynamic = 'force-dynamic';
+
+const siteUrl = process.env.NEXTAUTH_URL || 'https://artqala.uz';
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: 'Reviews', path: '/reviews' }], siteUrl);
 
 export const metadata: Metadata = {
   title: 'Client Reviews & Collector Testimonials | Art Qala',
@@ -24,6 +28,46 @@ export default async function ReviewsPage() {
     orderBy: { created_at: 'desc' },
   });
 
-  return <ReviewsClient initialReviews={reviews} />;
+  // Surfaces star ratings in search results — Google reads aggregateRating
+  // off an ArtGallery/LocalBusiness node the same way it does for Product.
+  const reviewsJsonLd =
+    reviews.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'ArtGallery',
+          name: 'Art Qala',
+          url: siteUrl,
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: +(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1),
+            reviewCount: reviews.length,
+          },
+          review: reviews.slice(0, 20).map((r) => ({
+            '@type': 'Review',
+            author: { '@type': 'Person', name: r.author_name },
+            reviewRating: { '@type': 'Rating', ratingValue: r.rating, bestRating: 5 },
+            reviewBody: r.text,
+            datePublished: r.created_at.toISOString(),
+          })),
+        }
+      : null;
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {reviewsJsonLd && (
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewsJsonLd) }}
+        />
+      )}
+      <ReviewsClient initialReviews={reviews} />
+    </>
+  );
 }
 

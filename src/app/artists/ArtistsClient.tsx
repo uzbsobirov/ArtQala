@@ -7,6 +7,7 @@ import { useApp } from '@/context/AppContext';
 import { ArrowRight, Send } from 'lucide-react';
 import AnimatedMadohil from '@/components/patterns/AnimatedMadohil';
 import AnimatedShamchiroq from '@/components/patterns/AnimatedShamchiroq';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface ArtistsClientProps {
   artists: any[];
@@ -25,6 +26,7 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
 
   return (
     <div className="py-14 sm:py-16">
+      <Breadcrumbs items={[{ label: t.nav.artists }]} />
       <div className="max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14">
         {/* Page Head */}
         <AnimatedMadohil />

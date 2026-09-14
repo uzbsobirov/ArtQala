@@ -1,9 +1,13 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { getArtists } from '@/lib/api';
+import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
 import ArtistsClient from './ArtistsClient';
 
 export const dynamic = 'force-dynamic';
+
+const siteUrl = process.env.NEXTAUTH_URL || 'https://artqala.uz';
+const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: 'Artists', path: '/artists' }], siteUrl);
 
 export const metadata: Metadata = {
   title: 'Artists — Uzbek Masters & Painters',
@@ -19,5 +23,14 @@ export const metadata: Metadata = {
 export default async function ArtistsPage() {
   const artists = await getArtists();
 
-  return <ArtistsClient artists={artists} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <ArtistsClient artists={artists} />
+    </>
+  );
 }

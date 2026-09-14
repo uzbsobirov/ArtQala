@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import { parsePhones, formatWorkingHours } from '@/lib/settingsUtils';
 import { MapPin, Phone, MessageSquare, Clock, CheckCircle2, Send, ExternalLink } from 'lucide-react';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 export default function ContactClient() {
   const { t, lang, settings } = useApp();
@@ -52,6 +53,7 @@ export default function ContactClient() {
 
   return (
     <div className="py-14 sm:py-16">
+      <Breadcrumbs items={[{ label: t.nav.contact }]} />
       <div className="max-w-[1240px] mx-auto px-6 sm:px-10 lg:px-14">
         {/* Page Head */}
         <div className="max-w-2xl mb-12 space-y-2">
