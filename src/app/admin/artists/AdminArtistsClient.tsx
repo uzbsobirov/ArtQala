@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Plus, Trash2, Pencil, X, Loader2, Upload, Languages } from 'lucide-react';
+import FilterSelect from '@/components/FilterSelect';
 
 interface ArtistItem {
   id: string;
@@ -345,18 +346,14 @@ export default function AdminArtistsClient({
                 <label className="block text-xs font-bold text-[#6B5E55] mb-1">
                   Ota-kategoriya (yo'nalishi)
                 </label>
-                <select
+                <FilterSelect
                   value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] bg-white"
-                >
-                  <option value="">— Belgilanmagan —</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name_uz}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setCategoryId}
+                  allValue=""
+                  allLabel="— Belgilanmagan —"
+                  buttonClassName="!rounded !py-2"
+                  options={categories.map((c) => ({ value: c.id, label: c.name_uz }))}
+                />
                 <p className="text-[10.5px] text-[#8F7E73] mt-1">
                   Kartina qo'shishda bu rassom tanlansa, ota-kategoriya avtomatik shunga o'rnatiladi.
                 </p>

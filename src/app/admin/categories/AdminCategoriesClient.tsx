@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Plus, Trash2, Pencil, X, Layers, CornerDownRight, Languages } from 'lucide-react';
+import FilterSelect from '@/components/FilterSelect';
 
 interface CategoryItem {
   id: string;
@@ -374,21 +375,13 @@ export default function AdminCategoriesClient({
                   <label className="block text-xs font-bold text-[#6B5E55] mb-1">
                     Ota-kategoriya {formMode === 'create-child' && '*'}
                   </label>
-                  <select
-                    required={formMode === 'create-child'}
+                  <FilterSelect
                     value={parentId}
-                    onChange={(e) => setParentId(e.target.value)}
-                    className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] bg-white"
-                  >
-                    {formMode === 'edit' && (
-                      <option value="">— Yuqori daraja (o'zi mahsulot turi) —</option>
-                    )}
-                    {topLevelOptions.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name_uz}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setParentId}
+                    buttonClassName="!rounded !py-2"
+                    {...(formMode === 'edit' ? { allValue: '', allLabel: '— Yuqori daraja (o\'zi mahsulot turi) —' } : {})}
+                    options={topLevelOptions.map((c) => ({ value: c.id, label: c.name_uz }))}
+                  />
                   {formMode === 'create-child' && (
                     <p className="text-[10.5px] text-[#8F7E73] mt-1">
                       Bu kategoriya shu ota-kategoriyaning mavzusi/ichidagi bo'limi bo'ladi.

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Percent, Plus, Trash2, ArrowRight, ShieldCheck } from 'lucide-react';
+import FilterSelect from '@/components/FilterSelect';
 
 interface AdminDiscountsClientProps {
   initialDiscounts: any[];
@@ -117,16 +118,17 @@ export default function AdminDiscountsClient({
               <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
                 DISCOUNT LEVEL / SCOPE *
               </label>
-              <select
+              <FilterSelect
                 value={scope}
-                onChange={(e) => setScope(e.target.value as any)}
-                className="w-full text-xs px-3.5 py-2.5 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-              >
-                <option value="PAINTING">1. Specific Painting (Individual)</option>
-                <option value="ARTIST">2. Entire Artist Catalog</option>
-                <option value="CATEGORY">3. Entire Category</option>
-                <option value="SITE">4. Site-Wide General Promotion</option>
-              </select>
+                onChange={(v) => setScope(v as any)}
+                buttonClassName="!rounded-[3px] !py-2.5"
+                options={[
+                  { value: 'PAINTING', label: '1. Specific Painting (Individual)' },
+                  { value: 'ARTIST', label: '2. Entire Artist Catalog' },
+                  { value: 'CATEGORY', label: '3. Entire Category' },
+                  { value: 'SITE', label: '4. Site-Wide General Promotion' },
+                ]}
+              />
             </div>
 
             {scope === 'PAINTING' && (
@@ -134,19 +136,15 @@ export default function AdminDiscountsClient({
                 <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
                   SELECT PAINTING
                 </label>
-                <select
+                <FilterSelect
                   value={targetId}
-                  onChange={(e) => setTargetId(e.target.value)}
-                  required
-                  className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px]"
-                >
-                  <option value="">-- Choose painting --</option>
-                  {paintings.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title_en}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setTargetId}
+                  allValue=""
+                  allLabel="-- Choose painting --"
+                  searchable
+                  buttonClassName="!rounded-[3px] !py-2"
+                  options={paintings.map((p) => ({ value: p.id, label: p.title_en }))}
+                />
               </div>
             )}
 
@@ -155,19 +153,15 @@ export default function AdminDiscountsClient({
                 <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
                   SELECT ARTIST
                 </label>
-                <select
+                <FilterSelect
                   value={targetId}
-                  onChange={(e) => setTargetId(e.target.value)}
-                  required
-                  className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px]"
-                >
-                  <option value="">-- Choose artist --</option>
-                  {artists.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setTargetId}
+                  allValue=""
+                  allLabel="-- Choose artist --"
+                  searchable
+                  buttonClassName="!rounded-[3px] !py-2"
+                  options={artists.map((a) => ({ value: a.id, label: a.name }))}
+                />
               </div>
             )}
 
@@ -176,19 +170,14 @@ export default function AdminDiscountsClient({
                 <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
                   SELECT CATEGORY
                 </label>
-                <select
+                <FilterSelect
                   value={targetId}
-                  onChange={(e) => setTargetId(e.target.value)}
-                  required
-                  className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px]"
-                >
-                  <option value="">-- Choose category --</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name_en}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setTargetId}
+                  allValue=""
+                  allLabel="-- Choose category --"
+                  buttonClassName="!rounded-[3px] !py-2"
+                  options={categories.map((c) => ({ value: c.id, label: c.name_en }))}
+                />
               </div>
             )}
 

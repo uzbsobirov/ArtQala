@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import AiBackgroundModal from './AiBackgroundModal';
 import ImageCropModal from './ImageCropModal';
+import FilterSelect from '@/components/FilterSelect';
 
 interface PaintingFormProps {
   initialData?: any;
@@ -650,14 +651,16 @@ export default function PaintingForm({
                       placeholder="80"
                       className="w-14 text-xs font-semibold text-center focus:outline-none"
                     />
-                    <select
+                    <FilterSelect
                       value={sizeUnit}
-                      onChange={(e) => setSizeUnit(e.target.value)}
-                      className="text-[11px] bg-transparent font-medium text-[#BA4E25] focus:outline-none ml-auto border-l pl-1 border-[#E7E0D8]"
-                    >
-                      <option value="sm">sm</option>
-                      <option value="dyum">dyum</option>
-                    </select>
+                      onChange={setSizeUnit}
+                      className="w-[68px] ml-auto"
+                      buttonClassName="!bg-transparent !border-0 !border-l !rounded-none !pl-1.5 !pr-1 !py-0 !text-[11px] !font-medium !text-[#BA4E25] !ring-0 border-[#E7E0D8]"
+                      options={[
+                        { value: 'sm', label: 'sm' },
+                        { value: 'dyum', label: 'dyum' },
+                      ]}
+                    />
                   </div>
                   <span className="text-[10px] text-[#8F7E73] mt-0.5 block">
                     Natija: {sizeWidth} × {sizeHeight} {sizeUnit}
@@ -694,10 +697,9 @@ export default function PaintingForm({
                       <span>+ Yangi qo'shish</span>
                     </button>
                   </div>
-                  <select
+                  <FilterSelect
                     value={artistId}
-                    onChange={(e) => {
-                      const newArtistId = e.target.value;
+                    onChange={(newArtistId) => {
                       setArtistId(newArtistId);
                       // Rassomga biriktirilgan ota-kategoriya (yo'nalishi)
                       // bo'lsa, ota-kategoriyani avtomatik shunga o'rnatamiz
@@ -709,14 +711,10 @@ export default function PaintingForm({
                         setCategoryId(children[0]?.id || chosenArtist.category_id);
                       }
                     }}
-                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-                  >
-                    {artistsList.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.name}
-                      </option>
-                    ))}
-                  </select>
+                    buttonClassName="!rounded-[3px] !py-2"
+                    searchable
+                    options={artistsList.map((a) => ({ value: a.id, label: a.name }))}
+                  />
                 </div>
 
                 {/* Category Selector — ota (product type) then bola (subject) */}
@@ -735,26 +733,20 @@ export default function PaintingForm({
                         <span>+ Yangi qo'shish</span>
                       </button>
                     </div>
-                    <select
+                    <FilterSelect
                       value={topCategoryId}
-                      onChange={(e) => {
-                        const newTopId = e.target.value;
+                      onChange={(newTopId) => {
                         setTopCategoryId(newTopId);
                         const children = categoriesList.filter((c: any) => c.parent_id === newTopId);
                         // A top-level category with no subjects under it (e.g.
                         // "Kulolchilik") is used directly as the painting's category.
                         setCategoryId(children[0]?.id || newTopId);
                       }}
-                      className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-                    >
-                      {categoriesList
+                      buttonClassName="!rounded-[3px] !py-2"
+                      options={categoriesList
                         .filter((c: any) => !c.parent_id)
-                        .map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name_uz || c.name_en}
-                          </option>
-                        ))}
-                    </select>
+                        .map((c) => ({ value: c.id, label: c.name_uz || c.name_en }))}
+                    />
                   </div>
 
                   {(() => {
@@ -765,17 +757,12 @@ export default function PaintingForm({
                         <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
                           BOLA-KATEGORIYA (MAVZU) *
                         </label>
-                        <select
+                        <FilterSelect
                           value={categoryId}
-                          onChange={(e) => setCategoryId(e.target.value)}
-                          className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-                        >
-                          {children.map((c: any) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name_uz || c.name_en}
-                            </option>
-                          ))}
-                        </select>
+                          onChange={setCategoryId}
+                          buttonClassName="!rounded-[3px] !py-2"
+                          options={children.map((c: any) => ({ value: c.id, label: c.name_uz || c.name_en }))}
+                        />
                       </div>
                     );
                   })()}
@@ -1044,18 +1031,14 @@ export default function PaintingForm({
                 <label className="block text-xs font-bold text-[#6B5E55] mb-1">
                   Ota-kategoriya (yo'nalishi)
                 </label>
-                <select
+                <FilterSelect
                   value={newArtistCategoryId}
-                  onChange={(e) => setNewArtistCategoryId(e.target.value)}
-                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] bg-white"
-                >
-                  <option value="">— Belgilanmagan —</option>
-                  {topLevelCategoryOptions.map((c: any) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name_uz}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setNewArtistCategoryId}
+                  allValue=""
+                  allLabel="— Belgilanmagan —"
+                  buttonClassName="!rounded !py-2"
+                  options={topLevelCategoryOptions.map((c: any) => ({ value: c.id, label: c.name_uz }))}
+                />
                 <p className="text-[10.5px] text-[#8F7E73] mt-1">
                   Bu rassom keyingi kartinalarga tanlanganda ota-kategoriya avtomatik shunga o'rnatiladi.
                 </p>
@@ -1234,18 +1217,14 @@ export default function PaintingForm({
                 <label className="block text-xs font-bold text-[#6B5E55] mb-1">
                   Ota-kategoriya (mahsulot turi)
                 </label>
-                <select
+                <FilterSelect
                   value={newCategoryParentId}
-                  onChange={(e) => setNewCategoryParentId(e.target.value)}
-                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] bg-white"
-                >
-                  <option value="">— Yuqori daraja (o'zi mahsulot turi) —</option>
-                  {topLevelCategoryOptions.map((c: any) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name_uz}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setNewCategoryParentId}
+                  allValue=""
+                  allLabel="— Yuqori daraja (o'zi mahsulot turi) —"
+                  buttonClassName="!rounded !py-2"
+                  options={topLevelCategoryOptions.map((c: any) => ({ value: c.id, label: c.name_uz }))}
+                />
               </div>
 
               <div>

@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
+import FilterSelect from '@/components/FilterSelect';
 
 interface AdminPaintingsClientProps {
   initialPaintings: any[];
@@ -83,31 +84,26 @@ export default function AdminPaintingsClient({
           />
         </div>
 
-        <select
+        <FilterSelect
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] text-xs text-[#4D3F38] focus:outline-none focus:border-[#BA4E25]"
-        >
-          <option value="ALL">All categories</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name_en}
-            </option>
-          ))}
-        </select>
+          onChange={setCategoryFilter}
+          allValue="ALL"
+          allLabel="All categories"
+          className="w-44"
+          buttonClassName="!rounded-[3px] !py-2"
+          options={categories.map((c) => ({ value: c.id, label: c.name_en }))}
+        />
 
-        <select
+        <FilterSelect
           value={artistFilter}
-          onChange={(e) => setArtistFilter(e.target.value)}
-          className="px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] text-xs text-[#4D3F38] focus:outline-none focus:border-[#BA4E25]"
-        >
-          <option value="ALL">All artists</option>
-          {artists.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
+          onChange={setArtistFilter}
+          allValue="ALL"
+          allLabel="All artists"
+          searchable
+          className="w-44"
+          buttonClassName="!rounded-[3px] !py-2"
+          options={artists.map((a) => ({ value: a.id, label: a.name }))}
+        />
       </div>
 
       {/* Paintings Table matching AdminPaintings.png */}

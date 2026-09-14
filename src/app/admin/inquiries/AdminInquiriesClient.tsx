@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, CheckCircle2, Shield, User, Clock, Loader2, Mail, Gem, DollarSign } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
+import FilterSelect from '@/components/FilterSelect';
 
 interface AdminInquiriesClientProps {
   initialInquiries: any[];
@@ -384,16 +385,18 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
                   <label className="text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase">
                     STATUS:
                   </label>
-                  <select
+                  <FilterSelect
                     value={selectedStatus}
-                    onChange={(e) => handleStatusChange(e.target.value)}
-                    className="text-xs px-2.5 py-1.5 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-                  >
-                    <option value="NEW">{t.admin.new}</option>
-                    <option value="IN_PROGRESS">{t.admin.inProgress}</option>
-                    <option value="ANSWERED">{t.admin.answered}</option>
-                    <option value="COMPLETED">{t.admin.completed}</option>
-                  </select>
+                    onChange={handleStatusChange}
+                    className="w-40"
+                    buttonClassName="!rounded-[3px] !py-1.5"
+                    options={[
+                      { value: 'NEW', label: t.admin.new },
+                      { value: 'IN_PROGRESS', label: t.admin.inProgress },
+                      { value: 'ANSWERED', label: t.admin.answered },
+                      { value: 'COMPLETED', label: t.admin.completed },
+                    ]}
+                  />
                 </div>
               </div>
 
