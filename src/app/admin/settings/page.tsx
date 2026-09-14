@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Settings, Save, CheckCircle2, Loader2, Globe, MapPin, Phone, Mail, Clock, Send, Plus, Trash2, AlertCircle } from 'lucide-react';
+import TimePicker from '@/components/TimePicker';
 
 export default function AdminSettingsPage() {
   const { refreshSettings } = useApp();
@@ -388,26 +389,20 @@ export default function AdminSettingsPage() {
                           <span className="text-[9.5px] uppercase font-bold text-[#8F8178] block">
                             Ochilish
                           </span>
-                          <input
-                            type="time"
+                          <TimePicker
                             value={day.open}
-                            onChange={(e) =>
-                              handleScheduleChange(idx, 'open', e.target.value)
-                            }
-                            className="w-full text-xs px-1.5 py-1 bg-[#FAF4EC]/60 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                            onChange={(v) => handleScheduleChange(idx, 'open', v)}
+                            buttonClassName="!px-1.5 !py-1 !bg-[#FAF4EC]/60"
                           />
                         </div>
                         <div>
                           <span className="text-[9.5px] uppercase font-bold text-[#8F8178] block">
                             Yopilish
                           </span>
-                          <input
-                            type="time"
+                          <TimePicker
                             value={day.close}
-                            onChange={(e) =>
-                              handleScheduleChange(idx, 'close', e.target.value)
-                            }
-                            className="w-full text-xs px-1.5 py-1 bg-[#FAF4EC]/60 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
+                            onChange={(v) => handleScheduleChange(idx, 'close', v)}
+                            buttonClassName="!px-1.5 !py-1 !bg-[#FAF4EC]/60"
                           />
                         </div>
                       </div>

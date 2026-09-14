@@ -20,6 +20,7 @@ import {
 import AiBackgroundModal from './AiBackgroundModal';
 import ImageCropModal from './ImageCropModal';
 import FilterSelect from '@/components/FilterSelect';
+import DatePicker from '@/components/DatePicker';
 
 interface PaintingFormProps {
   initialData?: any;
@@ -934,22 +935,20 @@ export default function PaintingForm({
                   <label className="block text-[10px] font-bold tracking-wider text-[#8F8178] uppercase mb-1">
                     BOSHLANISH SANASI
                   </label>
-                  <input
-                    type="date"
+                  <DatePicker
                     value={discountStarts}
-                    onChange={(e) => setDiscountStarts(e.target.value)}
-                    className="w-full text-xs px-3 py-1.5 bg-white border border-[#E7E0D8] rounded-[3px]"
+                    onChange={setDiscountStarts}
+                    buttonClassName="!py-1.5"
                   />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold tracking-wider text-[#8F8178] uppercase mb-1">
                     TUGASH SANASI
                   </label>
-                  <input
-                    type="date"
+                  <DatePicker
                     value={discountEnds}
-                    onChange={(e) => setDiscountEnds(e.target.value)}
-                    className="w-full text-xs px-3 py-1.5 bg-white border border-[#E7E0D8] rounded-[3px]"
+                    onChange={setDiscountEnds}
+                    buttonClassName="!py-1.5"
                   />
                 </div>
               </div>

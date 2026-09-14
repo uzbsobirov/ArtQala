@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Percent, Plus, Trash2, ArrowRight, ShieldCheck } from 'lucide-react';
 import FilterSelect from '@/components/FilterSelect';
+import DatePicker from '@/components/DatePicker';
 
 interface AdminDiscountsClientProps {
   initialDiscounts: any[];
@@ -202,22 +203,20 @@ export default function AdminDiscountsClient({
                 <label className="block text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
                   STARTS AT
                 </label>
-                <input
-                  type="date"
+                <DatePicker
                   value={startsAt}
-                  onChange={(e) => setStartsAt(e.target.value)}
-                  className="w-full text-[11px] px-2.5 py-1.5 bg-white border border-[#E7E0D8] rounded-[3px]"
+                  onChange={setStartsAt}
+                  buttonClassName="!text-[11px] !py-1.5"
                 />
               </div>
               <div>
                 <label className="block text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
                   ENDS AT
                 </label>
-                <input
-                  type="date"
+                <DatePicker
                   value={endsAt}
-                  onChange={(e) => setEndsAt(e.target.value)}
-                  className="w-full text-[11px] px-2.5 py-1.5 bg-white border border-[#E7E0D8] rounded-[3px]"
+                  onChange={setEndsAt}
+                  buttonClassName="!text-[11px] !py-1.5"
                 />
               </div>
             </div>
