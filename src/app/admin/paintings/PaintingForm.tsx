@@ -77,7 +77,19 @@ export default function PaintingForm({
   const [techniqueRu, setTechniqueRu] = useState(initialData?.technique_ru || '');
   const [year, setYear] = useState(initialData?.year || 2024);
   const [artistId, setArtistId] = useState(initialData?.artist_id || initialArtists[0]?.id || '');
-  const [categoryId, setCategoryId] = useState(initialData?.category_id || initialCategories[0]?.id || '');
+
+  // Category is picked in two steps — ota (product type) then bola (subject)
+  // — so it's always clear exactly which one a painting lands in, instead of
+  // one flat dropdown mixing both levels together.
+  const initialCategory = initialCategories.find(
+    (c: any) => c.id === (initialData?.category_id || initialCategories[0]?.id)
+  );
+  const [categoryId, setCategoryId] = useState(
+    initialData?.category_id || initialCategories[0]?.id || ''
+  );
+  const [topCategoryId, setTopCategoryId] = useState<string>(
+    (initialCategory as any)?.parent_id || initialCategory?.id || ''
+  );
 
   // Images array
   const initialImages: string[] = (() => {
@@ -321,6 +333,7 @@ export default function PaintingForm({
       if (data.success && data.category) {
         setCategoriesList((prev) => [...prev, data.category]);
         setCategoryId(data.category.id);
+        setTopCategoryId(data.category.parent_id || data.category.id);
         setShowAddCategoryModal(false);
         setNewCategoryNameUz('');
         setNewCategoryNameEn('');
@@ -686,32 +699,66 @@ export default function PaintingForm({
                   </select>
                 </div>
 
-                {/* Category Selector */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase">
-                      KATEGORIYA *
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddCategoryModal(true)}
-                      className="text-[11px] font-semibold text-[#BA4E25] hover:underline flex items-center gap-1 cursor-pointer"
+                {/* Category Selector — ota (product type) then bola (subject) */}
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase">
+                        OTA-KATEGORIYA (MAHSULOT TURI) *
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddCategoryModal(true)}
+                        className="text-[11px] font-semibold text-[#BA4E25] hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>+ Yangi qo'shish</span>
+                      </button>
+                    </div>
+                    <select
+                      value={topCategoryId}
+                      onChange={(e) => {
+                        const newTopId = e.target.value;
+                        setTopCategoryId(newTopId);
+                        const children = categoriesList.filter((c: any) => c.parent_id === newTopId);
+                        // A top-level category with no subjects under it (e.g.
+                        // "Kulolchilik") is used directly as the painting's category.
+                        setCategoryId(children[0]?.id || newTopId);
+                      }}
+                      className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
                     >
-                      <Plus className="w-3 h-3" />
-                      <span>+ Yangi qo'shish</span>
-                    </button>
+                      {categoriesList
+                        .filter((c: any) => !c.parent_id)
+                        .map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name_uz || c.name_en}
+                          </option>
+                        ))}
+                    </select>
                   </div>
-                  <select
-                    value={categoryId}
-                    onChange={(e) => setCategoryId(e.target.value)}
-                    className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-                  >
-                    {categoriesList.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name_uz || c.name_en}
-                      </option>
-                    ))}
-                  </select>
+
+                  {(() => {
+                    const children = categoriesList.filter((c: any) => c.parent_id === topCategoryId);
+                    if (children.length === 0) return null;
+                    return (
+                      <div>
+                        <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+                          BOLA-KATEGORIYA (MAVZU) *
+                        </label>
+                        <select
+                          value={categoryId}
+                          onChange={(e) => setCategoryId(e.target.value)}
+                          className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                        >
+                          {children.map((c: any) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name_uz || c.name_en}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
