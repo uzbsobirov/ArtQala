@@ -9,6 +9,7 @@ import { Search, Heart, SlidersHorizontal, Send, ChevronDown, X, Palette, Calend
 import AnimatedMadohil from '@/components/patterns/AnimatedMadohil';
 import DandanaScrollTrack from '@/components/patterns/DandanaScrollTrack';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import FilterSelect from '@/components/FilterSelect';
 import { getSizeBucket } from '@/lib/paintingSize';
 
 interface GalleryClientProps {
@@ -253,18 +254,14 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
                   <Palette className="w-3 h-3 text-[#BA4E25]" />
                   {t.gallery.filterByArtist}
                 </label>
-                <select
+                <FilterSelect
                   value={selectedArtistId}
-                  onChange={(e) => setSelectedArtistId(e.target.value)}
-                  className="w-full text-xs px-3 py-2.5 bg-white border border-[#E7E0D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#BA4E25]/20 focus:border-[#BA4E25] transition-colors"
-                >
-                  <option value="all">{t.gallery.allArtists}</option>
-                  {artistOptions.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setSelectedArtistId}
+                  allValue="all"
+                  allLabel={t.gallery.allArtists}
+                  emptyMessage={t.gallery.noArtistsInCategory}
+                  options={artistOptions.map((a) => ({ value: a.id, label: a.name }))}
+                />
               </div>
 
               <div>
@@ -272,18 +269,14 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
                   <CalendarDays className="w-3 h-3 text-[#BA4E25]" />
                   {t.gallery.filterByYear}
                 </label>
-                <select
+                <FilterSelect
                   value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                  className="w-full text-xs px-3 py-2.5 bg-white border border-[#E7E0D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#BA4E25]/20 focus:border-[#BA4E25] transition-colors"
-                >
-                  <option value="all">{t.gallery.allYears}</option>
-                  {yearOptions.map((y) => (
-                    <option key={y} value={String(y)}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setSelectedYear}
+                  allValue="all"
+                  allLabel={t.gallery.allYears}
+                  emptyMessage={t.gallery.noYearsInCategory}
+                  options={yearOptions.map((y) => ({ value: String(y), label: String(y) }))}
+                />
               </div>
 
               <div>
@@ -291,16 +284,18 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
                   <Ruler className="w-3 h-3 text-[#BA4E25]" />
                   {t.gallery.filterBySize}
                 </label>
-                <select
+                <FilterSelect
                   value={selectedSize}
-                  onChange={(e) => setSelectedSize(e.target.value)}
-                  className="w-full text-xs px-3 py-2.5 bg-white border border-[#E7E0D8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#BA4E25]/20 focus:border-[#BA4E25] transition-colors"
-                >
-                  <option value="all">{t.gallery.allSizes}</option>
-                  <option value="small">{t.gallery.sizeSmall}</option>
-                  <option value="medium">{t.gallery.sizeMedium}</option>
-                  <option value="large">{t.gallery.sizeLarge}</option>
-                </select>
+                  onChange={setSelectedSize}
+                  allValue="all"
+                  allLabel={t.gallery.allSizes}
+                  emptyMessage=""
+                  options={[
+                    { value: 'small', label: t.gallery.sizeSmall },
+                    { value: 'medium', label: t.gallery.sizeMedium },
+                    { value: 'large', label: t.gallery.sizeLarge },
+                  ]}
+                />
               </div>
 
               {hasActiveAdvancedFilters && (
