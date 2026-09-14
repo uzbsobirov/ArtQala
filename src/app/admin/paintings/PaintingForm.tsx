@@ -94,61 +94,6 @@ export default function PaintingForm({
   const [pendingCropFile, setPendingCropFile] = useState<File | null>(null);
   const [aiEditIndex, setAiEditIndex] = useState<number | null>(null);
 
-  // Auto-translation: typing in UZ or RU auto-fills the other two languages
-  // (via Gemini) for whichever field group ('title' | 'description' | 'technique')
-  // was just edited. Never overwrites a field the admin has already filled in.
-  const [translatingGroup, setTranslatingGroup] = useState<string | null>(null);
-
-  const fieldGroups = {
-    title: {
-      uz: [titleUz, setTitleUz] as const,
-      ru: [titleRu, setTitleRu] as const,
-      en: [titleEn, setTitleEn] as const,
-    },
-    description: {
-      uz: [descriptionUz, setDescriptionUz] as const,
-      ru: [descriptionRu, setDescriptionRu] as const,
-      en: [descriptionEn, setDescriptionEn] as const,
-    },
-    technique: {
-      uz: [techniqueUz, setTechniqueUz] as const,
-      ru: [techniqueRu, setTechniqueRu] as const,
-      en: [techniqueEn, setTechniqueEn] as const,
-    },
-  };
-
-  const autoTranslate = async (
-    group: keyof typeof fieldGroups,
-    sourceLang: 'uz' | 'ru',
-    text: string
-  ) => {
-    if (!text.trim()) return;
-    const groupFields = fieldGroups[group];
-    setTranslatingGroup(group);
-    try {
-      const res = await fetch('/api/admin/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, sourceLang }),
-      });
-      const data = await res.json();
-      if (data.success && data.translations) {
-        (['uz', 'ru', 'en'] as const).forEach((lang) => {
-          if (lang === sourceLang) return;
-          const value = data.translations[lang];
-          const [currentValue, setValue] = groupFields[lang];
-          if (value && !currentValue.trim()) {
-            setValue(value);
-          }
-        });
-      }
-    } catch {
-      // Silent failure — auto-translation is a convenience, not required to save the form.
-    } finally {
-      setTranslatingGroup(null);
-    }
-  };
-
   // Pricing
   const [price, setPrice] = useState(initialData?.price || 420);
   const [discountPercent, setDiscountPercent] = useState('15%');
@@ -196,6 +141,78 @@ export default function PaintingForm({
   const [newCategoryParentId, setNewCategoryParentId] = useState<string>(
     () => topLevelCategoryOptions.find((c: any) => c.slug === 'kartina')?.id || ''
   );
+
+  // Auto-translation: typing in UZ or RU auto-fills the other two languages
+  // (via Gemini) for whichever field group was just edited. Never overwrites
+  // a field the admin has already filled in.
+  const [translatingGroup, setTranslatingGroup] = useState<string | null>(null);
+
+  const fieldGroups = {
+    title: {
+      uz: [titleUz, setTitleUz] as const,
+      ru: [titleRu, setTitleRu] as const,
+      en: [titleEn, setTitleEn] as const,
+    },
+    description: {
+      uz: [descriptionUz, setDescriptionUz] as const,
+      ru: [descriptionRu, setDescriptionRu] as const,
+      en: [descriptionEn, setDescriptionEn] as const,
+    },
+    technique: {
+      uz: [techniqueUz, setTechniqueUz] as const,
+      ru: [techniqueRu, setTechniqueRu] as const,
+      en: [techniqueEn, setTechniqueEn] as const,
+    },
+    // Inline "add artist" / "add category" modal fields — same UZ->EN/RU
+    // convenience, just kept out of the main painting fields above.
+    newArtistSpecialty: {
+      uz: [newArtistSpecialtyUz, setNewArtistSpecialtyUz] as const,
+      ru: [newArtistSpecialtyRu, setNewArtistSpecialtyRu] as const,
+      en: [newArtistSpecialtyEn, setNewArtistSpecialtyEn] as const,
+    },
+    newArtistBio: {
+      uz: [newArtistBioUz, setNewArtistBioUz] as const,
+      ru: [newArtistBioRu, setNewArtistBioRu] as const,
+      en: [newArtistBioEn, setNewArtistBioEn] as const,
+    },
+    newCategoryName: {
+      uz: [newCategoryNameUz, setNewCategoryNameUz] as const,
+      ru: [newCategoryNameRu, setNewCategoryNameRu] as const,
+      en: [newCategoryNameEn, setNewCategoryNameEn] as const,
+    },
+  };
+
+  const autoTranslate = async (
+    group: keyof typeof fieldGroups,
+    sourceLang: 'uz' | 'ru',
+    text: string
+  ) => {
+    if (!text.trim()) return;
+    const groupFields = fieldGroups[group];
+    setTranslatingGroup(group);
+    try {
+      const res = await fetch('/api/admin/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, sourceLang }),
+      });
+      const data = await res.json();
+      if (data.success && data.translations) {
+        (['uz', 'ru', 'en'] as const).forEach((lang) => {
+          if (lang === sourceLang) return;
+          const value = data.translations[lang];
+          const [currentValue, setValue] = groupFields[lang];
+          if (value && !currentValue.trim()) {
+            setValue(value);
+          }
+        });
+      }
+    } catch {
+      // Silent failure — auto-translation is a convenience, not required to save the form.
+    } finally {
+      setTranslatingGroup(null);
+    }
+  };
 
   const slugify = (text: string): string => {
     return text
@@ -965,13 +982,15 @@ export default function PaintingForm({
                     type="text"
                     value={newArtistSpecialtyUz}
                     onChange={(e) => setNewArtistSpecialtyUz(e.target.value)}
+                    onBlur={(e) => autoTranslate('newArtistSpecialty', 'uz', e.target.value)}
                     placeholder="Miniatyura ustasi"
                     className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                  <label className="flex items-center gap-1 text-[11px] font-bold text-[#6B5E55] mb-1">
                     Mutaxassisligi (EN)
+                    {translatingGroup === 'newArtistSpecialty' && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
                   </label>
                   <input
                     type="text"
@@ -1004,13 +1023,15 @@ export default function PaintingForm({
                     rows={2}
                     value={newArtistBioUz}
                     onChange={(e) => setNewArtistBioUz(e.target.value)}
+                    onBlur={(e) => autoTranslate('newArtistBio', 'uz', e.target.value)}
                     placeholder="Rassom ijodi haqida o'zbekcha..."
                     className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] resize-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                  <label className="flex items-center gap-1 text-[11px] font-bold text-[#6B5E55] mb-1">
                     Tarjimai Hol (Bio - EN)
+                    {translatingGroup === 'newArtistBio' && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
                   </label>
                   <textarea
                     rows={2}
@@ -1088,14 +1109,16 @@ export default function PaintingForm({
                       setNewCategorySlug(slugify(val));
                     }
                   }}
+                  onBlur={(e) => autoTranslate('newCategoryName', 'uz', e.target.value)}
                   placeholder="Ipak yo'li manzaralari"
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                <label className="flex items-center gap-1.5 text-xs font-bold text-[#6B5E55] mb-1">
                   Kategoriya Nomi (Inglizcha - EN)
+                  {translatingGroup === 'newCategoryName' && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
                 </label>
                 <input
                   type="text"

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Plus, Trash2, Pencil, X, Loader2, Upload } from 'lucide-react';
+import { Plus, Trash2, Pencil, X, Loader2, Upload, Languages } from 'lucide-react';
 
 interface ArtistItem {
   id: string;
@@ -40,6 +40,47 @@ export default function AdminArtistsClient({
   const [photo, setPhoto] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [translatingGroup, setTranslatingGroup] = useState<string | null>(null);
+
+  const fieldGroups = {
+    specialty: {
+      uz: [specialtyUz, setSpecialtyUz] as const,
+      en: [specialtyEn, setSpecialtyEn] as const,
+      ru: [specialtyRu, setSpecialtyRu] as const,
+    },
+    bio: {
+      uz: [bioUz, setBioUz] as const,
+      en: [bioEn, setBioEn] as const,
+      ru: [bioRu, setBioRu] as const,
+    },
+  };
+
+  // Typing in UZ and blurring auto-fills EN/RU via Gemini — same pattern as
+  // the Paintings form. Never overwrites a field the admin already filled in.
+  const autoTranslate = async (group: keyof typeof fieldGroups, text: string) => {
+    if (!text.trim()) return;
+    const groupFields = fieldGroups[group];
+    setTranslatingGroup(group);
+    try {
+      const res = await fetch('/api/admin/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, sourceLang: 'uz' }),
+      });
+      const data = await res.json();
+      if (data.success && data.translations) {
+        (['en', 'ru'] as const).forEach((lang) => {
+          const value = data.translations[lang];
+          const [currentValue, setValue] = groupFields[lang];
+          if (value && !currentValue.trim()) setValue(value);
+        });
+      }
+    } catch {
+      // Silent failure — auto-translation is a convenience, not required to save.
+    } finally {
+      setTranslatingGroup(null);
+    }
+  };
 
   const openCreateModal = () => {
     setEditingArtist(null);
@@ -296,13 +337,15 @@ export default function AdminArtistsClient({
                     type="text"
                     value={specialtyUz}
                     onChange={(e) => setSpecialtyUz(e.target.value)}
+                    onBlur={(e) => autoTranslate('specialty', e.target.value)}
                     placeholder="Minyatura ustasi"
                     className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                  <label className="flex items-center gap-1 text-[11px] font-bold text-[#6B5E55] mb-1">
                     MUTAXASSISLIGI (EN)
+                    {translatingGroup === 'specialty' && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
                   </label>
                   <input
                     type="text"
@@ -336,13 +379,15 @@ export default function AdminArtistsClient({
                     rows={2}
                     value={bioUz}
                     onChange={(e) => setBioUz(e.target.value)}
+                    onBlur={(e) => autoTranslate('bio', e.target.value)}
                     placeholder="Rassom hayoti va ijodiy yo'li (O'zbekcha)..."
                     className="w-full text-xs px-2.5 py-1.5 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] resize-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-[#6B5E55] mb-1">
+                  <label className="flex items-center gap-1 text-[11px] font-bold text-[#6B5E55] mb-1">
                     TARJIMAI HOL (EN)
+                    {translatingGroup === 'bio' && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
                   </label>
                   <textarea
                     rows={2}

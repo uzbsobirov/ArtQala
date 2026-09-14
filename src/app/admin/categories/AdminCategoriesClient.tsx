@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Pencil, X, Layers, CornerDownRight } from 'lucide-react';
+import { Plus, Trash2, Pencil, X, Layers, CornerDownRight, Languages } from 'lucide-react';
 
 interface CategoryItem {
   id: string;
@@ -35,6 +35,31 @@ export default function AdminCategoriesClient({
   const [slugManualEdited, setSlugManualEdited] = useState(false);
   const [parentId, setParentId] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [translating, setTranslating] = useState(false);
+
+  // Typing in UZ and blurring auto-fills EN/RU via Gemini — same pattern as
+  // the Paintings and Accessories forms. Never overwrites a field the admin
+  // has already typed something into.
+  const autoTranslateName = async (text: string) => {
+    if (!text.trim()) return;
+    setTranslating(true);
+    try {
+      const res = await fetch('/api/admin/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, sourceLang: 'uz' }),
+      });
+      const data = await res.json();
+      if (data.success && data.translations) {
+        setNameEn((prev) => (prev.trim() ? prev : data.translations.en || prev));
+        setNameRu((prev) => (prev.trim() ? prev : data.translations.ru || prev));
+      }
+    } catch {
+      // Silent failure — auto-translation is a convenience, not required to save.
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   // Only a top-level category (no parent of its own) can be picked as a
   // parent — only one level of nesting is used, and a category can't be a
@@ -304,14 +329,16 @@ export default function AdminCategoriesClient({
                   required
                   value={nameUz}
                   onChange={(e) => handleNameUzChange(e.target.value)}
+                  onBlur={(e) => autoTranslateName(e.target.value)}
                   placeholder={formMode === 'create-parent' ? 'Kartina' : "Ipak yo'li manzaralari"}
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                <label className="flex items-center gap-1.5 text-xs font-bold text-[#6B5E55] mb-1">
                   Kategoriya Nomi (Inglizcha - EN)
+                  {translating && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
                 </label>
                 <input
                   type="text"
@@ -323,8 +350,9 @@ export default function AdminCategoriesClient({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                <label className="flex items-center gap-1.5 text-xs font-bold text-[#6B5E55] mb-1">
                   Kategoriya Nomi (Ruscha - RU)
+                  {translating && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
                 </label>
                 <input
                   type="text"
