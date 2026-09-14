@@ -246,8 +246,8 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
 
         {/* Advanced Filters Panel */}
         {showAdvancedFilters && (
-          <div className="relative -mt-6 mb-10 p-5 sm:p-6 bg-[#FDFBF9] border border-[#E7E0D8] rounded-lg shadow-sm overflow-hidden animate-[fadeSlideIn_0.2s_ease-out]">
-            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#BA4E25] via-[#D98C4A] to-[#429599]" />
+          <div className="relative -mt-6 mb-10 p-5 sm:p-6 bg-[#FDFBF9] border border-[#E7E0D8] rounded-lg shadow-sm animate-[fadeSlideIn_0.2s_ease-out]">
+            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-lg bg-gradient-to-r from-[#BA4E25] via-[#D98C4A] to-[#429599]" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="flex items-center gap-1.5 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
