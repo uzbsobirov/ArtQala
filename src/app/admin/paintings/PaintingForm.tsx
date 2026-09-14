@@ -137,6 +137,7 @@ export default function PaintingForm({
   const [newArtistBioUz, setNewArtistBioUz] = useState('');
   const [newArtistBioEn, setNewArtistBioEn] = useState('');
   const [newArtistBioRu, setNewArtistBioRu] = useState('');
+  const [newArtistCategoryId, setNewArtistCategoryId] = useState('');
   const [addingArtist, setAddingArtist] = useState(false);
 
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
@@ -291,12 +292,18 @@ export default function PaintingForm({
           bio_uz: newArtistBioUz,
           bio_en: newArtistBioEn || newArtistBioUz,
           bio_ru: newArtistBioRu || newArtistBioUz,
+          category_id: newArtistCategoryId || null,
         }),
       });
       const data = await res.json();
       if (data.success && data.artist) {
         setArtistsList((prev) => [data.artist, ...prev]);
         setArtistId(data.artist.id);
+        if (data.artist.category_id) {
+          setTopCategoryId(data.artist.category_id);
+          const children = categoriesList.filter((c: any) => c.parent_id === data.artist.category_id);
+          setCategoryId(children[0]?.id || data.artist.category_id);
+        }
         setShowAddArtistModal(false);
         setNewArtistName('');
         setNewArtistSpecialtyUz('');
@@ -305,6 +312,7 @@ export default function PaintingForm({
         setNewArtistBioUz('');
         setNewArtistBioEn('');
         setNewArtistBioRu('');
+        setNewArtistCategoryId('');
       }
     } catch {
       alert('Rassom qo\'shishda xatolik yuz berdi');
@@ -688,7 +696,19 @@ export default function PaintingForm({
                   </div>
                   <select
                     value={artistId}
-                    onChange={(e) => setArtistId(e.target.value)}
+                    onChange={(e) => {
+                      const newArtistId = e.target.value;
+                      setArtistId(newArtistId);
+                      // Rassomga biriktirilgan ota-kategoriya (yo'nalishi)
+                      // bo'lsa, ota-kategoriyani avtomatik shunga o'rnatamiz
+                      // — bola-kategoriyani admin qo'lda tanlaydi.
+                      const chosenArtist: any = artistsList.find((a: any) => a.id === newArtistId);
+                      if (chosenArtist?.category_id) {
+                        setTopCategoryId(chosenArtist.category_id);
+                        const children = categoriesList.filter((c: any) => c.parent_id === chosenArtist.category_id);
+                        setCategoryId(children[0]?.id || chosenArtist.category_id);
+                      }
+                    }}
                     className="w-full text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
                   >
                     {artistsList.map((a) => (
@@ -1018,6 +1038,27 @@ export default function PaintingForm({
                   placeholder="Kamoliddin Behzod"
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                  Ota-kategoriya (yo'nalishi)
+                </label>
+                <select
+                  value={newArtistCategoryId}
+                  onChange={(e) => setNewArtistCategoryId(e.target.value)}
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] bg-white"
+                >
+                  <option value="">— Belgilanmagan —</option>
+                  {topLevelCategoryOptions.map((c: any) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name_uz}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10.5px] text-[#8F7E73] mt-1">
+                  Bu rassom keyingi kartinalarga tanlanganda ota-kategoriya avtomatik shunga o'rnatiladi.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">

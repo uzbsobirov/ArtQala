@@ -57,6 +57,12 @@ model Artist {
   specialty_ru String
   specialty_uz String
 
+  // The artist's product type (a top-level Category, e.g. "Somon ishlari")
+  // — lets the Paintings form auto-pick ota-kategoriya once the artist is
+  // chosen, so the admin only has to pick the bola-kategoriya (subject).
+  category_id  String?
+  category     Category?  @relation(fields: [category_id], references: [id], onDelete: SetNull)
+
   paintings    Painting[]
   created_at   DateTime   @default(now())
   updated_at   DateTime   @updatedAt
@@ -78,6 +84,7 @@ model Category {
   children   Category[] @relation("CategoryHierarchy")
 
   paintings  Painting[]
+  artists    Artist[]
   created_at DateTime   @default(now())
   updated_at DateTime   @updatedAt
 }

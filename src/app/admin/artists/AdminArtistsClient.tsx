@@ -16,13 +16,22 @@ interface ArtistItem {
   bio_en: string;
   bio_ru?: string;
   bio_uz?: string;
+  category_id?: string | null;
+  category?: { id: string; name_uz: string } | null;
   _count?: { paintings: number };
+}
+
+interface CategoryOption {
+  id: string;
+  name_uz: string;
 }
 
 export default function AdminArtistsClient({
   initialArtists,
+  categories,
 }: {
   initialArtists: ArtistItem[];
+  categories: CategoryOption[];
 }) {
   const [artists, setArtists] = useState<ArtistItem[]>(initialArtists);
   
@@ -38,6 +47,7 @@ export default function AdminArtistsClient({
   const [bioEn, setBioEn] = useState('');
   const [bioRu, setBioRu] = useState('');
   const [photo, setPhoto] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [loading, setLoading] = useState(false);
   const [translatingGroup, setTranslatingGroup] = useState<string | null>(null);
@@ -92,6 +102,7 @@ export default function AdminArtistsClient({
     setBioEn('');
     setBioRu('');
     setPhoto('');
+    setCategoryId('');
     setIsModalOpen(true);
   };
 
@@ -105,6 +116,7 @@ export default function AdminArtistsClient({
     setBioEn(artist.bio_en || '');
     setBioRu(artist.bio_ru || '');
     setPhoto(artist.photo || '');
+    setCategoryId(artist.category_id || '');
     setIsModalOpen(true);
   };
 
@@ -150,6 +162,7 @@ export default function AdminArtistsClient({
         bio_en: bioEn || bioUz,
         bio_ru: bioRu || bioUz,
         photo: photo || null,
+        category_id: categoryId || null,
       };
 
       if (editingArtist) {
@@ -254,6 +267,7 @@ export default function AdminArtistsClient({
                   </h3>
                   <span className="text-[10.5px] font-bold tracking-wider text-[#429599] uppercase">
                     {a.specialty_uz || a.specialty_en}
+                    {a.category?.name_uz && <> · {a.category.name_uz}</>}
                   </span>
                 </div>
               </div>
@@ -325,6 +339,27 @@ export default function AdminArtistsClient({
                   placeholder="Kamoliddin Behzod"
                   className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25]"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#6B5E55] mb-1">
+                  Ota-kategoriya (yo'nalishi)
+                </label>
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded focus:outline-none focus:border-[#BA4E25] bg-white"
+                >
+                  <option value="">— Belgilanmagan —</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name_uz}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10.5px] text-[#8F7E73] mt-1">
+                  Kartina qo'shishda bu rassom tanlansa, ota-kategoriya avtomatik shunga o'rnatiladi.
+                </p>
               </div>
 
               {/* Mutaxassislik (3 tilda) */}
