@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Plus, Trash2, Pencil, X, Layers, CornerDownRight, Languages } from 'lucide-react';
+import { Plus, Trash2, Pencil, X, Layers, CornerDownRight, Languages, ChevronDown } from 'lucide-react';
 import FilterSelect from '@/components/FilterSelect';
 
 interface CategoryItem {
@@ -23,6 +23,10 @@ export default function AdminCategoriesClient({
   initialCategories: CategoryItem[];
 }) {
   const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
+
+  // Accordion — only one parent's children are shown at a time; opening a
+  // different one closes whichever was open.
+  const [expandedParentId, setExpandedParentId] = useState<string | null>(null);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -216,14 +220,37 @@ export default function AdminCategoriesClient({
   const childrenOf = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
 
   // A single row's cells (shared markup between the parent header row and
-  // child rows — only the container styling around it differs).
-  const renderCells = (c: CategoryItem, isChild: boolean) => (
+  // child rows — only the container styling around it differs). A parent
+  // row with children gets a chevron toggle instead of a plain label.
+  const renderCells = (
+    c: CategoryItem,
+    isChild: boolean,
+    expandToggle?: { childCount: number; isExpanded: boolean; onToggle: () => void }
+  ) => (
     <>
       <td className={`py-3 px-4 ${isChild ? 'text-[#554740]' : 'font-semibold text-[#281C18]'}`}>
-        <span className="flex items-center gap-1.5">
-          {isChild && <CornerDownRight className="w-3.5 h-3.5 text-[#C8B8AB] shrink-0" />}
-          {c.name_uz}
-        </span>
+        {expandToggle ? (
+          <button
+            type="button"
+            onClick={expandToggle.onToggle}
+            className="flex items-center gap-1.5 cursor-pointer hover:text-[#BA4E25] transition-colors"
+          >
+            <ChevronDown
+              className={`w-3.5 h-3.5 text-[#8F7E73] shrink-0 transition-transform ${
+                expandToggle.isExpanded ? 'rotate-180' : ''
+              }`}
+            />
+            <span>{c.name_uz}</span>
+            <span className="text-[10.5px] font-normal text-[#8F7E73]">
+              ({expandToggle.childCount})
+            </span>
+          </button>
+        ) : (
+          <span className="flex items-center gap-1.5">
+            {isChild && <CornerDownRight className="w-3.5 h-3.5 text-[#C8B8AB] shrink-0" />}
+            {c.name_uz}
+          </span>
+        )}
       </td>
       <td className="py-3 px-4 text-[#554740]">{c.name_en}</td>
       <td className="py-3 px-4 text-[#554740]">{c.name_ru}</td>
@@ -284,10 +311,11 @@ export default function AdminCategoriesClient({
         </div>
       </div>
 
-      {/* Each parent category is its own card, with its children nested
-          visibly inside it — kept visually separate from other parents'
-          groups instead of one continuous table where ota/bola rows could
-          blur together. */}
+      {/* Each parent category is its own card. A parent with children is a
+          collapsible accordion row — clicking it drops its children down
+          right below, and only one parent's children are shown at a time
+          (opening another closes it), instead of showing every parent's
+          children nested and visible all at once. */}
       {parents.length === 0 ? (
         <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] shadow-xs py-10 px-4 text-center text-[#8F8178] text-xs">
           Hali kategoriya yo'q. Avval "Ota kategoriya qo'shish" bilan boshlang.
@@ -296,6 +324,7 @@ export default function AdminCategoriesClient({
         <div className="space-y-4">
           {parents.map((parent) => {
             const children = childrenOf(parent.id);
+            const isExpanded = expandedParentId === parent.id;
             return (
               <div
                 key={parent.id}
@@ -314,13 +343,25 @@ export default function AdminCategoriesClient({
                   </thead>
                   <tbody className="divide-y divide-[#F0EAE1]">
                     <tr className="bg-white hover:bg-[#FAF4EC]/60 transition-colors">
-                      {renderCells(parent, false)}
+                      {renderCells(
+                        parent,
+                        false,
+                        children.length > 0
+                          ? {
+                              childCount: children.length,
+                              isExpanded,
+                              onToggle: () =>
+                                setExpandedParentId((prev) => (prev === parent.id ? null : parent.id)),
+                            }
+                          : undefined
+                      )}
                     </tr>
-                    {children.map((child) => (
-                      <tr key={child.id} className="bg-[#FAF4EC]/40 hover:bg-[#FAF4EC]/70 transition-colors">
-                        {renderCells(child, true)}
-                      </tr>
-                    ))}
+                    {isExpanded &&
+                      children.map((child) => (
+                        <tr key={child.id} className="bg-[#FAF4EC]/40 hover:bg-[#FAF4EC]/70 transition-colors">
+                          {renderCells(child, true)}
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>

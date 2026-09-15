@@ -147,7 +147,9 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
         return false;
       }
 
-      // Search filter
+      // Search filter — also matches the category/theme name (uz/en/ru), so
+      // typing e.g. "portret" finds paintings tagged with that theme even
+      // though it never appears in the title/artist/technique.
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesTitle =
@@ -156,7 +158,11 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
           p.title_uz.toLowerCase().includes(q);
         const matchesArtist = p.artist?.name.toLowerCase().includes(q);
         const matchesTech = p.technique_en?.toLowerCase().includes(q);
-        return matchesTitle || matchesArtist || matchesTech;
+        const matchesCategory =
+          p.category?.name_en?.toLowerCase().includes(q) ||
+          p.category?.name_ru?.toLowerCase().includes(q) ||
+          p.category?.name_uz?.toLowerCase().includes(q);
+        return matchesTitle || matchesArtist || matchesTech || matchesCategory;
       }
 
       return true;
