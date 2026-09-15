@@ -212,6 +212,181 @@ export async function sendCuratorReplyNotification(
   });
 }
 
+// 4. Acknowledge a contact-form submission — sent immediately on submit, so
+// the customer knows their message actually went through and roughly when
+// to expect a real reply, before a curator ever looks at it.
+export async function sendContactAcknowledgmentEmail(
+  to: string,
+  recipientName: string
+): Promise<EmailSendResult> {
+  const name = recipientName || 'Valued Visitor';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="utf-8"><title>We received your message</title></head>
+      <body style="margin: 0; padding: 0; background-color: #FAF4EC; font-family: 'Georgia', serif; color: #281C18;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #FAF4EC; padding: 40px 15px;">
+          <tr>
+            <td align="center">
+              <table width="100%" max-width="580" style="max-width: 580px; background-color: #FDFBF9; border: 1px solid #E7E0D8; border-radius: 4px; padding: 36px 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
+                <tr>
+                  <td style="border-bottom: 1px solid #EFE8DE; padding-bottom: 20px;">
+                    <h1 style="color: #BA4E25; margin: 0; font-size: 26px; letter-spacing: 1px;">Art Qala</h1>
+                    <p style="margin: 4px 0 0 0; color: #726861; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">Gallery &amp; Studio · Tashkent, Uzbekistan</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top: 28px;">
+                    <h2 style="font-size: 20px; color: #281C18; margin: 0 0 14px 0;">Thank you, ${name}!</h2>
+                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #554740; margin: 0 0 18px 0;">
+                      We've received your message and a member of our curatorial team will get back to you within <strong>1-2 business days</strong>.
+                    </p>
+                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; color: #8F8178; line-height: 1.5; margin: 0;">
+                      This is an automatic confirmation — no need to reply to this email.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="border-top: 1px solid #EFE8DE; margin-top: 30px; padding-top: 24px; text-align: center;">
+                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; color: #9E9086; margin: 0;">
+                      Art Qala Gallery · Barakhon Madrasah, Tashkent · info@artqala.uz
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `;
+
+  return sendResendEmail({
+    to,
+    subject: 'Art Qala — We received your message',
+    html,
+  });
+}
+
+// 5. Notify the gallery's own inbox that a new contact-form message arrived
+// — previously nothing told the admin a message existed except manually
+// checking /admin/messages.
+export async function sendContactAdminNotification(
+  adminEmail: string,
+  senderName: string,
+  senderEmail: string,
+  subject: string | null,
+  message: string
+): Promise<EmailSendResult> {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="utf-8"><title>New contact message</title></head>
+      <body style="margin: 0; padding: 0; background-color: #FAF4EC; font-family: 'Georgia', serif; color: #281C18;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #FAF4EC; padding: 40px 15px;">
+          <tr>
+            <td align="center">
+              <table width="100%" max-width="580" style="max-width: 580px; background-color: #FDFBF9; border: 1px solid #E7E0D8; border-radius: 4px; padding: 36px 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
+                <tr>
+                  <td style="border-bottom: 1px solid #EFE8DE; padding-bottom: 20px;">
+                    <h1 style="color: #BA4E25; margin: 0; font-size: 26px; letter-spacing: 1px;">Art Qala Admin</h1>
+                    <p style="margin: 4px 0 0 0; color: #726861; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">New Contact Message</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top: 28px;">
+                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #554740; margin: 0 0 14px 0;">
+                      <strong>${senderName}</strong> (${senderEmail}) sent a message via the contact form:
+                    </p>
+                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; color: #8F8178; margin: 0 0 4px 0;">
+                      Subject: <strong style="color: #281C18;">${subject || '(no subject)'}</strong>
+                    </p>
+                    <div style="background-color: #FFFFFF; border-left: 4px solid #BA4E25; padding: 16px 18px; margin: 16px 0; font-size: 14px; color: #281C18; line-height: 1.6; white-space: pre-wrap;">${message}</div>
+                    <div style="text-align: center; margin: 28px 0;">
+                      <a href="${SITE_URL}/admin/messages" style="background-color: #BA4E25; color: #FFFFFF; text-decoration: none; padding: 12px 28px; border-radius: 3px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 600; display: inline-block;">
+                        Open Admin Panel &rarr;
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `;
+
+  return sendResendEmail({
+    to: adminEmail,
+    subject: `New contact message from ${senderName}`,
+    html,
+  });
+}
+
+// 6. Deliver the curator's reply to a contact-form message — replaces a
+// `mailto:` link, which only works if the admin's browser/OS happens to
+// have a default mail client configured (unreliable for anyone using
+// webmail, and silently does nothing otherwise).
+export async function sendContactReplyEmail(
+  to: string,
+  recipientName: string,
+  originalSubject: string | null,
+  replyMessage: string
+): Promise<EmailSendResult> {
+  const name = recipientName || 'Valued Visitor';
+  const subjectLine = originalSubject || 'your message';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="utf-8"><title>Reply from Art Qala</title></head>
+      <body style="margin: 0; padding: 0; background-color: #FAF4EC; font-family: 'Georgia', serif; color: #281C18;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #FAF4EC; padding: 40px 15px;">
+          <tr>
+            <td align="center">
+              <table width="100%" max-width="580" style="max-width: 580px; background-color: #FDFBF9; border: 1px solid #E7E0D8; border-radius: 4px; padding: 36px 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
+                <tr>
+                  <td style="border-bottom: 1px solid #EFE8DE; padding-bottom: 20px;">
+                    <h1 style="color: #BA4E25; margin: 0; font-size: 26px; letter-spacing: 1px;">Art Qala</h1>
+                    <p style="margin: 4px 0 0 0; color: #726861; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">Gallery &amp; Studio · Tashkent, Uzbekistan</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top: 28px;">
+                    <h2 style="font-size: 20px; color: #281C18; margin: 0 0 14px 0;">Dear ${name},</h2>
+                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.6; color: #554740; margin: 0 0 18px 0;">
+                      Our gallery curator has replied to ${originalSubject ? `your message about <strong>"${subjectLine}"</strong>` : 'your message'}:
+                    </p>
+                    <div style="background-color: #FFFFFF; border-left: 4px solid #BA4E25; padding: 18px; margin: 20px 0; border-radius: 2px; font-style: italic; font-size: 14px; color: #281C18; line-height: 1.6; white-space: pre-wrap;">${replyMessage}</div>
+                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; color: #8F8178; line-height: 1.5; margin: 20px 0 0 0;">
+                      You can reply directly to this email if you have further questions.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="border-top: 1px solid #EFE8DE; margin-top: 30px; padding-top: 24px; text-align: center;">
+                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; color: #9E9086; margin: 0;">
+                      Art Qala Gallery · Barakhon Madrasah, Tashkent · info@artqala.uz
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `;
+
+  return sendResendEmail({
+    to,
+    subject: `Re: ${subjectLine} — Art Qala Gallery`,
+    html,
+  });
+}
+
 // Internal Resend API dispatcher
 async function sendResendEmail(params: {
   to: string;

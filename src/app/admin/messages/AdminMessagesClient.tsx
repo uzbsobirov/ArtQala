@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Mail, Trash2, CheckCircle2, Clock, Send, Eye, EyeOff } from 'lucide-react';
+import { Mail, Trash2, CheckCircle2, Clock, Send, Eye, EyeOff, Loader2 } from 'lucide-react';
+import FilterSelect from '@/components/FilterSelect';
 
 interface ContactMessageItem {
   id: string;
@@ -10,6 +11,8 @@ interface ContactMessageItem {
   subject: string | null;
   message: string;
   is_read: boolean;
+  status: string;
+  admin_reply: string | null;
   created_at: Date | string;
 }
 
@@ -22,8 +25,18 @@ export default function AdminMessagesClient({
   const [selectedId, setSelectedId] = useState<string | null>(
     initialMessages[0]?.id || null
   );
+  const [replyText, setReplyText] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sentJustNow, setSentJustNow] = useState(false);
 
   const selected = messages.find((m) => m.id === selectedId);
+
+  const handleSelect = (m: ContactMessageItem) => {
+    setSelectedId(m.id);
+    setReplyText('');
+    setSentJustNow(false);
+    if (!m.is_read) handleToggleRead(m.id, false);
+  };
 
   const handleToggleRead = async (id: string, currentRead: boolean) => {
     try {
@@ -42,6 +55,54 @@ export default function AdminMessagesClient({
     }
   };
 
+  const handleStatusChange = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`/api/contact/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, status } : m)));
+      }
+    } catch {
+      alert('Xatolik yuz berdi.');
+    }
+  };
+
+  const handleSendReply = async () => {
+    if (!selected || !replyText.trim() || sending) return;
+    setSending(true);
+    try {
+      const res = await fetch(`/api/contact/${selected.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_reply: replyText.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === selected.id
+              ? { ...m, admin_reply: replyText.trim(), status: 'ANSWERED', is_read: true }
+              : m
+          )
+        );
+        setReplyText('');
+        setSentJustNow(true);
+        if (!data.emailSent) {
+          alert("Javob saqlandi, lekin mijozga email yuborishda xatolik yuz berdi. Emailni qo'lda yuborishingiz kerak bo'lishi mumkin.");
+        }
+      } else {
+        alert(data.error || 'Javobni yuborishda xatolik yuz berdi');
+      }
+    } catch {
+      alert("Serverga bog'lanishda xatolik yuz berdi");
+    } finally {
+      setSending(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('Ushbu xabarni o\'chirishni tasdiqlaysizmi?')) return;
     try {
@@ -55,6 +116,29 @@ export default function AdminMessagesClient({
       }
     } catch {
       alert('Xatolik yuz berdi.');
+    }
+  };
+
+  const statusBadge = (status: string) => {
+    switch (status) {
+      case 'ANSWERED':
+        return (
+          <span className="bg-[#DCFCE7] text-[#16A34A] text-[10px] font-bold px-2 py-0.5 rounded-full">
+            Javob berilgan
+          </span>
+        );
+      case 'COMPLETED':
+        return (
+          <span className="bg-[#F3E8FF] text-[#9333EA] text-[10px] font-bold px-2 py-0.5 rounded-full">
+            Yakunlangan
+          </span>
+        );
+      default:
+        return (
+          <span className="bg-[#E0F2FE] text-[#0284C7] text-[10px] font-bold px-2 py-0.5 rounded-full">
+            Yangi
+          </span>
+        );
     }
   };
 
@@ -94,10 +178,7 @@ export default function AdminMessagesClient({
               return (
                 <div
                   key={m.id}
-                  onClick={() => {
-                    setSelectedId(m.id);
-                    if (!m.is_read) handleToggleRead(m.id, false);
-                  }}
+                  onClick={() => handleSelect(m)}
                   className={`p-4 rounded-[4px] border cursor-pointer transition-all ${
                     isCurrent
                       ? 'bg-[#FAF4EC] border-[#BA4E25] shadow-xs'
@@ -108,15 +189,7 @@ export default function AdminMessagesClient({
                     <span className={`text-sm font-bold ${!m.is_read ? 'text-[#BA4E25]' : 'text-[#281C18]'}`}>
                       {m.name}
                     </span>
-                    {!m.is_read ? (
-                      <span className="bg-[#BA4E25]/10 text-[#BA4E25] text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        Yangi
-                      </span>
-                    ) : (
-                      <span className="bg-[#E7E0D8]/60 text-[#726861] text-[10px] font-medium px-2 py-0.5 rounded-full">
-                        O'qilgan
-                      </span>
-                    )}
+                    {statusBadge(m.status)}
                   </div>
 
                   <p className="text-xs font-medium text-[#554740] truncate">
@@ -144,7 +217,7 @@ export default function AdminMessagesClient({
           <div className="lg:col-span-7 bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-6 space-y-5 shadow-xs">
             {selected ? (
               <>
-                <div className="flex items-start justify-between border-b pb-4 border-[#E7E0D8]">
+                <div className="flex items-start justify-between border-b pb-4 border-[#E7E0D8] gap-3 flex-wrap">
                   <div>
                     <h3 className="font-serif text-xl font-bold text-[#281C18]">
                       {selected.name}
@@ -168,6 +241,17 @@ export default function AdminMessagesClient({
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <FilterSelect
+                      value={selected.status}
+                      onChange={(v) => handleStatusChange(selected.id, v)}
+                      className="w-40"
+                      buttonClassName="!rounded-[3px] !py-1.5"
+                      options={[
+                        { value: 'NEW', label: 'Yangi' },
+                        { value: 'ANSWERED', label: 'Javob berilgan' },
+                        { value: 'COMPLETED', label: 'Yakunlangan' },
+                      ]}
+                    />
                     <button
                       type="button"
                       onClick={() => handleToggleRead(selected.id, selected.is_read)}
@@ -205,16 +289,55 @@ export default function AdminMessagesClient({
                   </div>
                 </div>
 
-                <div className="pt-2">
-                  <a
-                    href={`mailto:${selected.email}?subject=${encodeURIComponent(
-                      `Re: ${selected.subject || 'Art Qala Inquiry'}`
-                    )}`}
-                    className="inline-flex items-center gap-2 bg-[#BA4E25] hover:bg-[#9C3E1B] text-white text-xs font-semibold px-5 py-2.5 rounded-[3px] transition-all cursor-pointer shadow-xs"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Mijozga Email orqali javob yozish</span>
-                  </a>
+                {selected.admin_reply && (
+                  <div>
+                    <label className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-[#429599] uppercase mb-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>YUBORILGAN JAVOB</span>
+                    </label>
+                    <div className="bg-[#281C18] text-[#FAF4EC] rounded-[4px] p-4 text-sm leading-relaxed whitespace-pre-wrap">
+                      {selected.admin_reply}
+                    </div>
+                  </div>
+                )}
+
+                {/* Reply Input — sends via Resend instead of a mailto: link,
+                    which only worked if the admin's own device happened to
+                    have a default mail client configured. */}
+                <div className="pt-2 border-t border-[#F0EAE1] space-y-3">
+                  <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase">
+                    {selected.admin_reply ? 'YANA JAVOB YOZISH' : 'MIJOZGA JAVOB YOZISH'}
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="Mijozga javobingizni yozing... Yuborilganda unga email orqali yetkaziladi."
+                    className="w-full text-xs px-3.5 py-2.5 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
+                  />
+
+                  {sentJustNow && (
+                    <div className="p-3 bg-[#E8F5E9] border border-[#A5D6A7] rounded-[3px] text-xs text-[#1B5E20] flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#2E7D32]" />
+                      <span>Javob mijozga email orqali yuborildi!</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-end">
+                    <button
+                      type="button"
+                      onClick={handleSendReply}
+                      disabled={sending || !replyText.trim()}
+                      className="bg-[#BA4E25] hover:bg-[#9C3E1B] disabled:opacity-50 text-white font-semibold text-xs px-5 py-2.5 rounded-[3px] transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+                    >
+                      {sending ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5" />
+                      )}
+                      <span>{sending ? 'Yuborilmoqda...' : 'Javobni yuborish'}</span>
+                    </button>
+                  </div>
                 </div>
               </>
             ) : (

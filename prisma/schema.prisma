@@ -282,6 +282,8 @@ model ContactMessage {
   subject    String?
   message    String
   is_read    Boolean  @default(false)
+  status     String   @default("NEW") // NEW, ANSWERED, COMPLETED
+  admin_reply String?
   created_at DateTime @default(now())
 }
 

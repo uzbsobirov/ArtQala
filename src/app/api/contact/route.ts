@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from '@/lib/auth';
 import { validateEmail } from '@/lib/validation';
 import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
+import { sendContactAcknowledgmentEmail, sendContactAdminNotification } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,6 +51,22 @@ export async function POST(req: Request) {
         message: message.trim(),
       },
     });
+
+    // Fire-and-forget: let the customer know it went through, and let the
+    // gallery's own inbox know a message is waiting — previously the only
+    // way to find out was to remember to check /admin/messages.
+    const settings = await prisma.siteSettings.findUnique({ where: { id: 'default' } }).catch(() => null);
+    const adminEmail = settings?.email || 'info@artqala.uz';
+    sendContactAcknowledgmentEmail(contactMessage.email, contactMessage.name).catch((err) =>
+      console.error('Failed to send contact acknowledgment email:', err)
+    );
+    sendContactAdminNotification(
+      adminEmail,
+      contactMessage.name,
+      contactMessage.email,
+      contactMessage.subject,
+      contactMessage.message
+    ).catch((err) => console.error('Failed to send contact admin notification email:', err));
 
     return NextResponse.json({ success: true, message: contactMessage });
   } catch (error) {
