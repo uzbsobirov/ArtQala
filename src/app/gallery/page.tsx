@@ -5,7 +5,10 @@ import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
 import { safeJsonLdString } from '@/lib/jsonLd';
 import GalleryClient from './GalleryClient';
 
-export const dynamic = 'force-dynamic';
+// Cached and revalidated every 30s instead of re-querying the DB on every
+// visit — public browsing traffic doesn't need per-request freshness, and
+// this was the single biggest contributor to slow page loads.
+export const revalidate = 30;
 
 const siteUrl = process.env.NEXTAUTH_URL || 'https://artqala.uz';
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: 'Gallery', path: '/gallery' }], siteUrl);

@@ -6,6 +6,10 @@ import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
 import { safeJsonLdString } from '@/lib/jsonLd';
 import PaintingDetailClient from './PaintingDetailClient';
 
+// See src/app/gallery/page.tsx for why this is a cache window instead of
+// rendering fresh on every request.
+export const revalidate = 30;
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

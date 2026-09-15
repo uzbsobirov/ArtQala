@@ -5,7 +5,9 @@ import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
 import { safeJsonLdString } from '@/lib/jsonLd';
 import ServicesClient from './ServicesClient';
 
-export const dynamic = 'force-dynamic';
+// See src/app/gallery/page.tsx for why this is a cache window instead of
+// force-dynamic.
+export const revalidate = 30;
 
 const siteUrl = process.env.NEXTAUTH_URL || 'https://artqala.uz';
 const breadcrumbJsonLd = buildBreadcrumbJsonLd([{ name: 'Services', path: '/services' }], siteUrl);

@@ -25,6 +25,12 @@ const workSans = Work_Sans({
   display: 'swap',
 });
 
+// The root layout wraps every single route, and getOrganizationJsonLd()
+// below queries SiteSettings on every render — without a cache window this
+// was one DB round-trip on every single page navigation site-wide, not
+// just on the handful of pages that fetch their own data.
+export const revalidate = 60;
+
 const siteUrl = process.env.NEXTAUTH_URL || 'https://artqala.uz';
 
 export const metadata: Metadata = {
