@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import KhorezmScrollTrack from '@/components/patterns/KhorezmScrollTrack';
 import { prisma } from '@/lib/prisma';
 import { safeJsonLdString } from '@/lib/jsonLd';
+import { parseSocialLinks, normalizeSocialUrl } from '@/lib/settingsUtils';
 
 const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
@@ -94,7 +95,9 @@ async function getOrganizationJsonLd() {
         addressCountry: 'UZ',
       },
       ...(settings?.location_map ? { hasMap: settings.location_map } : {}),
-      sameAs: [settings?.telegram, settings?.instagram].filter(Boolean),
+      sameAs: parseSocialLinks(settings?.social_links, settings?.telegram, settings?.instagram).map((l) =>
+        normalizeSocialUrl(l.url)
+      ),
     };
   } catch {
     return null;

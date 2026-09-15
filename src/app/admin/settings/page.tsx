@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Settings, Save, CheckCircle2, Loader2, Globe, MapPin, Phone, Mail, Clock, Send, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { Settings, Save, CheckCircle2, Loader2, Globe, MapPin, Phone, Mail, Clock, Send, Plus, Trash2, AlertCircle, Languages, MessageSquare } from 'lucide-react';
 import TimePicker from '@/components/TimePicker';
+import { parseSocialLinks, SocialLink } from '@/lib/settingsUtils';
 
 export default function AdminSettingsPage() {
   const { refreshSettings } = useApp();
@@ -41,13 +42,20 @@ export default function AdminSettingsPage() {
   ];
 
   const [schedule, setSchedule] = useState<DaySchedule[]>(defaultSchedule);
-  const [telegram, setTelegram] = useState('https://t.me/artqala');
-  const [instagram, setInstagram] = useState('https://instagram.com/artqala');
 
-  // About texts
+  // Social/messenger links (Telegram, Instagram, WhatsApp, ...) — an
+  // open-ended list instead of two fixed fields.
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([
+    { label: 'Telegram', url: 'https://t.me/artqala' },
+    { label: 'Instagram', url: 'https://instagram.com/artqala' },
+  ]);
+
+  // About texts — only Uzbek is entered by hand; EN/RU are auto-translated
+  // on blur (same pattern as Paintings/Categories/Artists/Accessories).
   const [aboutUz, setAboutUz] = useState('');
   const [aboutEn, setAboutEn] = useState('');
   const [aboutRu, setAboutRu] = useState('');
+  const [translatingAbout, setTranslatingAbout] = useState(false);
 
   // Currency
   const [manualRates, setManualRates] = useState(false);
@@ -94,6 +102,43 @@ export default function AdminSettingsPage() {
     setSchedule(updated);
   };
 
+  const handleSocialLinkChange = (idx: number, field: keyof SocialLink, value: string) => {
+    const updated = [...socialLinks];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setSocialLinks(updated);
+  };
+
+  const handleAddSocialLink = () => {
+    setSocialLinks([...socialLinks, { label: '', url: '' }]);
+  };
+
+  const handleRemoveSocialLink = (idx: number) => {
+    setSocialLinks(socialLinks.filter((_, i) => i !== idx));
+  };
+
+  // Typing the Uzbek "about us" text and blurring auto-fills EN/RU via
+  // Gemini — same pattern as the Paintings/Categories/Artists forms.
+  const autoTranslateAbout = async (text: string) => {
+    if (!text.trim()) return;
+    setTranslatingAbout(true);
+    try {
+      const res = await fetch('/api/admin/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, sourceLang: 'uz' }),
+      });
+      const data = await res.json();
+      if (data.success && data.translations) {
+        setAboutEn(data.translations.en || '');
+        setAboutRu(data.translations.ru || '');
+      }
+    } catch {
+      // Silent failure — auto-translation is a convenience, not required to save.
+    } finally {
+      setTranslatingAbout(false);
+    }
+  };
+
   useEffect(() => {
     fetch('/api/settings')
       .then((res) => res.json())
@@ -133,8 +178,7 @@ export default function AdminSettingsPage() {
             }
           }
 
-          setTelegram(s.telegram || 'https://t.me/artqala');
-          setInstagram(s.instagram || 'https://instagram.com/artqala');
+          setSocialLinks(parseSocialLinks(s.social_links, s.telegram, s.instagram));
           setAboutUz(s.about_uz || '');
           setAboutEn(s.about_en || '');
           setAboutRu(s.about_ru || '');
@@ -172,8 +216,7 @@ export default function AdminSettingsPage() {
           address,
           location_map: locationMap,
           working_hours: JSON.stringify(schedule),
-          telegram,
-          instagram,
+          social_links: JSON.stringify(socialLinks.filter((l) => l.label.trim() && l.url.trim())),
           about_uz: aboutUz,
           about_en: aboutEn,
           about_ru: aboutRu,
@@ -443,75 +486,77 @@ export default function AdminSettingsPage() {
               />
             </div>
 
-            <div>
-              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                TELEGRAM HAVOLASI
-              </label>
-              <input
-                type="text"
-                value={telegram}
-                onChange={(e) => setTelegram(e.target.value)}
-                className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-              />
-            </div>
+            {/* Ijtimoiy tarmoqlar / messenjerlar (Telegram, Instagram, WhatsApp, ...) */}
+            <div className="md:col-span-2 space-y-2 bg-[#FAF4EC]/50 p-3.5 rounded border border-[#E7E0D8]">
+              <div className="flex items-center justify-between">
+                <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase">
+                  IJTIMOIY TARMOQLAR / MESSENJERLAR
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAddSocialLink}
+                  className="text-xs font-semibold text-[#BA4E25] hover:text-[#9C3E1B] flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Yana havola qo'shish</span>
+                </button>
+              </div>
 
-            <div>
-              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                INSTAGRAM HAVOLASI
-              </label>
-              <input
-                type="text"
-                value={instagram}
-                onChange={(e) => setInstagram(e.target.value)}
-                className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-              />
+              <div className="space-y-2">
+                {socialLinks.map((link, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-[#8F7E73] shrink-0" />
+                    <input
+                      type="text"
+                      value={link.label}
+                      onChange={(e) => handleSocialLinkChange(idx, 'label', e.target.value)}
+                      placeholder="Telegram"
+                      className="w-32 shrink-0 text-xs px-3 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                    />
+                    <input
+                      type="text"
+                      value={link.url}
+                      onChange={(e) => handleSocialLinkChange(idx, 'url', e.target.value)}
+                      placeholder="https://t.me/artqala"
+                      className="flex-1 text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSocialLink(idx)}
+                      className="p-2 text-[#8F7E73] hover:text-red-600 hover:bg-white rounded transition-colors cursor-pointer"
+                      title="O'chirish"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                {socialLinks.length === 0 && (
+                  <p className="text-[10.5px] text-[#8F7E73]">Hali havola qo'shilmagan.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 2. "Biz Haqimizda" Matnlari (3 tilda) */}
+        {/* 2. "Biz Haqimizda" Matni (faqat UZ, EN/RU avtomatik tarjima qilinadi) */}
         <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] p-6 space-y-4 shadow-xs">
           <h3 className="font-serif text-lg font-semibold text-[#281C18] border-b pb-2 border-[#E7E0D8] flex items-center gap-2">
             <Globe className="w-4 h-4 text-[#429599]" />
-            <span>"Biz Haqimizda" Matnlari (About Us)</span>
+            <span>"Biz Haqimizda" Matni (About Us)</span>
           </h3>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                O'ZBEKCHA (UZ - LOTIN)
-              </label>
-              <textarea
-                rows={3}
-                value={aboutUz}
-                onChange={(e) => setAboutUz(e.target.value)}
-                className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                INGLIZCHA (EN)
-              </label>
-              <textarea
-                rows={3}
-                value={aboutEn}
-                onChange={(e) => setAboutEn(e.target.value)}
-                className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                RUSCHA (RU)
-              </label>
-              <textarea
-                rows={3}
-                value={aboutRu}
-                onChange={(e) => setAboutRu(e.target.value)}
-                className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
-              />
-            </div>
+          <div>
+            <label className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
+              O'ZBEKCHA MATN (BOSHQA TILLARGA AVTOMATIK TARJIMA QILINADI)
+              {translatingAbout && <Languages className="w-3 h-3 text-[#BA4E25] animate-pulse" />}
+            </label>
+            <textarea
+              rows={4}
+              value={aboutUz}
+              onChange={(e) => setAboutUz(e.target.value)}
+              onBlur={(e) => autoTranslateAbout(e.target.value)}
+              className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25] resize-none"
+            />
           </div>
         </div>
 

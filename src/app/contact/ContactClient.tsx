@@ -1,22 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
-import { parsePhones, formatWorkingHours } from '@/lib/settingsUtils';
+import { parsePhones, formatWorkingHours, parseSocialLinks, normalizeSocialUrl } from '@/lib/settingsUtils';
 import { MapPin, Phone, MessageSquare, Clock, CheckCircle2, Send, ExternalLink } from 'lucide-react';
 import Breadcrumbs from '@/components/Breadcrumbs';
-
-interface Branch {
-  id: string;
-  name_uz: string;
-  name_en: string;
-  name_ru: string;
-  address: string;
-  location_map: string;
-  phone: string | null;
-  working_hours: string | null;
-}
 
 export default function ContactClient() {
   const { t, lang, settings } = useApp();
@@ -24,23 +13,7 @@ export default function ContactClient() {
   const workingHoursText = formatWorkingHours(settings?.working_hours, lang);
   const addressText = settings?.address || t.contact.address;
   const locationMap = settings?.location_map || 'https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8';
-
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const primaryMapLink = branches[0]?.location_map || locationMap;
-
-  useEffect(() => {
-    fetch('/api/branches')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.success && Array.isArray(data.branches)) {
-          setBranches(data.branches);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const branchName = (b: Branch) =>
-    lang === 'ru' ? b.name_ru : lang === 'uz' ? b.name_uz : b.name_en;
+  const socialLinks = parseSocialLinks(settings?.social_links, settings?.telegram, settings?.instagram);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -200,68 +173,26 @@ export default function ContactClient() {
 
           {/* Right Column: Visit, Reach Directly, Map Card */}
           <div className="lg:col-span-5 space-y-6">
-            {/* Visit Card(s) — one per branch when branches are configured,
-                otherwise fall back to the single gallery-wide address. */}
-            {branches.length > 0 ? (
-              <div className="bg-[#281C18] text-[#FAF4EC] rounded-[3px] p-6 space-y-4">
-                <div className="flex items-center gap-2 text-[11px] font-bold tracking-[2px] text-[#5AB3B7] uppercase">
-                  <MapPin className="w-4 h-4" />
-                  <span>{t.contact.branchesTitle}</span>
-                </div>
-                <div className="space-y-4 divide-y divide-white/10">
-                  {branches.map((b, idx) => (
-                    <div key={b.id} className={idx > 0 ? 'pt-4 space-y-2' : 'space-y-2'}>
-                      <p className="text-sm font-bold">{branchName(b)}</p>
-                      <p className="text-sm text-[#E4DAD1]">{b.address}</p>
-                      {b.working_hours && (
-                        <div className="flex items-start gap-2 text-xs text-[#C8B9AF]">
-                          <Clock className="w-3.5 h-3.5 text-[#5AB3B7] mt-0.5 shrink-0" />
-                          <span>{b.working_hours}</span>
-                        </div>
-                      )}
-                      {b.phone && (
-                        <div className="flex items-center gap-2 text-xs text-[#C8B9AF]">
-                          <Phone className="w-3.5 h-3.5 text-[#5AB3B7] shrink-0" />
-                          <a href={`tel:${b.phone.replace(/[^\d+]/g, '')}`} className="hover:text-[#5AB3B7] transition-colors">
-                            {b.phone}
-                          </a>
-                        </div>
-                      )}
-                      {b.location_map && (
-                        <a
-                          href={b.location_map}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[#5AB3B7] hover:underline text-xs pt-0.5 inline-flex items-center gap-1"
-                        >
-                          <span>{t.contact.viewOnMap} →</span>
-                        </a>
-                      )}
-                    </div>
-                  ))}
-                </div>
+            {/* Visit Card */}
+            <div className="bg-[#281C18] text-[#FAF4EC] rounded-[3px] p-6 space-y-3">
+              <div className="flex items-center gap-2 text-[11px] font-bold tracking-[2px] text-[#5AB3B7] uppercase">
+                <MapPin className="w-4 h-4" />
+                <span>{t.contact.visitTitle}</span>
               </div>
-            ) : (
-              <div className="bg-[#281C18] text-[#FAF4EC] rounded-[3px] p-6 space-y-3">
-                <div className="flex items-center gap-2 text-[11px] font-bold tracking-[2px] text-[#5AB3B7] uppercase">
-                  <MapPin className="w-4 h-4" />
-                  <span>{t.contact.visitTitle}</span>
-                </div>
-                <p className="text-sm font-medium">{addressText}</p>
-                <div className="flex items-start gap-2 text-xs text-[#C8B9AF]">
-                  <Clock className="w-3.5 h-3.5 text-[#5AB3B7] mt-0.5 shrink-0" />
-                  <span>{workingHoursText}</span>
-                </div>
-                <a
-                  href={locationMap}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[#5AB3B7] hover:underline text-xs pt-1 inline-flex items-center gap-1"
-                >
-                  <span>{t.contact.viewOnMap} →</span>
-                </a>
+              <p className="text-sm font-medium">{addressText}</p>
+              <div className="flex items-start gap-2 text-xs text-[#C8B9AF]">
+                <Clock className="w-3.5 h-3.5 text-[#5AB3B7] mt-0.5 shrink-0" />
+                <span>{workingHoursText}</span>
               </div>
-            )}
+              <a
+                href={locationMap}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[#5AB3B7] hover:underline text-xs pt-1 inline-flex items-center gap-1"
+              >
+                <span>{t.contact.viewOnMap} →</span>
+              </a>
+            </div>
 
             {/* Direct Contact Card */}
             <div className="bg-[#281C18] text-[#FAF4EC] rounded-[3px] p-6 space-y-3">
@@ -277,38 +208,25 @@ export default function ContactClient() {
                     </a>
                   </div>
                 ))}
-                {settings?.telegram && (
-                  <div className="flex items-center gap-2.5">
+                {socialLinks.map((link, idx) => (
+                  <div key={idx} className="flex items-center gap-2.5">
                     <MessageSquare className="w-4 h-4 text-[#BA4E25] shrink-0" />
                     <a
-                      href={settings.telegram.startsWith('http') ? settings.telegram : `https://t.me/${settings.telegram.replace('@', '')}`}
+                      href={normalizeSocialUrl(link.url)}
                       target="_blank"
                       rel="noreferrer"
                       className="hover:text-[#5AB3B7] transition-colors"
                     >
-                      Telegram · @{settings.telegram.split('/').pop()?.replace('@', '') || 'artqala'}
+                      {link.label}
                     </a>
                   </div>
-                )}
-                {settings?.instagram && (
-                  <div className="flex items-center gap-2.5">
-                    <svg className="w-4 h-4 text-[#BA4E25] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-                    <a
-                      href={settings.instagram.startsWith('http') ? settings.instagram : `https://instagram.com/${settings.instagram.replace('@', '')}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="hover:text-[#5AB3B7] transition-colors"
-                    >
-                      Instagram · @{settings.instagram.split('/').pop()?.replace('@', '') || 'artqala'}
-                    </a>
-                  </div>
-                )}
+                ))}
               </div>
             </div>
 
             {/* Interactive Map Pin Illustration (Clickable link to Google Maps) */}
             <a
-              href={primaryMapLink}
+              href={locationMap}
               target="_blank"
               rel="noreferrer"
               className="relative aspect-[16/10] w-full rounded-[3px] overflow-hidden border border-[#E7E0D8] bg-[#F4ECE1] block group cursor-pointer"

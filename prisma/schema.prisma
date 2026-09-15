@@ -252,6 +252,12 @@ model SiteSettings {
   working_hours String   @default("Mon - Sun: 09:00 - 19:00")
   telegram      String   @default("https://t.me/artqala")
   instagram     String   @default("https://instagram.com/artqala")
+  // JSON array of {label, url} — lets the admin add any number of social/
+  // messenger links (Telegram, Instagram, WhatsApp, Facebook, ...) instead
+  // of being limited to the two fixed fields above. Those two fields are
+  // kept only as a fallback seed/for older code paths; new UI reads/writes
+  // this field exclusively.
+  social_links  String?
   about_en      String   @default("Art Qala is a premier art gallery and studio located in the historic heart of Tashkent, Uzbekistan, celebrating Central Asian heritage.")
   about_ru      String   @default("Art Qala — ведущая художественная галерея и студия в историческом центре Ташкента.")
   about_uz      String   @default("Art Qala — Toshkent shahrining tarixiy markazida joylashgan yetakchi san'at galereyasi va studiyasi.")
@@ -262,23 +268,6 @@ model SiteSettings {
   manual_rates  Boolean  @default(false)
 
   updated_at    DateTime @updatedAt
-}
-
-// A physical gallery location ("filial"). SiteSettings.address/location_map
-// remain the single "main" address shown in the site header/footer JSON-LD;
-// Branch is the full list shown on the Contact page.
-model Branch {
-  id           String   @id @default(cuid())
-  name_uz      String
-  name_en      String
-  name_ru      String
-  address      String
-  location_map String
-  phone        String?
-  working_hours String?
-  order        Int      @default(0)
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
 }
 
 model ContactMessage {

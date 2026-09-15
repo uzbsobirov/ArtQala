@@ -17,7 +17,6 @@ import {
   Star,
   UserCog,
   Settings,
-  Building2,
   ArrowUpRight,
   LogOut,
   Loader2,
@@ -85,7 +84,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { href: '/admin/customers', label: t.admin.customers, icon: Users2 },
     { href: '/admin/reviews', label: t.admin.reviews, icon: Star },
     { href: '/admin/staff', label: t.admin.staff, icon: UserCog },
-    { href: '/admin/branches', label: t.admin.branches, icon: Building2 },
     { href: '/admin/settings', label: t.admin.settings, icon: Settings },
   ];
 
@@ -102,7 +100,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     if (pathname.startsWith('/admin/customers')) return t.admin.customers;
     if (pathname.startsWith('/admin/reviews')) return t.admin.reviews;
     if (pathname.startsWith('/admin/staff')) return t.admin.staff;
-    if (pathname.startsWith('/admin/branches')) return t.admin.branches;
     if (pathname.startsWith('/admin/settings')) return t.admin.settings;
     return 'Admin';
   };

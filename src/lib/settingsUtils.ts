@@ -34,6 +34,45 @@ export function getAboutText(
   return fallback;
 }
 
+export interface SocialLink {
+  label: string;
+  url: string;
+}
+
+// Admin can add any number of social/messenger links (Telegram, Instagram,
+// WhatsApp, Facebook, ...) stored as JSON in SiteSettings.social_links.
+// Falls back to the older fixed telegram/instagram fields when that JSON
+// hasn't been set yet, so nothing disappears for sites that predate it.
+export function parseSocialLinks(
+  raw: string | null | undefined,
+  legacyTelegram?: string | null,
+  legacyInstagram?: string | null
+): SocialLink[] {
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const links = parsed
+          .filter((l) => l && typeof l === 'object' && l.url)
+          .map((l) => ({
+            label: String(l.label || '').trim() || 'Link',
+            url: String(l.url).trim(),
+          }));
+        if (links.length > 0) return links;
+      }
+    } catch {}
+  }
+
+  const fallback: SocialLink[] = [];
+  if (legacyTelegram) fallback.push({ label: 'Telegram', url: legacyTelegram });
+  if (legacyInstagram) fallback.push({ label: 'Instagram', url: legacyInstagram });
+  return fallback;
+}
+
+export function normalizeSocialUrl(url: string): string {
+  return url.startsWith('http') ? url : `https://${url}`;
+}
+
 export function formatWorkingHours(
   rawWorkingHours: string | null | undefined,
   lang: Language

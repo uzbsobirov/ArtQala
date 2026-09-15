@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
-import { parsePhones, formatWorkingHours, getAboutText } from '@/lib/settingsUtils';
+import { parsePhones, formatWorkingHours, getAboutText, parseSocialLinks, normalizeSocialUrl } from '@/lib/settingsUtils';
 
 export default function Footer() {
   const { t, lang, settings } = useApp();
@@ -14,9 +14,10 @@ export default function Footer() {
   const aboutText = getAboutText(settings, lang, t.footer.about);
   const addressText = settings?.address || 'Barakhon Madrasah, Tashkent, Uzbekistan';
   const locationMap = settings?.location_map || 'https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8';
-  const cityCountryText = settings?.address
-    ? settings.address.split(',').slice(-2).map((s) => s.trim()).join(', ')
-    : 'Tashkent, Uzbekistan';
+  const socialLinks = parseSocialLinks(settings?.social_links, settings?.telegram, settings?.instagram);
+  const countryText = settings?.address
+    ? settings.address.split(',').pop()?.trim() || 'Uzbekistan'
+    : 'Uzbekistan';
 
   return (
     <footer className="bg-[#281C18] text-[#E8DFD8] pt-14 pb-8 border-t border-[#3D2C26]">
@@ -75,26 +76,17 @@ export default function Footer() {
                   {p}
                 </a>
               ))}
-              {settings?.telegram && (
+              {socialLinks.map((link, idx) => (
                 <a
-                  href={settings.telegram.startsWith('http') ? settings.telegram : `https://t.me/${settings.telegram.replace('@', '')}`}
+                  key={idx}
+                  href={normalizeSocialUrl(link.url)}
                   target="_blank"
                   rel="noreferrer"
                   className="hover:text-[#429599] transition-colors"
                 >
-                  Telegram · @{settings.telegram.split('/').pop()?.replace('@', '') || 'artqala'}
+                  {link.label}
                 </a>
-              )}
-              {settings?.instagram && (
-                <a
-                  href={settings.instagram.startsWith('http') ? settings.instagram : `https://instagram.com/${settings.instagram.replace('@', '')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-[#429599] transition-colors"
-                >
-                  Instagram · @{settings.instagram.split('/').pop()?.replace('@', '') || 'artqala'}
-                </a>
-              )}
+              ))}
             </div>
           </div>
 
@@ -135,7 +127,7 @@ export default function Footer() {
           <div className="flex items-center gap-4">
             <span>EN · RU · UZ (Lotin)</span>
             <span>•</span>
-            <span>{cityCountryText}</span>
+            <span>{countryText}</span>
           </div>
         </div>
       </div>

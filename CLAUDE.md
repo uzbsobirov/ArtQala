@@ -69,12 +69,18 @@ ota-kategoriya (product type), leaving only bola-kategoriya (subject) for the ad
 **Discount priority (highest to lowest)**: painting's own discount > artist-wide > category-wide
 > site-wide (`Discount.scope`: `PAINTING` / `ARTIST` / `CATEGORY` / `SITE`).
 
-**`Branch`** is a separate table from `SiteSettings` — `SiteSettings.address`/`location_map` is
-the single gallery-wide address shown in the header/footer and JSON-LD, while `Branch` rows are
-the full list of physical locations ("filial"lar) shown on the Contact page, each with its own
-name (uz/en/ru), address, Google Maps link, phone and working hours, ordered by `order`. Managed
-at `/admin/branches`; the Contact page (`src/app/contact/ContactClient.tsx`) fetches
-`/api/branches` and falls back to the single `SiteSettings` address when no branches exist yet.
+**Gallery location is a single address** (`SiteSettings.address`/`location_map`), edited at
+`/admin/settings` — there is no separate multi-branch model. **Social/messenger links are an
+open-ended list**, not fixed fields: `SiteSettings.social_links` is a JSON array of
+`{label, url}` edited freely in the admin (add/remove any number of Telegram/Instagram/WhatsApp/
+etc. links), falling back to the older fixed `telegram`/`instagram` columns via
+`src/lib/settingsUtils.ts#parseSocialLinks()` for sites that predate this field. Every place that
+renders social links (`Footer.tsx`, `ContactClient.tsx`, `layout.tsx`'s JSON-LD `sameAs`) goes
+through that helper — never read `settings.telegram`/`settings.instagram` directly.
+
+**"About Us" is entered only in Uzbek** in the admin (`SiteSettings.about_uz`) — EN/RU
+(`about_en`/`about_ru`) are auto-translated on blur via `/api/admin/translate`, the same pattern
+used elsewhere; there's no manual EN/RU input for this field.
 
 **No native `<select>`, `<input type="date">`, or `<input type="time">` anywhere in this
 codebase** — they render inconsistently across browsers/OSes. Use the shared components instead:

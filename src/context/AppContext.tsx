@@ -25,6 +25,7 @@ export interface SiteSettingsData {
   working_hours?: string;
   telegram?: string;
   instagram?: string;
+  social_links?: string;
   about_en?: string;
   about_ru?: string;
   about_uz?: string;
