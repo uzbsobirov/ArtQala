@@ -264,6 +264,23 @@ model SiteSettings {
   updated_at    DateTime @updatedAt
 }
 
+// A physical gallery location ("filial"). SiteSettings.address/location_map
+// remain the single "main" address shown in the site header/footer JSON-LD;
+// Branch is the full list shown on the Contact page.
+model Branch {
+  id           String   @id @default(cuid())
+  name_uz      String
+  name_en      String
+  name_ru      String
+  address      String
+  location_map String
+  phone        String?
+  working_hours String?
+  order        Int      @default(0)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+}
+
 model ContactMessage {
   id         String   @id @default(cuid())
   name       String

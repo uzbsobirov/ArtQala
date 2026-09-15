@@ -69,6 +69,13 @@ ota-kategoriya (product type), leaving only bola-kategoriya (subject) for the ad
 **Discount priority (highest to lowest)**: painting's own discount > artist-wide > category-wide
 > site-wide (`Discount.scope`: `PAINTING` / `ARTIST` / `CATEGORY` / `SITE`).
 
+**`Branch`** is a separate table from `SiteSettings` — `SiteSettings.address`/`location_map` is
+the single gallery-wide address shown in the header/footer and JSON-LD, while `Branch` rows are
+the full list of physical locations ("filial"lar) shown on the Contact page, each with its own
+name (uz/en/ru), address, Google Maps link, phone and working hours, ordered by `order`. Managed
+at `/admin/branches`; the Contact page (`src/app/contact/ContactClient.tsx`) fetches
+`/api/branches` and falls back to the single `SiteSettings` address when no branches exist yet.
+
 **No native `<select>`, `<input type="date">`, or `<input type="time">` anywhere in this
 codebase** — they render inconsistently across browsers/OSes. Use the shared components instead:
 `src/components/FilterSelect.tsx` (dropdown — pass `searchable` for long lists like country
