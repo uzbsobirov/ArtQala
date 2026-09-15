@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const ip = getClientIp(request);
     const rateLimitKey = `verify-otp:${ip}:${normalizedEmail}`;
 
-    const rateCheck = checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
+    const rateCheck = await checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
     if (!rateCheck.allowed) {
       const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
       return NextResponse.json(
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     });
 
     if (!record) {
-      recordFailedAttempt(rateLimitKey);
+      await recordFailedAttempt(rateLimitKey);
       return NextResponse.json(
         { success: false, error: 'Invalid or expired verification code' },
         { status: 400 }

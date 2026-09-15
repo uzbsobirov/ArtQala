@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   try {
     const ip = getClientIp(req);
     const rateLimitKey = `contact:${ip}`;
-    const rateCheck = checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
+    const rateCheck = await checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
     if (!rateCheck.allowed) {
       const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
       return NextResponse.json(
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         { status: 429 }
       );
     }
-    recordFailedAttempt(rateLimitKey);
+    await recordFailedAttempt(rateLimitKey);
 
     const body = await req.json();
     const { name, email, subject, message } = body;

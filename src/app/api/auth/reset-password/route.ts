@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const normalizedEmail = email.toLowerCase().trim();
     const rateLimitKey = `reset-password:${ip}:${normalizedEmail}`;
 
-    const rateCheck = checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
+    const rateCheck = await checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
     if (!rateCheck.allowed) {
       const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
       return NextResponse.json(
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     });
 
     if (!record) {
-      recordFailedAttempt(rateLimitKey);
+      await recordFailedAttempt(rateLimitKey);
       return NextResponse.json(
         { success: false, error: "Noto'g'ri yoki muddati o'tgan kod" },
         { status: 400 }

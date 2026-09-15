@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   }
 
   const rateLimitKey = `translate:${auth.user.id}`;
-  const rateCheck = checkRateLimit(rateLimitKey, 60, 15 * 60 * 1000);
+  const rateCheck = await checkRateLimit(rateLimitKey, 60, 15 * 60 * 1000);
   if (!rateCheck.allowed) {
     const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
     return NextResponse.json(
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       { status: 429 }
     );
   }
-  recordFailedAttempt(rateLimitKey);
+  await recordFailedAttempt(rateLimitKey);
 
   try {
     const body = await request.json();

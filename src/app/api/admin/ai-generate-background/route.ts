@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
   // AI generation costs money per call — throttle per-admin regardless of IP.
   const rateLimitKey = `ai-bg:${auth.user.id}`;
-  const rateCheck = checkRateLimit(rateLimitKey, 20, 15 * 60 * 1000);
+  const rateCheck = await checkRateLimit(rateLimitKey, 20, 15 * 60 * 1000);
   if (!rateCheck.allowed) {
     const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
     return NextResponse.json(
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       { status: 429 }
     );
   }
-  recordFailedAttempt(rateLimitKey);
+  await recordFailedAttempt(rateLimitKey);
 
   try {
     const body = await request.json();

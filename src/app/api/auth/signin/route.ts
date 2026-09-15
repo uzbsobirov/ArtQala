@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const rateLimitKey = `signin:${ip}:${normalizedEmail}`;
 
     // 1. Check rate limit (Max 5 attempts in 15 minutes)
-    const rateCheck = checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
+    const rateCheck = await checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
     if (!rateCheck.allowed) {
       const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
       return NextResponse.json(
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     });
 
     if (!user || !user.password_hash) {
-      recordFailedAttempt(rateLimitKey);
+      await recordFailedAttempt(rateLimitKey);
       return NextResponse.json(
         { success: false, error: 'Invalid email or password' },
         { status: 401 }
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
     const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) {
-      recordFailedAttempt(rateLimitKey);
+      await recordFailedAttempt(rateLimitKey);
       return NextResponse.json(
         { success: false, error: 'Invalid email or password' },
         { status: 401 }
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     }
 
     // Successful login: reset failed attempts
-    resetRateLimit(rateLimitKey);
+    await resetRateLimit(rateLimitKey);
 
     const userSession = {
       id: user.id,

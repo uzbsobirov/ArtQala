@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const ip = getClientIp(request);
     const rateLimitKey = `forgot-password:${ip}`;
 
-    const rateCheck = checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
+    const rateCheck = await checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
     if (!rateCheck.allowed) {
       const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
       return NextResponse.json(
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
         { status: 429 }
       );
     }
-    recordFailedAttempt(rateLimitKey);
+    await recordFailedAttempt(rateLimitKey);
 
     const { email } = await request.json();
 
