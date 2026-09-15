@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Plus, Trash2, Pencil, X, Layers, CornerDownRight, Languages } from 'lucide-react';
 import FilterSelect from '@/components/FilterSelect';
 
@@ -38,11 +38,20 @@ export default function AdminCategoriesClient({
   const [loading, setLoading] = useState(false);
   const [translating, setTranslating] = useState(false);
 
+  // Guards against a stale translate response landing after the form has
+  // moved on (e.g. admin submits "Kartina", its translation is still
+  // in-flight, they immediately open a fresh "Somon" form — without this,
+  // "Kartina"'s late EN/RU response would land in "Somon"'s empty fields).
+  // resetForm() bumps this to invalidate anything still in flight for the
+  // previous form instance.
+  const translateSeqRef = useRef(0);
+
   // Typing in UZ and blurring auto-fills EN/RU via Gemini — same pattern as
   // the Paintings and Accessories forms. Never overwrites a field the admin
   // has already typed something into.
   const autoTranslateName = async (text: string) => {
     if (!text.trim()) return;
+    const seq = ++translateSeqRef.current;
     setTranslating(true);
     try {
       const res = await fetch('/api/admin/translate', {
@@ -51,6 +60,7 @@ export default function AdminCategoriesClient({
         body: JSON.stringify({ text, sourceLang: 'uz' }),
       });
       const data = await res.json();
+      if (seq !== translateSeqRef.current) return; // stale — a reset or newer request happened
       if (data.success && data.translations) {
         setNameEn((prev) => (prev.trim() ? prev : data.translations.en || prev));
         setNameRu((prev) => (prev.trim() ? prev : data.translations.ru || prev));
@@ -58,7 +68,7 @@ export default function AdminCategoriesClient({
     } catch {
       // Silent failure — auto-translation is a convenience, not required to save.
     } finally {
-      setTranslating(false);
+      if (seq === translateSeqRef.current) setTranslating(false);
     }
   };
 
@@ -87,6 +97,7 @@ export default function AdminCategoriesClient({
   };
 
   const resetForm = () => {
+    translateSeqRef.current++; // invalidate any translate request tied to the previous form instance
     setEditingCategory(null);
     setNameUz('');
     setNameEn('');
@@ -114,6 +125,7 @@ export default function AdminCategoriesClient({
   };
 
   const openEditModal = (cat: CategoryItem) => {
+    translateSeqRef.current++; // invalidate any translate request tied to a previous form instance
     setEditingCategory(cat);
     setFormMode('edit');
     setNameUz(cat.name_uz || '');
@@ -203,21 +215,23 @@ export default function AdminCategoriesClient({
   const parents = categories.filter((c) => !c.parent_id);
   const childrenOf = (parentId: string) => categories.filter((c) => c.parent_id === parentId);
 
-  const renderRow = (c: CategoryItem, isChild: boolean) => (
-    <tr key={c.id} className="hover:bg-[#FAF4EC]/40 transition-colors">
-      <td className="py-3.5 px-4 font-semibold text-[#281C18]">
+  // A single row's cells (shared markup between the parent header row and
+  // child rows — only the container styling around it differs).
+  const renderCells = (c: CategoryItem, isChild: boolean) => (
+    <>
+      <td className={`py-3 px-4 ${isChild ? 'text-[#554740]' : 'font-semibold text-[#281C18]'}`}>
         <span className="flex items-center gap-1.5">
           {isChild && <CornerDownRight className="w-3.5 h-3.5 text-[#C8B8AB] shrink-0" />}
           {c.name_uz}
         </span>
       </td>
-      <td className="py-3.5 px-4 text-[#554740]">{c.name_en}</td>
-      <td className="py-3.5 px-4 text-[#554740]">{c.name_ru}</td>
-      <td className="py-3.5 px-4 font-mono text-[#8F8178]">{c.slug}</td>
-      <td className="py-3.5 px-4 text-center font-bold text-[#BA4E25]">
+      <td className="py-3 px-4 text-[#554740]">{c.name_en}</td>
+      <td className="py-3 px-4 text-[#554740]">{c.name_ru}</td>
+      <td className="py-3 px-4 font-mono text-[#8F8178]">{c.slug}</td>
+      <td className="py-3 px-4 text-center font-bold text-[#BA4E25]">
         {c._count?.paintings || 0}
       </td>
-      <td className="py-3.5 px-4 text-right">
+      <td className="py-3 px-4 text-right">
         <div className="flex items-center justify-end gap-1">
           <button
             onClick={() => openEditModal(c)}
@@ -235,7 +249,7 @@ export default function AdminCategoriesClient({
           </button>
         </div>
       </td>
-    </tr>
+    </>
   );
 
   return (
@@ -270,35 +284,50 @@ export default function AdminCategoriesClient({
         </div>
       </div>
 
-      <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] shadow-xs overflow-hidden">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="bg-[#FAF4EC] border-b border-[#E7E0D8] text-[#8F8178] font-bold tracking-wider uppercase text-[10.5px]">
-              <th className="py-3 px-4">NOMI (UZ)</th>
-              <th className="py-3 px-4">NOMI (EN)</th>
-              <th className="py-3 px-4">NOMI (RU)</th>
-              <th className="py-3 px-4">SLUG</th>
-              <th className="py-3 px-4 text-center">ASARLAR SONI</th>
-              <th className="py-3 px-4 text-right">AMALLAR</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#F0EAE1]">
-            {parents.length === 0 && (
-              <tr>
-                <td colSpan={6} className="py-8 px-4 text-center text-[#8F8178]">
-                  Hali kategoriya yo'q. Avval "Ota kategoriya qo'shish" bilan boshlang.
-                </td>
-              </tr>
-            )}
-            {parents.map((parent) => (
-              <React.Fragment key={parent.id}>
-                {renderRow(parent, false)}
-                {childrenOf(parent.id).map((child) => renderRow(child, true))}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Each parent category is its own card, with its children nested
+          visibly inside it — kept visually separate from other parents'
+          groups instead of one continuous table where ota/bola rows could
+          blur together. */}
+      {parents.length === 0 ? (
+        <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] shadow-xs py-10 px-4 text-center text-[#8F8178] text-xs">
+          Hali kategoriya yo'q. Avval "Ota kategoriya qo'shish" bilan boshlang.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {parents.map((parent) => {
+            const children = childrenOf(parent.id);
+            return (
+              <div
+                key={parent.id}
+                className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] shadow-xs overflow-hidden"
+              >
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-[#FAF4EC] border-b border-[#E7E0D8] text-[#8F8178] font-bold tracking-wider uppercase text-[10.5px]">
+                      <th className="py-2.5 px-4">NOMI (UZ)</th>
+                      <th className="py-2.5 px-4">NOMI (EN)</th>
+                      <th className="py-2.5 px-4">NOMI (RU)</th>
+                      <th className="py-2.5 px-4">SLUG</th>
+                      <th className="py-2.5 px-4 text-center">ASARLAR SONI</th>
+                      <th className="py-2.5 px-4 text-right">AMALLAR</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F0EAE1]">
+                    <tr className="bg-white hover:bg-[#FAF4EC]/60 transition-colors">
+                      {renderCells(parent, false)}
+                    </tr>
+                    {children.map((child) => (
+                      <tr key={child.id} className="bg-[#FAF4EC]/40 hover:bg-[#FAF4EC]/70 transition-colors">
+                        {renderCells(child, true)}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Modal: Create (parent/child) or Edit Category */}
       {isModalOpen && (

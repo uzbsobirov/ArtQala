@@ -66,12 +66,11 @@ export default function AdminArtistsClient({
     },
   };
 
-  // Typing in UZ and blurring auto-fills EN/RU via Gemini — same pattern as
-  // the Paintings form. Never overwrites a field the admin already filled in.
-  const autoTranslate = async (group: keyof typeof fieldGroups, text: string) => {
-    if (!text.trim()) return;
-    const groupFields = fieldGroups[group];
-    setTranslatingGroup(group);
+  // Returns the raw translation (or null on failure) without touching state
+  // — used both by the live onBlur handler below and by handleSave, which
+  // needs the result synchronously rather than waiting on a state update.
+  const translateText = async (text: string): Promise<{ en?: string; ru?: string } | null> => {
+    if (!text.trim()) return null;
     try {
       const res = await fetch('/api/admin/translate', {
         method: 'POST',
@@ -79,15 +78,27 @@ export default function AdminArtistsClient({
         body: JSON.stringify({ text, sourceLang: 'uz' }),
       });
       const data = await res.json();
-      if (data.success && data.translations) {
+      return data.success && data.translations ? data.translations : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Typing in UZ and blurring auto-fills EN/RU via Gemini — same pattern as
+  // the Paintings form. Never overwrites a field the admin already filled in.
+  const autoTranslate = async (group: keyof typeof fieldGroups, text: string) => {
+    if (!text.trim()) return;
+    const groupFields = fieldGroups[group];
+    setTranslatingGroup(group);
+    try {
+      const translations = await translateText(text);
+      if (translations) {
         (['en', 'ru'] as const).forEach((lang) => {
-          const value = data.translations[lang];
+          const value = translations[lang];
           const [currentValue, setValue] = groupFields[lang];
           if (value && !currentValue.trim()) setValue(value);
         });
       }
-    } catch {
-      // Silent failure — auto-translation is a convenience, not required to save.
     } finally {
       setTranslatingGroup(null);
     }
@@ -110,12 +121,18 @@ export default function AdminArtistsClient({
   const openEditModal = (artist: ArtistItem) => {
     setEditingArtist(artist);
     setName(artist.name);
-    setSpecialtyUz(artist.specialty_uz || artist.specialty_en || '');
-    setSpecialtyEn(artist.specialty_en || '');
-    setSpecialtyRu(artist.specialty_ru || '');
-    setBioUz(artist.bio_uz || artist.bio_en || '');
-    setBioEn(artist.bio_en || '');
-    setBioRu(artist.bio_ru || '');
+    const uzSpecialty = artist.specialty_uz || artist.specialty_en || '';
+    const uzBio = artist.bio_uz || artist.bio_en || '';
+    setSpecialtyUz(uzSpecialty);
+    setBioUz(uzBio);
+    // A record saved before this fix could have EN/RU copied verbatim from
+    // UZ (the old silent fallback when translation hadn't finished yet) —
+    // treat that as "never actually translated" so re-saving retranslates
+    // it, instead of the untranslated text looking like a real value.
+    setSpecialtyEn(artist.specialty_en && artist.specialty_en !== uzSpecialty ? artist.specialty_en : '');
+    setSpecialtyRu(artist.specialty_ru && artist.specialty_ru !== uzSpecialty ? artist.specialty_ru : '');
+    setBioEn(artist.bio_en && artist.bio_en !== uzBio ? artist.bio_en : '');
+    setBioRu(artist.bio_ru && artist.bio_ru !== uzBio ? artist.bio_ru : '');
     setPhoto(artist.photo || '');
     setCategoryId(artist.category_id || '');
     setIsModalOpen(true);
@@ -154,14 +171,39 @@ export default function AdminArtistsClient({
 
     setLoading(true);
     try {
+      // If the admin filled in UZ and submitted before onBlur's translation
+      // finished (or it simply never fired), give it one real attempt here
+      // instead of silently saving the Uzbek text as if it were EN/RU — a
+      // gallery visitor reading the site in English/Russian should never
+      // see an untranslated bio just because the timing was unlucky.
+      let finalSpecialtyEn = specialtyEn;
+      let finalSpecialtyRu = specialtyRu;
+      if (!finalSpecialtyEn.trim() && specialtyUz.trim()) {
+        const t = await translateText(specialtyUz);
+        if (t) {
+          finalSpecialtyEn = t.en || finalSpecialtyEn;
+          finalSpecialtyRu = t.ru || finalSpecialtyRu;
+        }
+      }
+
+      let finalBioEn = bioEn;
+      let finalBioRu = bioRu;
+      if (!finalBioEn.trim() && bioUz.trim()) {
+        const t = await translateText(bioUz);
+        if (t) {
+          finalBioEn = t.en || finalBioEn;
+          finalBioRu = t.ru || finalBioRu;
+        }
+      }
+
       const payload = {
         name,
         specialty_uz: specialtyUz || 'Rassom',
-        specialty_en: specialtyEn || specialtyUz || 'Painter',
-        specialty_ru: specialtyRu || specialtyUz || 'Художник',
+        specialty_en: finalSpecialtyEn || specialtyUz || 'Painter',
+        specialty_ru: finalSpecialtyRu || specialtyUz || 'Художник',
         bio_uz: bioUz,
-        bio_en: bioEn || bioUz,
-        bio_ru: bioRu || bioUz,
+        bio_en: finalBioEn || bioUz,
+        bio_ru: finalBioRu || bioUz,
         photo: photo || null,
         category_id: categoryId || null,
       };

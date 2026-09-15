@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Palette } from 'lucide-react';
 import FilterSelect from '@/components/FilterSelect';
 
 interface AdminPaintingsClientProps {
@@ -121,6 +121,25 @@ export default function AdminPaintingsClient({
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F0EAE1]">
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-12 px-4 text-center">
+                    <div className="flex flex-col items-center gap-2 text-[#8F8178]">
+                      <Palette className="w-8 h-8 text-[#D2C5BA]" />
+                      <p className="text-sm font-medium text-[#726861]">
+                        {paintings.length === 0
+                          ? "Hali kartina qo'shilmagan"
+                          : 'Bu qidiruv/filtrga mos kartina topilmadi'}
+                      </p>
+                      {paintings.length === 0 && (
+                        <p className="text-xs">
+                          Yuqoridagi "+ Add Painting" tugmasi bilan birinchi kartinangizni qo'shing.
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              )}
               {filtered.map((p) => {
                 let thumb = '/assets/p-arch.svg';
                 try {
@@ -160,9 +179,16 @@ export default function AdminPaintingsClient({
                     </td>
                     <td className="py-3 px-4">
                       {p.is_sold ? (
-                        <span className="bg-[#E7DFD9] text-[#7A6B62] text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
-                          Sold
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="bg-[#E7DFD9] text-[#7A6B62] text-[10.5px] font-bold px-2.5 py-0.5 rounded-full self-start">
+                            Sold
+                          </span>
+                          {p.inquiries?.[0]?.final_price != null && (
+                            <span className="text-[10.5px] text-[#8F7E73]">
+                              Sotilgan narx: <strong className="text-[#281C18]">${p.inquiries[0].final_price}</strong>
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="bg-[#DCFCE7] text-[#16A34A] text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
                           Available

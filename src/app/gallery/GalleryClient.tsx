@@ -5,12 +5,13 @@ import { useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import PaintingCard, { PaintingItem } from '@/components/PaintingCard';
 import WishlistInquiryModal from '@/components/WishlistInquiryModal';
-import { Search, Heart, SlidersHorizontal, Send, ChevronDown, X, Palette, CalendarDays, Ruler } from 'lucide-react';
+import { Search, Heart, SlidersHorizontal, Send, ChevronDown, X, Palette, CalendarDays, Ruler, Layers } from 'lucide-react';
 import AnimatedMadohil from '@/components/patterns/AnimatedMadohil';
 import DandanaScrollTrack from '@/components/patterns/DandanaScrollTrack';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import FilterSelect from '@/components/FilterSelect';
 import { getSizeBucket } from '@/lib/paintingSize';
+import { effectiveProductType } from '@/lib/productType';
 
 interface GalleryClientProps {
   paintings: any[];
@@ -21,7 +22,17 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
   const { lang, t, wishlist } = useApp();
   const searchParams = useSearchParams();
 
+  // The top pills are product types only (ota kategoriya — Kartina,
+  // Kulolchilik, ...); the subject/theme (bola kategoriya — Portret,
+  // Tabiat, ...) is a separate filter below, scoped to whichever product
+  // type is selected — showing both flattened together as pills made it
+  // impossible to tell which was which, and picking a product-type pill
+  // used to only match paintings tagged with that exact category, missing
+  // every painting actually tagged with one of its themes.
+  const topLevelCategories = useMemo(() => categories.filter((c) => !c.parent_id), [categories]);
+
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [onlyWishlist, setOnlyWishlist] = useState<boolean>(false);
   const [showWishlistInquiry, setShowWishlistInquiry] = useState<boolean>(false);
@@ -32,14 +43,35 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedSize, setSelectedSize] = useState<string>('all');
 
-  // Scoped to the selected category (top pills), so the artist/year lists in
+  // Theme/subject options that actually exist under the selected product
+  // type — an "All" ota pill has no single parent to scope by, so no theme
+  // options are offered until a specific product type is chosen.
+  const subCategoryOptions = useMemo(() => {
+    if (selectedCategory === 'all') return [];
+    const ota = topLevelCategories.find((c) => c.slug === selectedCategory);
+    if (!ota) return [];
+    return categories.filter((c) => c.parent_id === ota.id);
+  }, [categories, topLevelCategories, selectedCategory]);
+
+  // Reset the theme filter whenever the product type changes — otherwise a
+  // theme from the previous product type could stay selected and silently
+  // filter everything to zero results.
+  useEffect(() => {
+    setSelectedSubCategory('all');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory]);
+
+  // Scoped to the selected product type + theme, so the artist/year lists in
   // Advanced Filters only ever offer choices that actually exist within it —
   // picking a category then an artist/year that has no work there is what
   // used to silently return zero results.
   const categoryScopedPaintings = useMemo(() => {
-    if (selectedCategory === 'all') return paintings;
-    return paintings.filter((p) => p.category?.slug === selectedCategory);
-  }, [paintings, selectedCategory]);
+    return paintings.filter((p) => {
+      if (selectedSubCategory !== 'all') return p.category?.slug === selectedSubCategory;
+      if (selectedCategory !== 'all') return effectiveProductType(p.category) === selectedCategory;
+      return true;
+    });
+  }, [paintings, selectedCategory, selectedSubCategory]);
 
   const artistOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -69,12 +101,13 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
       setSelectedYear('all');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory]);
+  }, [selectedCategory, selectedSubCategory]);
 
   const hasActiveAdvancedFilters =
-    selectedArtistId !== 'all' || selectedYear !== 'all' || selectedSize !== 'all';
+    selectedSubCategory !== 'all' || selectedArtistId !== 'all' || selectedYear !== 'all' || selectedSize !== 'all';
 
   const clearAdvancedFilters = () => {
+    setSelectedSubCategory('all');
     setSelectedArtistId('all');
     setSelectedYear('all');
     setSelectedSize('all');
@@ -88,9 +121,14 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
 
   const filteredPaintings = useMemo(() => {
     return paintings.filter((p) => {
-      // Category filter
-      if (selectedCategory !== 'all' && p.category?.slug !== selectedCategory) {
-        return false;
+      // Theme (bola kategoriya) filter — exact match. Otherwise fall back
+      // to the product-type (ota kategoriya) pill, matched via the shared
+      // effectiveProductType() helper so a painting tagged with any theme
+      // under that product type still shows up.
+      if (selectedSubCategory !== 'all') {
+        if (p.category?.slug !== selectedSubCategory) return false;
+      } else if (selectedCategory !== 'all') {
+        if (effectiveProductType(p.category) !== selectedCategory) return false;
       }
 
       // Wishlist filter
@@ -126,6 +164,7 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
   }, [
     paintings,
     selectedCategory,
+    selectedSubCategory,
     onlyWishlist,
     wishlist,
     searchQuery,
@@ -170,7 +209,7 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
               {t.gallery.filterAll}
             </button>
 
-            {categories.map((cat) => {
+            {topLevelCategories.map((cat) => {
               const catName =
                 lang === 'ru'
                   ? cat.name_ru
@@ -236,7 +275,7 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
               <span className="hidden sm:inline">{t.gallery.advancedFilters}</span>
               {hasActiveAdvancedFilters && (
                 <span className="bg-[#BA4E25] text-white text-[9.5px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                  {[selectedArtistId, selectedYear, selectedSize].filter((v) => v !== 'all').length}
+                  {[selectedSubCategory, selectedArtistId, selectedYear, selectedSize].filter((v) => v !== 'all').length}
                 </span>
               )}
               <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} />
@@ -249,6 +288,26 @@ export default function GalleryClient({ paintings, categories }: GalleryClientPr
           <div className="relative -mt-6 mb-10 p-5 sm:p-6 bg-[#FDFBF9] border border-[#E7E0D8] rounded-lg shadow-sm animate-[fadeSlideIn_0.2s_ease-out]">
             <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-lg bg-gradient-to-r from-[#BA4E25] via-[#D98C4A] to-[#429599]" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {subCategoryOptions.length > 0 && (
+                <div>
+                  <label className="flex items-center gap-1.5 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
+                    <Layers className="w-3 h-3 text-[#BA4E25]" />
+                    {t.gallery.filterBySubcategory}
+                  </label>
+                  <FilterSelect
+                    value={selectedSubCategory}
+                    onChange={setSelectedSubCategory}
+                    allValue="all"
+                    allLabel={t.gallery.allSubcategories}
+                    emptyMessage={t.gallery.noSubcategoriesInType}
+                    options={subCategoryOptions.map((c) => ({
+                      value: c.slug,
+                      label: lang === 'ru' ? c.name_ru : lang === 'uz' ? c.name_uz : c.name_en,
+                    }))}
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="flex items-center gap-1.5 text-[10.5px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1.5">
                   <Palette className="w-3 h-3 text-[#BA4E25]" />

@@ -209,6 +209,14 @@ export default function AdminInquiriesClient({ initialInquiries }: AdminInquirie
               : item
           )
         );
+
+        // Marking the painting sold means this specific deal is done —
+        // reflect that on the inquiry's own status too, otherwise it stays
+        // stuck on whatever it was (e.g. "In progress") even though the
+        // sale card right above it says "Kartina sotilgan deb belgilangan".
+        if (nextIsSold && selectedStatus !== 'COMPLETED') {
+          await handleStatusChange('COMPLETED');
+        }
       } else {
         alert(data.error || "Kartinani sotilgan deb belgilashda xatolik yuz berdi");
       }

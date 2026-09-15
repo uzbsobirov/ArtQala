@@ -30,19 +30,39 @@ export async function POST(request: Request) {
     let fileExt: string | null = null;
 
     // Validate MIME type. SVG is deliberately excluded: it's XML and can carry
-    // a <script>, and (unlike JPEG/PNG/WebP) it isn't re-encoded below, so it
-    // would be stored and served byte-for-byte from the site's own origin.
-    const validMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    // a <script>, and (unlike the raster formats below) it isn't re-encoded,
+    // so it would be stored and served byte-for-byte from the site's own origin.
+    // The rest is deliberately broad — phones commonly export HEIC/HEIF
+    // (iPhone default) or AVIF/BMP/TIFF, and rejecting those meant "upload an
+    // image" silently only worked for a subset of real photos.
+    const validMimes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+      'image/avif',
+      'image/heic',
+      'image/heif',
+      'image/bmp',
+      'image/tiff',
+    ];
     if (!validMimes.includes(file.type)) {
       return NextResponse.json(
-        { success: false, error: 'Only image files (JPEG, PNG, WebP, GIF) are allowed' },
+        {
+          success: false,
+          error: 'Only image files (JPEG, PNG, WebP, GIF, AVIF, HEIC/HEIF, BMP, TIFF) are allowed',
+        },
         { status: 400 }
       );
     }
 
     // Auto-correct raster uploads: normalize orientation (EXIF), cap resolution,
-    // and re-encode as optimized WebP. Vector (SVG) and animated (GIF) files pass through untouched.
-    if (file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp') {
+    // and re-encode as optimized WebP. Animated GIFs pass through untouched
+    // (re-encoding would collapse them to a single frame). If sharp can't
+    // decode a given format on this platform (e.g. HEIC support varies by
+    // build), the catch below falls back to storing the original bytes
+    // as-is rather than failing the whole upload.
+    if (file.type !== 'image/gif') {
       try {
         buffer = await sharp(buffer)
           .rotate()
