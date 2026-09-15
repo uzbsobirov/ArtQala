@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
-import { parsePhones, formatWorkingHours, getAboutText, parseSocialLinks, normalizeSocialUrl } from '@/lib/settingsUtils';
+import { parsePhones, formatWorkingHours, getAboutText, parseSocialLinks, normalizeSocialUrl, parseLocations } from '@/lib/settingsUtils';
 
 export default function Footer() {
   const { t, lang, settings } = useApp();
@@ -12,11 +12,10 @@ export default function Footer() {
   const phones = parsePhones(settings?.phone);
   const workingHoursText = formatWorkingHours(settings?.working_hours, lang);
   const aboutText = getAboutText(settings, lang, t.footer.about);
-  const addressText = settings?.address || 'Barakhon Madrasah, Tashkent, Uzbekistan';
-  const locationMap = settings?.location_map || 'https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8';
+  const locations = parseLocations(settings?.locations, settings?.address, settings?.location_map);
   const socialLinks = parseSocialLinks(settings?.social_links, settings?.telegram, settings?.instagram);
-  const countryText = settings?.address
-    ? settings.address.split(',').pop()?.trim() || 'Uzbekistan'
+  const countryText = locations[0]?.address
+    ? locations[0].address.split(',').pop()?.trim() || 'Uzbekistan'
     : 'Uzbekistan';
 
   return (
@@ -48,16 +47,22 @@ export default function Footer() {
               {t.footer.visit}
             </h4>
             <div className="flex flex-col space-y-2 text-[13.5px] text-[#D8CDC5]">
-              <span>{addressText}</span>
+              {locations.map((loc, idx) => (
+                <div key={idx} className={idx > 0 ? 'pt-2 border-t border-[#3D2C26]' : ''}>
+                  <span>{loc.address}</span>
+                  {loc.url && (
+                    <a
+                      href={loc.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[#429599] hover:underline text-xs pt-1 flex items-center gap-1"
+                    >
+                      <span>{t.contact.viewOnMap} →</span>
+                    </a>
+                  )}
+                </div>
+              ))}
               <span className="text-[#A89990]">{workingHoursText}</span>
-              <a
-                href={locationMap}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[#429599] hover:underline text-xs pt-1 inline-flex items-center gap-1"
-              >
-                <span>{t.contact.viewOnMap} →</span>
-              </a>
             </div>
           </div>
 

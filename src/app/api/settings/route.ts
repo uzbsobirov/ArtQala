@@ -62,6 +62,7 @@ export async function PUT(req: Request) {
         email: body.email,
         address: body.address,
         location_map: body.location_map,
+        locations: typeof body.locations === 'string' ? body.locations : JSON.stringify(body.locations || []),
         working_hours: typeof body.working_hours === 'string' ? body.working_hours : JSON.stringify(body.working_hours || ''),
         telegram: body.telegram,
         instagram: body.instagram,

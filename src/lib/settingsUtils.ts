@@ -34,6 +34,40 @@ export function getAboutText(
   return fallback;
 }
 
+export interface GalleryLocation {
+  address: string;
+  url: string;
+}
+
+// Admin can list any number of physical addresses, each with its own map
+// link, stored as JSON in SiteSettings.locations. Falls back to the older
+// fixed address/location_map fields when that JSON hasn't been set yet.
+export function parseLocations(
+  raw: string | null | undefined,
+  legacyAddress?: string | null,
+  legacyMap?: string | null
+): GalleryLocation[] {
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const locations = parsed
+          .filter((l) => l && typeof l === 'object' && l.address)
+          .map((l) => ({
+            address: String(l.address).trim(),
+            url: String(l.url || '').trim(),
+          }));
+        if (locations.length > 0) return locations;
+      }
+    } catch {}
+  }
+
+  if (legacyAddress) {
+    return [{ address: legacyAddress, url: legacyMap || '' }];
+  }
+  return [];
+}
+
 export interface SocialLink {
   label: string;
   url: string;

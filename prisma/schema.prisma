@@ -249,6 +249,11 @@ model SiteSettings {
   email         String   @default("info@artqala.uz")
   address       String   @default("Barakhon Madrasah, Tashkent, Uzbekistan")
   location_map  String   @default("https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8")
+  // JSON array of {address, url} — lets the admin list any number of
+  // physical addresses, each with its own map link, instead of the single
+  // address/location_map pair above (kept only as a fallback for sites that
+  // predate this field, and as the primary address in the JSON-LD schema).
+  locations     String?
   working_hours String   @default("Mon - Sun: 09:00 - 19:00")
   telegram      String   @default("https://t.me/artqala")
   instagram     String   @default("https://instagram.com/artqala")

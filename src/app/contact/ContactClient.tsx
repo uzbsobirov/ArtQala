@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
-import { parsePhones, formatWorkingHours, parseSocialLinks, normalizeSocialUrl } from '@/lib/settingsUtils';
+import { parsePhones, formatWorkingHours, parseSocialLinks, normalizeSocialUrl, parseLocations } from '@/lib/settingsUtils';
 import { MapPin, Phone, MessageSquare, Clock, CheckCircle2, Send, ExternalLink } from 'lucide-react';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
@@ -11,8 +11,8 @@ export default function ContactClient() {
   const { t, lang, settings } = useApp();
   const phones = parsePhones(settings?.phone);
   const workingHoursText = formatWorkingHours(settings?.working_hours, lang);
-  const addressText = settings?.address || t.contact.address;
-  const locationMap = settings?.location_map || 'https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8';
+  const locations = parseLocations(settings?.locations, settings?.address, settings?.location_map);
+  const primaryMapLink = locations[0]?.url || 'https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8';
   const socialLinks = parseSocialLinks(settings?.social_links, settings?.telegram, settings?.instagram);
 
   const [name, setName] = useState('');
@@ -174,24 +174,32 @@ export default function ContactClient() {
           {/* Right Column: Visit, Reach Directly, Map Card */}
           <div className="lg:col-span-5 space-y-6">
             {/* Visit Card */}
-            <div className="bg-[#281C18] text-[#FAF4EC] rounded-[3px] p-6 space-y-3">
+            <div className="bg-[#281C18] text-[#FAF4EC] rounded-[3px] p-6 space-y-4">
               <div className="flex items-center gap-2 text-[11px] font-bold tracking-[2px] text-[#5AB3B7] uppercase">
                 <MapPin className="w-4 h-4" />
                 <span>{t.contact.visitTitle}</span>
               </div>
-              <p className="text-sm font-medium">{addressText}</p>
-              <div className="flex items-start gap-2 text-xs text-[#C8B9AF]">
+              <div className="space-y-3 divide-y divide-white/10">
+                {locations.map((loc, idx) => (
+                  <div key={idx} className={idx > 0 ? 'pt-3 space-y-1' : 'space-y-1'}>
+                    <p className="text-sm font-medium">{loc.address}</p>
+                    {loc.url && (
+                      <a
+                        href={loc.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[#5AB3B7] hover:underline text-xs inline-flex items-center gap-1"
+                      >
+                        <span>{t.contact.viewOnMap} →</span>
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-start gap-2 text-xs text-[#C8B9AF] pt-1 border-t border-white/10">
                 <Clock className="w-3.5 h-3.5 text-[#5AB3B7] mt-0.5 shrink-0" />
                 <span>{workingHoursText}</span>
               </div>
-              <a
-                href={locationMap}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[#5AB3B7] hover:underline text-xs pt-1 inline-flex items-center gap-1"
-              >
-                <span>{t.contact.viewOnMap} →</span>
-              </a>
             </div>
 
             {/* Direct Contact Card */}
@@ -226,7 +234,7 @@ export default function ContactClient() {
 
             {/* Interactive Map Pin Illustration (Clickable link to Google Maps) */}
             <a
-              href={locationMap}
+              href={primaryMapLink}
               target="_blank"
               rel="noreferrer"
               className="relative aspect-[16/10] w-full rounded-[3px] overflow-hidden border border-[#E7E0D8] bg-[#F4ECE1] block group cursor-pointer"

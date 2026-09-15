@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Settings, Save, CheckCircle2, Loader2, Globe, MapPin, Phone, Mail, Clock, Send, Plus, Trash2, AlertCircle, Languages, MessageSquare } from 'lucide-react';
 import TimePicker from '@/components/TimePicker';
-import { parseSocialLinks, SocialLink } from '@/lib/settingsUtils';
+import { parseSocialLinks, SocialLink, parseLocations, GalleryLocation } from '@/lib/settingsUtils';
 
 export default function AdminSettingsPage() {
   const { refreshSettings } = useApp();
@@ -17,9 +17,13 @@ export default function AdminSettingsPage() {
   const [galleryName, setGalleryName] = useState('Art Qala');
   const [phones, setPhones] = useState<string[]>(['+998 66 233 44 55']);
   const [email, setEmail] = useState('info@artqala.uz');
-  const [address, setAddress] = useState('Barakhon Madrasah, Tashkent, Uzbekistan');
-  const [locationMap, setLocationMap] = useState('https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8');
-  
+
+  // Physical gallery addresses — an open-ended list (like phones/social
+  // links) instead of a single fixed address/map pair.
+  const [locations, setLocations] = useState<GalleryLocation[]>([
+    { address: 'Barakhon Madrasah, Tashkent, Uzbekistan', url: 'https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8' },
+  ]);
+
   // Weekly working hours schedule
   interface DaySchedule {
     dayKey: string;
@@ -102,6 +106,21 @@ export default function AdminSettingsPage() {
     setSchedule(updated);
   };
 
+  const handleLocationChange = (idx: number, field: keyof GalleryLocation, value: string) => {
+    const updated = [...locations];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setLocations(updated);
+  };
+
+  const handleAddLocation = () => {
+    setLocations([...locations, { address: '', url: '' }]);
+  };
+
+  const handleRemoveLocation = (idx: number) => {
+    if (locations.length <= 1) return;
+    setLocations(locations.filter((_, i) => i !== idx));
+  };
+
   const handleSocialLinkChange = (idx: number, field: keyof SocialLink, value: string) => {
     const updated = [...socialLinks];
     updated[idx] = { ...updated[idx], [field]: value };
@@ -163,8 +182,9 @@ export default function AdminSettingsPage() {
           }
 
           setEmail(s.email || 'info@artqala.uz');
-          setAddress(s.address || 'Barakhon Madrasah, Tashkent, Uzbekistan');
-          setLocationMap(s.location_map || 'https://maps.app.goo.gl/FvSvu2kJ3Mqdwhzg8');
+          setLocations(
+            parseLocations(s.locations, s.address, s.location_map).map((l) => ({ ...l }))
+          );
 
           // Parse schedule
           if (s.working_hours) {
@@ -213,8 +233,7 @@ export default function AdminSettingsPage() {
           gallery_name: galleryName,
           phone: JSON.stringify(phones),
           email,
-          address,
-          location_map: locationMap,
+          locations: JSON.stringify(locations.filter((l) => l.address.trim())),
           working_hours: JSON.stringify(schedule),
           social_links: JSON.stringify(socialLinks.filter((l) => l.label.trim() && l.url.trim())),
           about_uz: aboutUz,
@@ -461,29 +480,55 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                MANZIL (MATN)
-              </label>
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-              />
-            </div>
+            {/* Manzillar (bir nechta joylashuv, har biri o'z xarita havolasi bilan) */}
+            <div className="md:col-span-2 space-y-2 bg-[#FAF4EC]/50 p-3.5 rounded border border-[#E7E0D8]">
+              <div className="flex items-center justify-between">
+                <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase">
+                  MANZILLAR (GALEREYA / FILIALLAR)
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAddLocation}
+                  className="text-xs font-semibold text-[#BA4E25] hover:text-[#9C3E1B] flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Yana manzil qo'shish</span>
+                </button>
+              </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-[11px] font-bold tracking-wider text-[#6B5E55] uppercase mb-1">
-                XARITA HAVOLASI (GOOGLE MAPS / LOKATSIYA)
-              </label>
-              <input
-                type="text"
-                value={locationMap}
-                onChange={(e) => setLocationMap(e.target.value)}
-                placeholder="https://maps.google.com/?q=..."
-                className="w-full text-xs px-3.5 py-2 bg-white border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
-              />
+              <div className="space-y-2">
+                {locations.map((loc, idx) => (
+                  <div key={idx} className="flex items-start gap-2 bg-white p-2.5 rounded border border-[#E7E0D8]">
+                    <MapPin className="w-4 h-4 text-[#8F7E73] shrink-0 mt-2" />
+                    <div className="flex-1 space-y-1.5">
+                      <input
+                        type="text"
+                        value={loc.address}
+                        onChange={(e) => handleLocationChange(idx, 'address', e.target.value)}
+                        placeholder="Barakhon Madrasah, Tashkent, Uzbekistan"
+                        className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                      />
+                      <input
+                        type="text"
+                        value={loc.url}
+                        onChange={(e) => handleLocationChange(idx, 'url', e.target.value)}
+                        placeholder="https://maps.google.com/?q=..."
+                        className="w-full text-xs px-3 py-2 border border-[#E7E0D8] rounded-[3px] focus:outline-none focus:border-[#BA4E25]"
+                      />
+                    </div>
+                    {locations.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLocation(idx)}
+                        className="p-2 text-[#8F7E73] hover:text-red-600 hover:bg-[#FAF4EC] rounded transition-colors cursor-pointer"
+                        title="O'chirish"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Ijtimoiy tarmoqlar / messenjerlar (Telegram, Instagram, WhatsApp, ...) */}

@@ -8,7 +8,7 @@ import Footer from '@/components/Footer';
 import KhorezmScrollTrack from '@/components/patterns/KhorezmScrollTrack';
 import { prisma } from '@/lib/prisma';
 import { safeJsonLdString } from '@/lib/jsonLd';
-import { parseSocialLinks, normalizeSocialUrl } from '@/lib/settingsUtils';
+import { parseSocialLinks, normalizeSocialUrl, parseLocations } from '@/lib/settingsUtils';
 
 const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
@@ -77,7 +77,8 @@ const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 async function getOrganizationJsonLd() {
   try {
     const settings = await prisma.siteSettings.findUnique({ where: { id: 'default' } });
-    const address = settings?.address || 'Barakhon Madrasah, Tashkent, Uzbekistan';
+    const locations = parseLocations(settings?.locations, settings?.address, settings?.location_map);
+    const primaryLocation = locations[0] || { address: 'Barakhon Madrasah, Tashkent, Uzbekistan', url: '' };
     return {
       '@context': 'https://schema.org',
       '@type': 'ArtGallery',
@@ -90,11 +91,11 @@ async function getOrganizationJsonLd() {
       email: settings?.email || 'info@artqala.uz',
       address: {
         '@type': 'PostalAddress',
-        streetAddress: address,
+        streetAddress: primaryLocation.address,
         addressLocality: 'Tashkent',
         addressCountry: 'UZ',
       },
-      ...(settings?.location_map ? { hasMap: settings.location_map } : {}),
+      ...(primaryLocation.url ? { hasMap: primaryLocation.url } : {}),
       sameAs: parseSocialLinks(settings?.social_links, settings?.telegram, settings?.instagram).map((l) =>
         normalizeSocialUrl(l.url)
       ),

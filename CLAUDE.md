@@ -69,9 +69,17 @@ ota-kategoriya (product type), leaving only bola-kategoriya (subject) for the ad
 **Discount priority (highest to lowest)**: painting's own discount > artist-wide > category-wide
 > site-wide (`Discount.scope`: `PAINTING` / `ARTIST` / `CATEGORY` / `SITE`).
 
-**Gallery location is a single address** (`SiteSettings.address`/`location_map`), edited at
-`/admin/settings` — there is no separate multi-branch model. **Social/messenger links are an
-open-ended list**, not fixed fields: `SiteSettings.social_links` is a JSON array of
+**Gallery addresses are an open-ended list**, not a fixed field: `SiteSettings.locations` is a
+JSON array of `{address, url}` edited freely at `/admin/settings` (add/remove any number of
+addresses, each with its own Google Maps link — there is no separate multi-branch model, it's
+all in Settings), falling back to the older fixed `address`/`location_map` columns via
+`src/lib/settingsUtils.ts#parseLocations()` for sites that predate this field. Every place that
+renders the address(es) (`Footer.tsx`, `ContactClient.tsx`, `layout.tsx`'s JSON-LD) goes through
+that helper — never read `settings.address`/`settings.location_map` directly; the JSON-LD schema
+uses only the first location as its single `PostalAddress`.
+
+**Social/messenger links are an open-ended list**, not fixed fields: `SiteSettings.social_links`
+is a JSON array of
 `{label, url}` edited freely in the admin (add/remove any number of Telegram/Instagram/WhatsApp/
 etc. links), falling back to the older fixed `telegram`/`instagram` columns via
 `src/lib/settingsUtils.ts#parseSocialLinks()` for sites that predate this field. Every place that

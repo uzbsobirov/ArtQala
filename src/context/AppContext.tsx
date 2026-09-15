@@ -22,6 +22,7 @@ export interface SiteSettingsData {
   email?: string;
   address?: string;
   location_map?: string;
+  locations?: string;
   working_hours?: string;
   telegram?: string;
   instagram?: string;
