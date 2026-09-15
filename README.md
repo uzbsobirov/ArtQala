@@ -1,8 +1,40 @@
-# Art Qala — San'at Galereyasi Veb-sayti
+<p align="center">
+  <img src="assets/logo.png" alt="Art Qala" width="140"/>
+</p>
 
-Samarqand shahridagi "Art Qala" san'at galereyasi uchun zamonaviy, nafis va to'liq funksional veb-platforma.
+<h1 align="center">Art Qala — San'at Galereyasi Veb-sayti</h1>
+
+<p align="center">
+  Samarqand shahridagi <strong>"Art Qala"</strong> san'at galereyasi uchun zamonaviy, nafis va to'liq funksional veb-platforma.
+</p>
+
+<p align="center">
+  <a href="https://art-qala.vercel.app"><img src="https://img.shields.io/badge/demo-live-3b7a57?style=flat-square" alt="Live Demo"/></a>
+  <img src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs" alt="Next.js"/>
+  <img src="https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react" alt="React"/>
+  <img src="https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript"/>
+  <img src="https://img.shields.io/badge/Prisma-ORM-2D3748?style=flat-square&logo=prisma" alt="Prisma"/>
+  <img src="https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS"/>
+  <img src="https://img.shields.io/badge/deployed_on-Vercel-black?style=flat-square&logo=vercel" alt="Vercel"/>
+</p>
+
+<p align="center">
+  <a href="https://art-qala.vercel.app"><strong>🔗 Live Demo</strong></a>
+</p>
 
 Ushbu loyiha [AGENTS.md](./AGENTS.md) qoidalari hamda [TZ/ArtQala_TZ.docx](./TZ/ArtQala_TZ.docx) talablariga to'liq muvofiq ishlab chiqilgan.
+
+---
+
+## Mundarija
+
+- [Asosiy Imkoniyatlar](#asosiy-imkoniyatlar)
+- [Ko'rinish (Screenshots)](#korinish-screenshots)
+- [Texnologik Stack](#texnologik-stack)
+- [Lokal O'rnatish va Ishga Tushirish](#lokal-ornatish-va-ishga-tushirish)
+- [Dastlabki Hisoblar (Test Uchun)](#dastlabki-hisoblar-test-uchun)
+- [Vercel'ga Joylashtirish (Deploy)](#vercelga-joylashtirish-deploy)
+- [Litsenziya](#litsenziya)
 
 ---
 
@@ -41,13 +73,28 @@ Ushbu loyiha [AGENTS.md](./AGENTS.md) qoidalari hamda [TZ/ArtQala_TZ.docx](./TZ/
 
 ---
 
+## Ko'rinish (Screenshots)
+
+<p align="center">
+  <img src="design/screenshots/AdminDashboard.png" alt="Admin Dashboard" width="49%"/>
+  <img src="design/screenshots/AdminPaintings.png" alt="Admin Paintings" width="49%"/>
+</p>
+<p align="center">
+  <img src="design/screenshots/AdminPaintingForm.png" alt="Admin Painting Form" width="49%"/>
+  <img src="design/screenshots/AdminInquiries.png" alt="Admin Inquiries" width="49%"/>
+</p>
+
+> Jonli saytni to'liq ko'rish uchun: **[art-qala.vercel.app](https://art-qala.vercel.app)**
+
+---
+
 ## Texnologik Stack
 
 - **Frontend**: [Next.js 16](https://nextjs.org/) (App Router), [React 19](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/)
 - **Shriftlar**: Google Fonts (`Cormorant Garamond` & `Work Sans`)
-- **Backend & Database**: [Prisma ORM](https://www.prisma.io/) + SQLite (lokal test) / PostgreSQL (production)
+- **Backend & Database**: [Prisma ORM](https://www.prisma.io/) + SQLite (lokal test) / PostgreSQL (production, Neon)
 - **Ikonkalar**: [Lucide React](https://lucide.dev/)
-- **Xavfsizlik**: `bcryptjs` parollarni shifrlash va himoyalangan sessiya kukilari
+- **Xavfsizlik**: `bcryptjs` parollarni shifrlash va HMAC-SHA256 imzolangan sessiya kukilari
 - **Hosting**: [Vercel](https://vercel.com/)
 
 ---
@@ -56,6 +103,7 @@ Ushbu loyiha [AGENTS.md](./AGENTS.md) qoidalari hamda [TZ/ArtQala_TZ.docx](./TZ/
 
 ### 1. Repositoryni yuklab oling va paketlarni o'rnating
 ```bash
+git clone https://github.com/uzbsobirov/ArtQala.git
 cd ArtQala
 npm install
 ```
@@ -85,6 +133,8 @@ Brauzerda oching: [http://localhost:3000](http://localhost:3000)
 
 ## Dastlabki Hisoblar (Test Uchun)
 
+> ⚠️ Bu login ma'lumotlari faqat **lokal demo/test** muhiti uchun. Production'da albatta o'zgartiring.
+
 - **Admin Paneli**:
   - URL: [http://localhost:3000/admin](http://localhost:3000/admin)
   - Email: `admin@artqala.uz`
@@ -97,17 +147,23 @@ Brauzerda oching: [http://localhost:3000](http://localhost:3000)
 
 ## Vercel'ga Joylashtirish (Deploy)
 
-1. Ushbu loyihani o'z GitHub hisobingizga yuklang:
+1. O'zgarishlarni GitHub'ga yuboring:
    ```bash
-   git init
    git add .
-   git commit -m "feat: complete Art Qala gallery platform"
-   git remote add origin https://github.com/USERNAME/ArtQala.git
-   git push -u origin master
+   git commit -m "feat: your changes"
+   git push origin main
    ```
 2. [Vercel](https://vercel.com/) platformasiga kiring va loyihani import qiling.
 3. Environment variables bo'limiga quyidagilarni kiriting:
    - `DATABASE_URL`: PostgreSQL ulanish manzili (masalan [Neon](https://neon.tech/) yoki Vercel Postgres)
    - `NEXTAUTH_SECRET`: Istalgan maxfiy kalit
-   - `NEXTAUTH_URL`: Sizning Vercel domeningiz (masalan `https://artqala.vercel.app`)
+   - `NEXTAUTH_URL`: Sizning Vercel domeningiz (masalan `https://art-qala.vercel.app`)
 4. **Deploy** tugmasini bosing!
+
+To'liq birinchi marta sozlash bo'yicha qo'llanma uchun: [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+---
+
+## Litsenziya
+
+Bu — "Art Qala" galereyasi uchun buyurtma asosida ishlab chiqilgan proprietar (yopiq) loyiha. Barcha huquqlar himoyalangan © 2026.
