@@ -50,6 +50,24 @@ export default function AdminCategoriesClient({
   // previous form instance.
   const translateSeqRef = useRef(0);
 
+  // Returns the raw translation (or null on failure) without touching state
+  // — used both by the live onBlur handler below and by handleSave, which
+  // needs the result synchronously rather than waiting on a state update.
+  const translateText = async (text: string): Promise<{ en?: string; ru?: string } | null> => {
+    if (!text.trim()) return null;
+    try {
+      const res = await fetch('/api/admin/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, sourceLang: 'uz' }),
+      });
+      const data = await res.json();
+      return data.success && data.translations ? data.translations : null;
+    } catch {
+      return null;
+    }
+  };
+
   // Typing in UZ and blurring auto-fills EN/RU via Gemini — same pattern as
   // the Paintings and Accessories forms. Never overwrites a field the admin
   // has already typed something into.
@@ -58,19 +76,12 @@ export default function AdminCategoriesClient({
     const seq = ++translateSeqRef.current;
     setTranslating(true);
     try {
-      const res = await fetch('/api/admin/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, sourceLang: 'uz' }),
-      });
-      const data = await res.json();
+      const translations = await translateText(text);
       if (seq !== translateSeqRef.current) return; // stale — a reset or newer request happened
-      if (data.success && data.translations) {
-        setNameEn((prev) => (prev.trim() ? prev : data.translations.en || prev));
-        setNameRu((prev) => (prev.trim() ? prev : data.translations.ru || prev));
+      if (translations) {
+        setNameEn((prev) => (prev.trim() ? prev : translations.en || prev));
+        setNameRu((prev) => (prev.trim() ? prev : translations.ru || prev));
       }
-    } catch {
-      // Silent failure — auto-translation is a convenience, not required to save.
     } finally {
       if (seq === translateSeqRef.current) setTranslating(false);
     }
@@ -151,10 +162,23 @@ export default function AdminCategoriesClient({
 
     setLoading(true);
     try {
+      // If the admin submitted (e.g. pressing Enter) before onBlur's
+      // translation finished, give it one real attempt here instead of
+      // silently saving the Uzbek text as if it were the EN/RU name.
+      let finalNameEn = nameEn;
+      let finalNameRu = nameRu;
+      if (!finalNameEn.trim() && nameUz.trim()) {
+        const t = await translateText(nameUz);
+        if (t) {
+          finalNameEn = t.en || finalNameEn;
+          finalNameRu = t.ru || finalNameRu;
+        }
+      }
+
       const payload = {
-        name_uz: nameUz || nameEn,
-        name_en: nameEn || nameUz,
-        name_ru: nameRu || nameUz,
+        name_uz: nameUz || finalNameEn,
+        name_en: finalNameEn || nameUz,
+        name_ru: finalNameRu || nameUz,
         slug: slug.trim() || undefined,
         parent_id: formMode === 'create-parent' ? null : parentId || null,
       };
@@ -311,37 +335,33 @@ export default function AdminCategoriesClient({
         </div>
       </div>
 
-      {/* Each parent category is its own card. A parent with children is a
-          collapsible accordion row — clicking it drops its children down
+      {/* One continuous table, like before — a parent row with children is
+          a collapsible accordion row: clicking it drops its children down
           right below, and only one parent's children are shown at a time
-          (opening another closes it), instead of showing every parent's
-          children nested and visible all at once. */}
+          (opening another closes it). */}
       {parents.length === 0 ? (
         <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] shadow-xs py-10 px-4 text-center text-[#8F8178] text-xs">
           Hali kategoriya yo'q. Avval "Ota kategoriya qo'shish" bilan boshlang.
         </div>
       ) : (
-        <div className="space-y-4">
-          {parents.map((parent) => {
-            const children = childrenOf(parent.id);
-            const isExpanded = expandedParentId === parent.id;
-            return (
-              <div
-                key={parent.id}
-                className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] shadow-xs overflow-hidden"
-              >
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="bg-[#FAF4EC] border-b border-[#E7E0D8] text-[#8F8178] font-bold tracking-wider uppercase text-[10.5px]">
-                      <th className="py-2.5 px-4">NOMI (UZ)</th>
-                      <th className="py-2.5 px-4">NOMI (EN)</th>
-                      <th className="py-2.5 px-4">NOMI (RU)</th>
-                      <th className="py-2.5 px-4">SLUG</th>
-                      <th className="py-2.5 px-4 text-center">ASARLAR SONI</th>
-                      <th className="py-2.5 px-4 text-right">AMALLAR</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#F0EAE1]">
+        <div className="bg-[#FDFBF9] border border-[#E7E0D8] rounded-[4px] shadow-xs overflow-hidden">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="bg-[#FAF4EC] border-b border-[#E7E0D8] text-[#8F8178] font-bold tracking-wider uppercase text-[10.5px]">
+                <th className="py-2.5 px-4">NOMI (UZ)</th>
+                <th className="py-2.5 px-4">NOMI (EN)</th>
+                <th className="py-2.5 px-4">NOMI (RU)</th>
+                <th className="py-2.5 px-4">SLUG</th>
+                <th className="py-2.5 px-4 text-center">ASARLAR SONI</th>
+                <th className="py-2.5 px-4 text-right">AMALLAR</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F0EAE1]">
+              {parents.map((parent) => {
+                const children = childrenOf(parent.id);
+                const isExpanded = expandedParentId === parent.id;
+                return (
+                  <React.Fragment key={parent.id}>
                     <tr className="bg-white hover:bg-[#FAF4EC]/60 transition-colors">
                       {renderCells(
                         parent,
@@ -362,11 +382,11 @@ export default function AdminCategoriesClient({
                           {renderCells(child, true)}
                         </tr>
                       ))}
-                  </tbody>
-                </table>
-              </div>
-            );
-          })}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
