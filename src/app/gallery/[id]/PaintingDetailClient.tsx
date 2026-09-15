@@ -279,6 +279,13 @@ export default function PaintingDetailClient({ painting, relatedPaintings = [] }
                   {t.gallery.soldBadge}
                 </div>
               )}
+
+              {/* Bestseller Badge — most-inquired-about available paintings */}
+              {!painting.is_sold && painting.is_bestseller && (
+                <div className="absolute bottom-4 left-4 bg-[#DAA932] text-[#281C18] text-xs tracking-widest uppercase font-semibold px-3 py-1 rounded-[2px] shadow-xs">
+                  {t.gallery.bestsellerBadge}
+                </div>
+              )}
             </div>
 
             {/* Certificate of Authenticity Info Box */}

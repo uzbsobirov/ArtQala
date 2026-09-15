@@ -1,16 +1,21 @@
 import { prisma } from './prisma';
+import { getBestsellerPaintingIds, withBestsellerFlag } from './bestseller';
 
 export async function getFeaturedPaintings() {
   try {
-    return await prisma.painting.findMany({
-      where: { is_featured: true },
-      include: {
-        artist: true,
-        category: true,
-      },
-      take: 8,
-      orderBy: { created_at: 'desc' },
-    });
+    const [paintings, bestsellerIds] = await Promise.all([
+      prisma.painting.findMany({
+        where: { is_featured: true },
+        include: {
+          artist: true,
+          category: true,
+        },
+        take: 8,
+        orderBy: { created_at: 'desc' },
+      }),
+      getBestsellerPaintingIds(),
+    ]);
+    return withBestsellerFlag(paintings, bestsellerIds);
   } catch (error) {
     console.error('Error fetching featured paintings:', error);
     return [];
@@ -24,14 +29,18 @@ export async function getAllPaintings(categorySlug?: string) {
       where.category = { slug: categorySlug };
     }
 
-    return await prisma.painting.findMany({
-      where,
-      include: {
-        artist: true,
-        category: { include: { parent: true } },
-      },
-      orderBy: { created_at: 'desc' },
-    });
+    const [paintings, bestsellerIds] = await Promise.all([
+      prisma.painting.findMany({
+        where,
+        include: {
+          artist: true,
+          category: { include: { parent: true } },
+        },
+        orderBy: { created_at: 'desc' },
+      }),
+      getBestsellerPaintingIds(),
+    ]);
+    return withBestsellerFlag(paintings, bestsellerIds);
   } catch (error) {
     console.error('Error fetching paintings:', error);
     return [];
@@ -40,13 +49,18 @@ export async function getAllPaintings(categorySlug?: string) {
 
 export async function getPaintingById(id: string) {
   try {
-    return await prisma.painting.findUnique({
-      where: { id },
-      include: {
-        artist: true,
-        category: { include: { parent: true } },
-      },
-    });
+    const [painting, bestsellerIds] = await Promise.all([
+      prisma.painting.findUnique({
+        where: { id },
+        include: {
+          artist: true,
+          category: { include: { parent: true } },
+        },
+      }),
+      getBestsellerPaintingIds(),
+    ]);
+    if (!painting) return null;
+    return { ...painting, is_bestseller: bestsellerIds.has(painting.id) };
   } catch (error) {
     console.error('Error fetching painting by id:', error);
     return null;
@@ -81,7 +95,8 @@ export async function getRelatedPaintings(
       take: limit - byArtist.length,
     });
 
-    return [...byArtist, ...byCategory];
+    const bestsellerIds = await getBestsellerPaintingIds();
+    return withBestsellerFlag([...byArtist, ...byCategory], bestsellerIds);
   } catch (error) {
     console.error('Error fetching related paintings:', error);
     return [];

@@ -16,6 +16,7 @@ export interface PaintingItem {
   discount_price?: number | null;
   is_sold: boolean;
   is_featured?: boolean;
+  is_bestseller?: boolean;
   images: string;
   artist: {
     name: string;
@@ -114,6 +115,13 @@ export default function PaintingCard({ painting }: PaintingCardProps) {
         {painting.is_sold && (
           <div className="absolute bottom-3 left-3 bg-[#281C18]/85 text-[#FAF4EC] text-[10px] tracking-widest uppercase font-semibold px-2.5 py-0.5 rounded-xs">
             {t.gallery.soldBadge}
+          </div>
+        )}
+
+        {/* Bestseller Badge — most-inquired-about available paintings */}
+        {!painting.is_sold && painting.is_bestseller && (
+          <div className="absolute bottom-3 left-3 bg-[#DAA932] text-[#281C18] text-[10px] tracking-widest uppercase font-semibold px-2.5 py-0.5 rounded-xs shadow-xs">
+            {t.gallery.bestsellerBadge}
           </div>
         )}
 
