@@ -20,6 +20,8 @@
 
 <p align="center">
   <a href="https://art-qala.vercel.app"><strong>🔗 Live Demo</strong></a>
+  &nbsp;·&nbsp;
+  <a href="./README.en.md">🇬🇧 English</a>
 </p>
 
 Ushbu loyiha [AGENTS.md](./AGENTS.md) qoidalari hamda [TZ/ArtQala_TZ.docx](./TZ/ArtQala_TZ.docx) talablariga to'liq muvofiq ishlab chiqilgan.
