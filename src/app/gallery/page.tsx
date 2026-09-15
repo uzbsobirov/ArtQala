@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { getAllPaintings, getCategories } from '@/lib/api';
 import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
@@ -53,7 +53,13 @@ export default async function GalleryPage() {
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: safeJsonLdString(itemListJsonLd) }}
       />
-      <GalleryClient paintings={paintings} categories={categories} />
+      {/* GalleryClient reads useSearchParams() (for the ?wishlist=true deep
+          link) — without a Suspense boundary around it, that alone forces
+          this whole route to render dynamically on every request, silently
+          defeating the `revalidate` cache above. */}
+      <Suspense fallback={null}>
+        <GalleryClient paintings={paintings} categories={categories} />
+      </Suspense>
     </>
   );
 }
