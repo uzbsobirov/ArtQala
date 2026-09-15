@@ -78,7 +78,7 @@ export async function POST(request: Request, context: RouteContext) {
       where: { id },
       include: {
         painting: true,
-        user: true,
+        user: { select: { id: true, name: true, email: true } },
       },
     });
 

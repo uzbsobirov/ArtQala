@@ -45,13 +45,19 @@ export function verifySessionToken(token: string | undefined | null): UserSessio
 
   const [encodedPayload, signature] = parts;
 
-  // Verify HMAC signature
+  // Verify HMAC signature. Compared with a constant-time check (not `!==`)
+  // so a forged token's per-byte correctness can't be inferred from response
+  // timing — a straightforward string comparison exits at the first
+  // mismatched byte, which is exactly the kind of side channel that makes
+  // signatures forgeable byte-by-byte over enough requests.
   const expectedSignature = crypto
     .createHmac('sha256', SECRET)
     .update(encodedPayload)
     .digest('base64url');
 
-  if (signature !== expectedSignature) {
+  const sigBuf = Buffer.from(signature);
+  const expectedBuf = Buffer.from(expectedSignature);
+  if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
     return null; // Tampered token!
   }
 

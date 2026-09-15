@@ -27,22 +27,36 @@ export async function POST(request: Request) {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const rateLimitKey = `signin:${ip}:${normalizedEmail}`;
 
-    // 1. Check rate limit (Max 5 attempts in 15 minutes)
-    const rateCheck = await checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000);
-    if (!rateCheck.allowed) {
-      const minutesLeft = Math.ceil(rateCheck.retryAfterSeconds / 60);
+    // Three layers, since a single (ip, email) key alone doesn't stop either
+    // half of credential stuffing: an attacker spraying many passwords at
+    // ONE account from many IPs (caught by emailKey) or spraying many
+    // accounts from ONE IP/botnet node (caught by ipKey). comboKey stays as
+    // the tightest, most specific throttle for a repeat offender hitting the
+    // same account from the same origin.
+    const comboKey = `signin:${ip}:${normalizedEmail}`;
+    const ipKey = `signin-ip:${ip}`;
+    const emailKey = `signin-email:${normalizedEmail}`;
+
+    const [comboCheck, ipCheck, emailCheck] = await Promise.all([
+      checkRateLimit(comboKey, 5, 15 * 60 * 1000),
+      checkRateLimit(ipKey, 20, 15 * 60 * 1000),
+      checkRateLimit(emailKey, 10, 15 * 60 * 1000),
+    ]);
+    const failedCheck = [comboCheck, ipCheck, emailCheck].find((c) => !c.allowed);
+
+    if (failedCheck) {
+      const minutesLeft = Math.ceil(failedCheck.retryAfterSeconds / 60);
       return NextResponse.json(
         {
           success: false,
           error: `Juda ko'p noto'g'ri urinishlar. Xavfsizlik yuzasidan hisob ${minutesLeft} daqiqaga vaqtincha bloklandi.`,
-          retryAfterSeconds: rateCheck.retryAfterSeconds,
+          retryAfterSeconds: failedCheck.retryAfterSeconds,
         },
         {
           status: 429,
           headers: {
-            'Retry-After': String(rateCheck.retryAfterSeconds),
+            'Retry-After': String(failedCheck.retryAfterSeconds),
           },
         }
       );
@@ -53,7 +67,11 @@ export async function POST(request: Request) {
     });
 
     if (!user || !user.password_hash) {
-      await recordFailedAttempt(rateLimitKey);
+      await Promise.all([
+        recordFailedAttempt(comboKey),
+        recordFailedAttempt(ipKey),
+        recordFailedAttempt(emailKey),
+      ]);
       return NextResponse.json(
         { success: false, error: 'Invalid email or password' },
         { status: 401 }
@@ -62,15 +80,21 @@ export async function POST(request: Request) {
 
     const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) {
-      await recordFailedAttempt(rateLimitKey);
+      await Promise.all([
+        recordFailedAttempt(comboKey),
+        recordFailedAttempt(ipKey),
+        recordFailedAttempt(emailKey),
+      ]);
       return NextResponse.json(
         { success: false, error: 'Invalid email or password' },
         { status: 401 }
       );
     }
 
-    // Successful login: reset failed attempts
-    await resetRateLimit(rateLimitKey);
+    // Successful login: reset the per-account throttles (but not ipKey — an
+    // attacker shouldn't be able to reset their IP-wide spray throttle just
+    // by also owning one valid account on that IP).
+    await Promise.all([resetRateLimit(comboKey), resetRateLimit(emailKey)]);
 
     const userSession = {
       id: user.id,

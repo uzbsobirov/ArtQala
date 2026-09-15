@@ -11,6 +11,19 @@ if (process.env.NODE_ENV === 'production' && !process.env.NEXTAUTH_SECRET) {
 
 const SECRET = process.env.NEXTAUTH_SECRET || 'artqala-fallback-secret-2026-tashkent';
 
+// Constant-time string comparison — the Edge runtime's Web Crypto has no
+// built-in timingSafeEqual, but a plain `!==` here would let an attacker
+// infer a forged signature byte-by-byte from response timing (it exits at
+// the first mismatch). This always walks the full length instead.
+function timingSafeEqualStr(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
 async function verifyToken(token: string | undefined): Promise<{ role: string } | null> {
   if (!token || typeof token !== 'string') return null;
   const parts = token.split('.');
@@ -41,7 +54,7 @@ async function verifyToken(token: string | undefined): Promise<{ role: string } 
       .replace(/\//g, '_')
       .replace(/=+$/, '');
 
-    if (expectedSignature !== signature) {
+    if (!timingSafeEqualStr(expectedSignature, signature)) {
       return null;
     }
 

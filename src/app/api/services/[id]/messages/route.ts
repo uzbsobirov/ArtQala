@@ -66,7 +66,7 @@ export async function POST(request: Request, context: RouteContext) {
     const existingSR = await prisma.serviceRequest.findUnique({
       where: { id },
       include: {
-        user: true,
+        user: { select: { id: true, name: true, email: true } },
       },
     });
 

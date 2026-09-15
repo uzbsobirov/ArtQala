@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { randomInt } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { sendPasswordResetEmail } from '@/lib/email';
 import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
@@ -48,7 +49,9 @@ export async function POST(request: Request) {
     // this prevents attackers from using this endpoint to discover registered emails.
     // Skip accounts with no password (Google/Apple-only sign-in has nothing to reset).
     if (user && user.password_hash) {
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      // crypto.randomInt (not Math.random, which is a predictable PRNG) —
+      // this code gates a password reset, so it must be unguessable.
+      const otpCode = randomInt(100000, 1000000).toString();
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
       await prisma.otpVerification.create({
