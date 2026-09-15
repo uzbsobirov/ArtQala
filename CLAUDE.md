@@ -83,9 +83,11 @@ Accessories) call `/api/admin/translate` (Gemini) `onBlur` of the UZ field to fi
 never overwrite a field the admin already typed into. When adding a new trilingual field to an
 admin form, follow this same pattern rather than leaving EN/RU to be filled by hand.
 
-**Rate limiting** (`src/lib/rateLimit.ts`) is an in-memory `Map` — it does not persist or
-synchronize across serverless function instances on Vercel, so it's a soft speed bump, not a
-reliable limit, in production.
+**Rate limiting** (`src/lib/rateLimit.ts`) uses Upstash Redis (`UPSTASH_REDIS_REST_URL` /
+`UPSTASH_REDIS_REST_TOKEN`) when those env vars are set, so limits are shared correctly across
+Vercel's serverless instances. Without them it falls back to an in-memory `Map`, which is fine
+for local dev but does not synchronize across instances in production — always keep both env
+vars set on Vercel.
 
 **`AGENTS.md`** in the repo root has the original build brief (design reference files under
 `/design/`, the TZ requirements doc, and one hard rule: never edit, re-color, or replace
