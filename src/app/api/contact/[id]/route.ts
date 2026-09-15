@@ -38,6 +38,16 @@ export async function PATCH(
 ) {
   try {
     const { id } = await context.params;
+    const user = await getServerSession();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const body = await req.json();
 
     const updated = await prisma.contactMessage.update({

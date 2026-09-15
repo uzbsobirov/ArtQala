@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
+import { safeJsonLdString } from '@/lib/jsonLd';
 import ContactClient from './ContactClient';
 
 const siteUrl = process.env.NEXTAUTH_URL || 'https://artqala.uz';
@@ -22,7 +23,7 @@ export default function ContactPage() {
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdString(breadcrumbJsonLd) }}
       />
       <ContactClient />
     </>

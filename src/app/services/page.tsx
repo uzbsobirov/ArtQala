@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
+import { safeJsonLdString } from '@/lib/jsonLd';
 import ServicesClient from './ServicesClient';
 
 export const dynamic = 'force-dynamic';
@@ -70,7 +71,7 @@ export default async function ServicesPage() {
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdString(breadcrumbJsonLd) }}
       />
       <ServicesClient
         muralImages={muralImages}

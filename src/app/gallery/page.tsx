@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { getAllPaintings, getCategories } from '@/lib/api';
 import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
+import { safeJsonLdString } from '@/lib/jsonLd';
 import GalleryClient from './GalleryClient';
 
 export const dynamic = 'force-dynamic';
@@ -42,12 +43,12 @@ export default async function GalleryPage() {
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdString(breadcrumbJsonLd) }}
       />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdString(itemListJsonLd) }}
       />
       <GalleryClient paintings={paintings} categories={categories} />
     </>

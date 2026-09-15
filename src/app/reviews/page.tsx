@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
+import { safeJsonLdString } from '@/lib/jsonLd';
 import ReviewsClient from './ReviewsClient';
 
 export const dynamic = 'force-dynamic';
@@ -57,13 +58,13 @@ export default async function ReviewsPage() {
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdString(breadcrumbJsonLd) }}
       />
       {reviewsJsonLd && (
         <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewsJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdString(reviewsJsonLd) }}
         />
       )}
       <ReviewsClient initialReviews={reviews} />

@@ -7,6 +7,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import KhorezmScrollTrack from '@/components/patterns/KhorezmScrollTrack';
 import { prisma } from '@/lib/prisma';
+import { safeJsonLdString } from '@/lib/jsonLd';
 
 const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
@@ -118,7 +119,7 @@ export default async function RootLayout({
           <script
             type="application/ld+json"
             // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+            dangerouslySetInnerHTML={{ __html: safeJsonLdString(orgJsonLd) }}
           />
         )}
         {GA_MEASUREMENT_ID && (

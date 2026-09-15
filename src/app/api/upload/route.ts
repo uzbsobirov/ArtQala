@@ -29,11 +29,13 @@ export async function POST(request: Request) {
     let contentType = file.type;
     let fileExt: string | null = null;
 
-    // Validate MIME type
-    const validMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif'];
+    // Validate MIME type. SVG is deliberately excluded: it's XML and can carry
+    // a <script>, and (unlike JPEG/PNG/WebP) it isn't re-encoded below, so it
+    // would be stored and served byte-for-byte from the site's own origin.
+    const validMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!validMimes.includes(file.type)) {
       return NextResponse.json(
-        { success: false, error: 'Only image files (JPEG, PNG, WebP, SVG, GIF) are allowed' },
+        { success: false, error: 'Only image files (JPEG, PNG, WebP, GIF) are allowed' },
         { status: 400 }
       );
     }

@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { getArtists } from '@/lib/api';
 import { buildBreadcrumbJsonLd } from '@/lib/breadcrumbJsonLd';
+import { safeJsonLdString } from '@/lib/jsonLd';
 import ArtistsClient from './ArtistsClient';
 
 export const dynamic = 'force-dynamic';
@@ -28,7 +29,7 @@ export default async function ArtistsPage() {
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdString(breadcrumbJsonLd) }}
       />
       <ArtistsClient artists={artists} />
     </>
