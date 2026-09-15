@@ -105,7 +105,7 @@ This project was built according to the [AGENTS.md](./AGENTS.md) engineering rul
 
 ### 1. Clone the repo and install dependencies
 ```bash
-git clone https://github.com/uzbsobirov/ArtQala.git
+git clone https://github.com/zemeisteer/ArtQala.git
 cd ArtQala
 npm install
 ```

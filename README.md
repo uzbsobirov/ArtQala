@@ -105,7 +105,7 @@ Ushbu loyiha [AGENTS.md](./AGENTS.md) qoidalari hamda [TZ/ArtQala_TZ.docx](./TZ/
 
 ### 1. Repositoryni yuklab oling va paketlarni o'rnating
 ```bash
-git clone https://github.com/uzbsobirov/ArtQala.git
+git clone https://github.com/zemeisteer/ArtQala.git
 cd ArtQala
 npm install
 ```

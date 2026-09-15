@@ -96,7 +96,7 @@ task to do).
 
 ## Deployment
 
-Vercel, auto-deploys `main` from `github.com/uzbsobirov/ArtQala`. Database is Neon Postgres —
+Vercel, auto-deploys `main` from `github.com/zemeisteer/ArtQala`. Database is Neon Postgres —
 `DATABASE_URL` (plus `NEXTAUTH_SECRET`, `ADMIN_PASSWORD`, `RESEND_API_KEY`,
 `GEMINI_API_KEY`/`GEMINI_TEXT_MODEL`/`GEMINI_IMAGE_MODEL`, `GOOGLE_CLIENT_ID/SECRET`) live in
 Vercel's env vars, not `.env`. See `DEPLOYMENT.md` for the full first-time setup walkthrough.
