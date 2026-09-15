@@ -259,7 +259,7 @@ export default function AdminSettingsPage() {
             Galereya Sozlamalari
           </h2>
           <p className="text-xs text-[#726861] mt-0.5">
-            Aloqa ma'lumotlari, valyuta kurslari va uch tildagi "Biz haqimizda" matni
+            Aloqa ma'lumotlari, valyuta kurslari va "Biz haqimizda" matni
           </p>
         </div>
 
